@@ -231,6 +231,9 @@ backend/src/
 📌 **[Requisitos da disciplina — Fundamentos de Computação Concorrente, Paralela e Distribuída](docs/requisitos-disciplina-projetos.md)**  
 Mapeamento dos requisitos avaliados: arquitetura distribuída, diagrama, concorrência/paralelismo e otimização
 
+📖 **[Documentação da API](docs/api.md)**  
+Endpoints REST, autenticação, permissões, payloads, exemplos de resposta e variáveis de ambiente
+
 📖 **[Avaliação 2 — Backend real](docs/avaliacao-2-backend.md)**  
 Arquitetura Express, Prisma, autenticação JWT, Redis opcional, cron jobs e endpoints
 
