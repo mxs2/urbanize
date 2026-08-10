@@ -1,6 +1,7 @@
+import assert from "node:assert/strict";
 import { Given, When, Then } from "@cucumber/cucumber";
 import request from "supertest";
-import { app } from "@/server/app";
+import { app } from "../../../backend/src/app";
 
 let response: request.Response;
 
@@ -28,14 +29,14 @@ When(
 );
 
 Then("eu devo receber um token de autenticação", function () {
-  expect(response.status).toBe(200);
-  expect(response.body.token).toBeDefined();
+  assert.strictEqual(response.status, 200);
+  assert.notStrictEqual(response.body.data.token, undefined);
 });
 
 Then(
   "eu devo receber uma mensagem de erro {string}",
   function (message: string) {
-    expect(response.status).toBe(401);
-    expect(response.body.error.message).toBe(message);
+    assert.strictEqual(response.status, 401);
+    assert.strictEqual(response.body.error.message, message);
   }
 );

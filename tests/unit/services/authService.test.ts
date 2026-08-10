@@ -18,9 +18,10 @@ describe("AuthService", () => {
   });
 
   it("deve lançar um erro se as credenciais forem inválidas", async () => {
-    jest.spyOn(api, "login").mockRejectedValue(new Error("Email ou senha inválidos"));
+    jest.spyOn(api, "login").mockRejectedValue(new Error("Credenciais inválidas."));
 
-    await expect(authService.login({ email: "invalido@urbanize.com", senha: "senhaerrada" }))
-      .rejects.toThrow("Email ou senha inválidos");
+    await expect(authService.login({ email: "invalido@urbanize.com", senha: "senhaerrada" })).rejects.toThrow(
+      "Credenciais inválidas."
+    );
   });
 });

@@ -11,4 +11,4 @@ Feature: Login de usuário
   Scenario: Login com credenciais inválidas
     Given que eu tenho um email "invalido@urbanize.com" e senha "senhaerrada"
     When eu envio uma requisição de login
-    Then eu devo receber uma mensagem de erro "Email ou senha inválidos"
+    Then eu devo receber uma mensagem de erro "Credenciais inválidas."

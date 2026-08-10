@@ -2,57 +2,64 @@
 
 > Plataforma de gestão de demandas urbanas com backend real, banco persistente e diferenciação de perfis (Cidadão e Gestor)
 
-<img width="1917" height="985" alt="image" src="https://github.com/user-attachments/assets/39b854b8-b572-40cb-8177-8a01f822b2ab" />
+**Stack:** Expo (React Native) • TypeScript • expo-router • Zustand • Node.js • Express • Prisma ORM • JWT • Redis opcional • Cron Jobs
 
-
-**Stack:** Next.js 16 • TypeScript • Chakra UI • Zustand • TensorFlow.js/MobileNet • Node.js • Express • Prisma ORM • JWT • Cookies • Redis opcional • Cron Jobs
+> Este projeto era originalmente uma aplicação web (Next.js). O frontend foi removido e substituído por um app mobile (Expo/React Native) — veja o histórico do Git para a versão web.
 
 ## Início rápido
 
 ```bash
-# Instalar dependências
+# Backend
+cd backend
 npm install
-
-# Configurar variáveis de ambiente
-# Crie um arquivo .env no diretório backend a partir do .env.example
-
-# Linux/macOS
-cp backend/.env.example backend/.env
-
-# Windows (PowerShell)
-Copy-Item backend/.env.example backend/.env
-
-# Gerar o Prisma Client
+Copy-Item .env.example .env   # PowerShell (Linux/macOS: cp .env.example .env)
 npx prisma generate
-
-# Preparar banco local
 npm run db:migrate
 npm run db:seed
+npm run dev                    # API em http://localhost:4000/api
 
-# Rodar backend Express
-npm run dev:backend
-
-# Rodar frontend
-npm run dev:frontend
-
-# Acessar
-http://127.0.0.1:4100
+# App mobile (em outro terminal)
+cd mobile
+npm install
+Copy-Item .env.example .env    # ajuste EXPO_PUBLIC_API_URL se necessário
+npm start                      # abre o Expo Dev Tools (emulador, dispositivo físico ou navegador)
 ```
 
 **Credenciais de teste:**
 - Cidadão: `cidadao@urbanize.com` / `demo`
 - Gestor: `gestor@urbanize.com` / `demo`
 
-**Backend:** `http://localhost:4000/api`  
-**Frontend:** `http://127.0.0.1:4100`
+**Backend:** `http://localhost:4000/api`
+
+<details>
+<summary>Configurando EXPO_PUBLIC_API_URL</summary>
+
+O app mobile precisa apontar para o endereço do backend acessível pelo dispositivo/emulador usado:
+
+- **iOS Simulator / web:** `http://127.0.0.1:4000/api` (padrão)
+- **Android Emulator:** `http://10.0.2.2:4000/api`
+- **Dispositivo físico:** `http://<IP-da-máquina-na-rede-local>:4000/api`
+
+Configure em `mobile/.env` (a partir de `mobile/.env.example`).
+
+</details>
 
 <details>
 <summary>Scripts disponíveis</summary>
 
-- `npm run dev:frontend` - Servidor Next.js de desenvolvimento
-- `npm run dev:backend` - API Express com Prisma, JWT, Redis opcional e cron
+**Backend (`backend/`):**
+- `npm run dev` - API Express com Prisma, JWT, Redis opcional e cron
 - `npm run db:migrate` - Criar/aplicar migrações Prisma
 - `npm run db:seed` - Popular usuários e demandas de demonstração
+- `npm test` - Testes de aceitação (Jest + Supertest)
+- `npm run test:bdd` - Cenários BDD (Cucumber)
+
+**Mobile (`mobile/`):**
+- `npm start` - Abre o Expo Dev Tools
+- `npm run android` / `npm run ios` / `npm run web` - Roda em uma plataforma específica
+- `npm run typecheck` - Verificação de tipos TypeScript
+- `npm run lint` - ESLint (eslint-config-expo)
+- `npm test` - Testes unitários (Jest)
 
 </details>
 
@@ -62,7 +69,7 @@ http://127.0.0.1:4100
 **Erro ao executar o seed:**
 
 ```bash
-Cannot find module '../src/generated/prisma/client'
+Cannot find module '../generated/prisma/client'
 ```
 
 Gere novamente o Prisma Client:
@@ -72,17 +79,9 @@ npx prisma generate
 npm run db:seed
 ```
 
-**Porta ocupada:**
+**App mobile não consegue falar com o backend:**
 
-```bash
-lsof -ti tcp:4100 | xargs kill
-```
-
-**Mudar porta:**
-
-```bash
-npm run dev -- --hostname 127.0.0.1 --port 4101
-```
+Confira `EXPO_PUBLIC_API_URL` em `mobile/.env` — veja a seção acima sobre emulador Android vs. dispositivo físico vs. simulador iOS.
 
 </details>
 
@@ -95,9 +94,7 @@ O perfil do usuário é definido no cadastro e validado no backend:
 - **Cidadão** → cria e acompanha suas próprias demandas
 - **Gestor público** → visualiza a fila geral, revisa triagens e altera status
 
-A autenticação usa senha com hash, JWT, cookie HTTP-only e proteção por perfil.
-
-<img width="1914" height="965" alt="image" src="https://github.com/user-attachments/assets/edbef56e-8f49-4c60-a1c5-c9c2a5d731ed" />
+A autenticação usa senha com hash, JWT e proteção por perfil. O app mobile mantém a sessão via token Bearer (persistido com AsyncStorage), sem depender de cookies.
 
 ### Perfil Cidadão
 
@@ -109,106 +106,98 @@ A autenticação usa senha com hash, JWT, cookie HTTP-only e proteção por perf
 - ❌ Alterar status de demandas
 - ❌ Acessar painel do gestor
 
-**Navegação:**
-- `/dashboard` - Visão geral pessoal
-- `/demandas` - Minhas demandas
-- `/demandas/nova` - Criar nova demanda
-- `/demandas/:id` - Detalhes da demanda
-
-Na home, o CTA "Registrar demanda" direciona para `/login?next=/demandas/nova`; após autenticação, o cidadão segue para a tela de criação.
+**Telas:**
+- Início — visão geral pessoal e métricas
+- Minhas demandas — listagem com filtros
+- Nova demanda — criação com foto, localização e triagem automática
+- Detalhes da demanda — status e histórico
 
 <details>
 <summary>Ver jornada completa do cidadão</summary>
 
-Consulte a [documentação de jornadas](docs/jornada-usuario.md) para fluxos detalhados, permissões e cenários de teste.
+Consulte a [documentação de jornadas](docs/jornada-usuario.md) para fluxos detalhados, permissões e cenários de teste (referência histórica da versão web — a lógica de permissões é a mesma no app mobile).
 
 </details>
 
 ### Perfil Gestor
 
 **Permissões:**
-- ✅ Visualizar demandas do seu órgão ou, quando sem vínculo, a fila geral
+- ✅ Visualizar a fila geral de demandas
 - ✅ Alterar status de demandas
 - ✅ Adicionar observações
 - ✅ Revisar triagem automática
 - ✅ Visualizar métricas gerais
 - ❌ Criar novas demandas
 
-**Navegação:**
-- `/gestor` - Painel de gestão
-- `/demandas` - Demandas visíveis ao gestor
-- `/demandas/:id` - Gerenciar demanda
-
-<img width="1917" height="994" alt="image" src="https://github.com/user-attachments/assets/01d549a9-9f3f-434f-aa5f-494a8b9870b5" />
-
-<img width="1912" height="993" alt="image" src="https://github.com/user-attachments/assets/c90cbfa2-dc45-4fb4-a970-71405e20ba65" />
+**Telas:**
+- Painel — métricas, fila de triagem inteligente e fila recente
+- Demandas — todas as demandas visíveis ao gestor
+- Detalhes da demanda — ações de triagem (mudança de status, observações)
 
 <details>
 <summary>Ver jornada completa do gestor</summary>
 
-Consulte a [documentação de jornadas](docs/jornada-usuario.md) para fluxos detalhados, permissões e cenários de teste.
+Consulte a [documentação de jornadas](docs/jornada-usuario.md) para fluxos detalhados, permissões e cenários de teste (referência histórica da versão web — a lógica de permissões é a mesma no app mobile).
 
 </details>
 
 ### Proteção de rotas
 
-O sistema implementa controle de acesso automático:
+O app implementa controle de acesso automático (`mobile/src/hooks/useRoleGuard.ts`):
 
-- Usuários não autenticados → Redirecionados para `/login`
-- Cidadão tentando acessar `/gestor` → Redirecionado para `/dashboard`
-- Gestor tentando acessar `/dashboard` ou `/demandas/nova` → Redirecionado para `/gestor`
+- Usuário não autenticado → redirecionado para a tela de login
+- Cidadão tentando acessar o painel do gestor → redirecionado para o início
+- Gestor tentando acessar telas exclusivas do cidadão (ex.: nova demanda) → redirecionado para o painel
 
 ### Triagem inteligente
 
-Fluxo atual de triagem:
-- Upload de foto na criação da demanda
-- Classificação local no navegador com TensorFlow.js/MobileNet
-- Fallback no backend com Google Vision quando `GOOGLE_APPLICATION_CREDENTIALS_JSON` estiver configurado
-- Rótulos exibidos: **Buraco na rua**, **Lixo acumulado na rua** e **Poste ou fiação caída**
+Fluxo de triagem no app mobile:
+- Foto anexada via câmera ou galeria (`expo-image-picker`) na criação da demanda
+- Upload para o backend, que classifica a imagem com Google Vision (`GOOGLE_APPLICATION_CREDENTIALS_JSON`) quando configurado
 - Sugestão de órgão responsável conforme categoria detectada e cadastro de órgãos
-- Título e descrição preenchidos automaticamente após análise da imagem
-- Histórico inicial da demanda gravado no banco sem expor links técnicos de contato
+- Título e descrição preenchidos automaticamente após a análise
+- Histórico da demanda gravado no banco
+
+> A versão web anterior também classificava a imagem localmente no navegador com TensorFlow.js/MobileNet como um pré-preenchimento client-side. Esse passo não foi portado para o mobile: a classificação do backend via Google Vision já cobre o mesmo papel (com fallback para a categoria escolhida manualmente quando o Vision não está configurado), e evita embutir um modelo de ML pesado no app.
 
 ## Estrutura do projeto
 
 ```
-frontend/src/
-├── app/                    # Páginas Next.js (App Router)
-│   ├── api/               # Rotas legadas da etapa 1
-│   ├── cadastro/          # Página de cadastro
-│   ├── dashboard/         # Dashboard do cidadão
-│   ├── demandas/          # Criação, listagem e detalhes
-│   ├── gestor/            # Painel do gestor
-│   └── login/             # Página de login
-├── components/            # Componentes React
-│   ├── auth/             # Proteção de rotas
-│   ├── dashboard/        # Cards de métricas
-│   ├── demandas/         # Cards, filtros, timeline
-│   ├── forms/            # Formulários e upload de imagem
-│   ├── layout/           # Navbar, footer, layout
-│   └── ui/               # Badges, títulos
-├── services/             # Cliente HTTP e services do frontend
-├── store/                # Zustand stores
-├── types/                # TypeScript types
-└── utils/                # Classificação, labels e auxiliares
+mobile/
+├── app/                      # Rotas (expo-router, file-based)
+│   ├── index.tsx            # Home pública
+│   ├── login.tsx
+│   ├── cadastro.tsx
+│   └── (app)/                # Grupo autenticado (guarda de rota + navegação)
+│       ├── dashboard.tsx     # Início do cidadão
+│       ├── gestor.tsx        # Painel do gestor
+│       └── demandas/         # Listagem, detalhe e criação
+├── src/
+│   ├── components/           # UI kit (Button, TextField, Badge, DemandCard, ImageUpload…)
+│   ├── hooks/                # useAuth, useDemands, useFilters, useMetrics, useRoleGuard
+│   ├── services/             # Cliente HTTP (axios) e services por domínio
+│   ├── store/                # Zustand stores (auth com persist via AsyncStorage)
+│   ├── theme/                # Tokens de cor/espaçamento
+│   ├── types/                # TypeScript types compartilhados
+│   └── utils/                # Labels, formatação, detecção de perfil
 
 backend/src/
-├── app.ts                 # Middlewares e rotas Express
-├── server.ts              # Bootstrap do servidor
-├── config/                # Variáveis, Prisma e Redis
-├── controllers/           # Entrada HTTP e validação
-├── services/              # Regras de negócio e triagem
-├── repositories/          # Acesso ao banco
-├── routes/                # Endpoints REST
-├── middlewares/           # Auth, upload e erros
-└── utils/                 # Mappers e erros
+├── app.ts                    # Middlewares e rotas Express
+├── server.ts                 # Bootstrap do servidor
+├── config/                   # Variáveis, Prisma e Redis
+├── controllers/               # Entrada HTTP e validação
+├── services/                  # Regras de negócio e triagem
+├── repositories/              # Acesso ao banco
+├── routes/                    # Endpoints REST
+├── middlewares/                # Auth, upload e erros
+└── utils/                     # Mappers e erros
 ```
 
 <details>
-<summary>Ver estrutura detalhada</summary>
+<summary>Ver estrutura detalhada do app mobile</summary>
 
 **Stores (Zustand):**
-- `authStore` - Autenticação e usuário (com persist)
+- `authStore` - Autenticação e usuário (persistido via AsyncStorage)
 - `demandStore` - Demandas e filtros
 - `uiStore` - Estado da UI
 
@@ -223,133 +212,83 @@ backend/src/
 - `useDemands` - Gerenciamento de demandas
 - `useFilters` - Filtros e busca
 - `useMetrics` - Métricas e estatísticas
+- `useRoleGuard` - Proteção de rotas por perfil
 
 </details>
 
 ## Documentação
 
-📌 **[Requisitos da disciplina — Fundamentos de Computação Concorrente, Paralela e Distribuída](docs/requisitos-disciplina-projetos.md)**  
+📌 **[Requisitos da disciplina — Fundamentos de Computação Concorrente, Paralela e Distribuída](docs/requisitos-disciplina-projetos.md)**
 Mapeamento dos requisitos avaliados: arquitetura distribuída, diagrama, concorrência/paralelismo e otimização
 
-📖 **[Documentação da API](docs/api.md)**  
+📖 **[Documentação da API](docs/api.md)**
 Endpoints REST, autenticação, permissões, payloads, exemplos de resposta e variáveis de ambiente
 
-📖 **[Avaliação 2 — Backend real](docs/avaliacao-2-backend.md)**  
+📖 **[Avaliação 2 — Backend real](docs/avaliacao-2-backend.md)**
 Arquitetura Express, Prisma, autenticação JWT, Redis opcional, cron jobs e endpoints
 
-📖 **[Jornadas e Perfis de Usuário](docs/jornada-usuario.md)**  
-Fluxos detalhados, permissões, matriz de proteção de rotas e guia de testes
+📖 **[Jornadas e Perfis de Usuário](docs/jornada-usuario.md)**
+Fluxos detalhados, permissões, matriz de proteção de rotas e guia de testes (documentação histórica da versão web)
 
-📋 **[Requisitos da Avaliação 1](docs/requisitos-urbanize.md)**  
-Checklist completo de conformidade com todos os requisitos implementados
+📋 **[Requisitos da Avaliação 1](docs/requisitos-urbanize.md)**
+Checklist completo de conformidade com todos os requisitos implementados (documentação histórica da versão web)
 
 ## Recursos técnicos
 
-**Frontend:**
-- Next.js 16.2.4 (App Router)
-- TypeScript 5.7.3 (strict mode)
-- Chakra UI 2.10.9 (sistema de design)
-- Tailwind CSS 4.2.2
-- React 18.3.1
+**Mobile:**
+- Expo SDK 57 (React Native 0.86, React 19)
+- expo-router (navegação baseada em arquivos)
+- TypeScript (strict mode)
+- expo-image-picker (câmera/galeria)
 
 **Estado e dados:**
-- Zustand 5.0.12 (gerenciamento de estado)
-- Axios 1.15.2 (cliente HTTP)
-- SQLite via Prisma (persistência local)
+- Zustand (gerenciamento de estado)
+- Axios (cliente HTTP)
+- AsyncStorage (persistência de sessão)
+- SQLite via Prisma no backend (persistência local)
 
 **Qualidade:**
-- ESLint 9.39.4
+- ESLint (eslint-config-expo)
 - TypeScript strict mode
 - Componentes de feedback (loading/error/empty)
 - Validação de formulários
 
-**Design:**
-- Totalmente responsivo (mobile, tablet, desktop)
-- Sistema de cores customizado
-- Tema claro customizado com Chakra UI
-- Acessibilidade (ARIA labels)
-
-<details>
-<summary>Dependências completas</summary>
-
-```json
-{
-  "next": "16.2.4",
-  "react": "18.3.1",
-  "express": "^5.2.1",
-  "@prisma/client": "^7.8.0",
-  "@prisma/adapter-better-sqlite3": "^7.8.0",
-  "@chakra-ui/next-js": "^2.4.2",
-  "@tensorflow-models/mobilenet": "^2.1.1",
-  "@tensorflow/tfjs": "^4.22.0",
-  "bcryptjs": "^3.0.3",
-  "exifr": "^7.1.3",
-  "jsonwebtoken": "^9.0.3",
-  "ioredis": "^5.10.1",
-  "node-cron": "^4.2.1",
-  "@chakra-ui/react": "2.10.9",
-  "zustand": "5.0.12",
-  "axios": "1.15.2",
-  "typescript": "5.7.3"
-}
-```
-
-</details>
-
 ## Notas de desenvolvimento
 
-**API real:**  
+**API real:**
 A aplicação usa backend Express em `backend/src`, persistência Prisma/SQLite e autenticação JWT. O Redis é opcional para cache de métricas e o cron consolida snapshots periódicos em `MetricsSnapshot`.
 
-**Perfis:**  
+**Perfis:**
 O perfil é definido no cadastro e armazenado no banco. O backend valida permissões por rota e impede alterações de status por cidadãos.
 
-**Proteção de rotas:**  
-Componente `RoleProtectedRoute` em `frontend/src/components/auth/` verifica autenticação e permissões antes de renderizar páginas protegidas.
+**Proteção de rotas:**
+Hook `useRoleGuard` em `mobile/src/hooks/` verifica autenticação e permissões antes de renderizar telas protegidas.
 
-**Estados visuais:**  
-Todos os componentes de lista implementam loading states (skeleton), empty states e error states para melhor UX.
+**Estados visuais:**
+Todos os componentes de lista implementam loading states, empty states e error states para melhor UX.
 
-## Avaliação 2 - Status
+## Status
 
-✅ **Backend funcional:** Express organizado em rotas, controllers, services e repositories  
-✅ **Banco persistente:** Prisma ORM com SQLite e migrações  
-✅ **Autenticação real:** Cadastro, login, JWT, cookie e logout  
-✅ **Perfis:** Cidadão e gestor com permissões distintas  
-✅ **CRUD principal:** Demandas com filtros, detalhe, criação e alteração de status  
-✅ **Upload de imagem:** Anexo de foto, armazenamento local e URL `/uploads/...`  
-✅ **Integração frontend + backend:** Services usam Axios para consumir API real  
-✅ **Redis opcional:** Cache de métricas quando `REDIS_URL` está configurado  
-✅ **Cron opcional:** Snapshot periódico de métricas  
+✅ **Backend funcional:** Express organizado em rotas, controllers, services e repositories
+✅ **Banco persistente:** Prisma ORM com SQLite e migrações
+✅ **Autenticação real:** Cadastro, login, JWT e logout
+✅ **Perfis:** Cidadão e gestor com permissões distintas
+✅ **CRUD principal:** Demandas com filtros, detalhe, criação e alteração de status
+✅ **Upload de imagem:** Anexo de foto via câmera/galeria, armazenamento local e triagem automática
+✅ **App mobile:** Expo/React Native consumindo a API real via Axios
+✅ **Redis opcional:** Cache de métricas quando `REDIS_URL` está configurado
+✅ **Cron opcional:** Snapshot periódico de métricas
 
-## Avaliação 1 - Status
+Consulte [docs/requisitos-urbanize.md](docs/requisitos-urbanize.md) para o checklist original da avaliação (versão web).
 
-✅ **Stack obrigatória:** Next.js, TypeScript, Chakra UI  
-✅ **10 funcionalidades MVP:** Todas implementadas  
-✅ **Páginas obrigatórias:** Home, Login, Cadastro, Dashboard, Gestor, Demandas  
-✅ **Extras:** Diferenciação de perfis, proteção de rotas, upload de fotos, triagem por imagem, métricas  
-✅ **Responsividade:** Mobile, tablet e desktop  
-✅ **Estados de feedback:** Loading, error, empty em todas as listas
-
-Consulte [docs/requisitos-urbanize.md](docs/requisitos-urbanize.md) para checklist completo.
-
-## Demo e Deploy
-
-**Frontend (Vercel):** https://urbanize-eta.vercel.app/
+## Deploy
 
 **Backend (Render):** https://urbanize-backend.onrender.com/api/health
 
-> **Importante:** o backend está hospedado no plano gratuito do Render. Por isso, ele pode ficar inativo após alguns minutos sem uso. Antes de testar o sistema pelo frontend, abra primeiro o link do backend acima e aguarde aparecer:
->
-> `{"success":true,"data":{"status":"ok"}}`
->
-> Depois disso, acesse o frontend normalmente pela Vercel.
+> O backend está hospedado no plano gratuito do Render e pode ficar inativo após alguns minutos sem uso — acesse o link acima antes de testar o app para "acordar" o serviço.
+
+O app mobile não possui deploy público; rode-o localmente com Expo (veja "Início rápido" acima) apontando `EXPO_PUBLIC_API_URL` para o backend acima ou para sua instância local.
 
 **Credenciais de teste:**
 - Cidadão: `cidadao@urbanize.com` / `demo`
 - Gestor: `gestor@urbanize.com` / `demo`
-
-**Vídeo demonstrativo:** https://youtu.be/dMM8QEGGw1g
-
-Relatório Evolutivo de Gerenciamento de Projetos: [Abrir relatório](<docs/Urbanize - Relatório Evolutivo de Gerenciamento de Projetos.md>)
-
