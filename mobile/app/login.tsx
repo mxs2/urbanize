@@ -20,8 +20,9 @@ export default function Login() {
       await login(email, senha);
       const user = useAuthStore.getState().user;
       router.replace(user?.role === "gestor" ? "/gestor" : "/dashboard");
-    } catch {
-      Alert.alert("Erro ao entrar", "Email ou senha inválidos.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Email ou senha inválidos.";
+      Alert.alert("Erro ao entrar", message);
     } finally {
       submitting.current = false;
     }

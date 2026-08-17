@@ -20,8 +20,9 @@ export default function Cadastro() {
     try {
       await register(nome, email, senha, telefone || undefined, role);
       router.replace(role === "gestor" ? "/gestor" : "/dashboard");
-    } catch {
-      Alert.alert("Erro ao criar conta", "Verifique os dados e tente novamente.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Verifique os dados e tente novamente.";
+      Alert.alert("Erro ao criar conta", message);
     }
   };
 
