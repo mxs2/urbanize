@@ -5,7 +5,7 @@
 **/dist
 **/web-build
 **/coverage
-mobile
+**/.metro-health-check*
 docs
 tools
 backend/src/generated

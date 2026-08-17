@@ -12,7 +12,22 @@
 ./scripts/up.sh
 ```
 
-O script gera `backend/.env`, `mobile/.env` e `docker/.env` (detectando o IP desta máquina na rede local e sorteando um `JWT_SECRET`), sobe a API e o Redis em containers, aplica as migrations e popula o banco de demonstração. Ao final a API responde em `http://localhost:4000/api` e no IP da rede local.
+O script gera `backend/.env`, `mobile/.env` e `docker/.env` (detectando o IP desta máquina na rede local e sorteando um `JWT_SECRET`), sobe os containers, aplica as migrations e popula o banco de demonstração.
+
+| Serviço | Endereço | O que é |
+| --- | --- | --- |
+| `mobile` | http://localhost:8081 | App Urbanize no navegador (Expo web / Metro) |
+| `backend` | http://localhost:4000/api | API REST (índice com os endpoints disponíveis) |
+| `redis` | `localhost:6379` | Cache das métricas |
+
+O mesmo Metro atende o Expo Go. O QR code para escanear com o celular aparece no log do serviço:
+
+```bash
+docker compose -f docker/docker-compose.yml logs mobile     # mostra o QR code
+docker compose -f docker/docker-compose.yml attach mobile   # QR + menu interativo (r, a, w...)
+```
+
+Se preferir digitar, a URL é `exp://<IP-da-máquina>:8081` — o IP detectado fica em `docker/.env` como `HOST_LAN_IP`. O celular precisa estar na mesma rede Wi-Fi.
 
 ```bash
 ./scripts/down.sh          # para os containers
@@ -20,13 +35,7 @@ O script gera `backend/.env`, `mobile/.env` e `docker/.env` (detectando o IP des
 ./scripts/setup-env.sh     # só regenera os .env (use --force ou --ip <endereço>)
 ```
 
-O app mobile continua rodando no host, porque o Expo precisa de acesso direto ao dispositivo:
-
-```bash
-cd mobile
-npm install
-npm start
-```
+> O log do serviço `mobile` mostra um erro ao instalar o React Native DevTools (`libglib-2.0.so.0`). É esperado: o DevTools é um app gráfico e o container é headless. O bundler e o app funcionam normalmente.
 
 ## Início rápido (sem Docker)
 

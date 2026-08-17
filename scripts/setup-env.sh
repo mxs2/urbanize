@@ -93,12 +93,15 @@ set_env "$MOBILE_ENV" EXPO_PUBLIC_API_URL "http://${LAN_IP}:${BACKEND_PORT}/api"
 log "EXPO_PUBLIC_API_URL apontando para http://${LAN_IP}:${BACKEND_PORT}/api"
 
 # --- docker/.env (lido automaticamente pelo compose) -------------------------
-# Só as portas publicadas no host; o resto da configuração vem de backend/.env.
+# Portas publicadas no host e o IP usado pelo Metro; o resto vem de backend/.env.
 DOCKER_ENV="$ROOT_DIR/docker/.env"
 REDIS_PORT="$(get_env "$DOCKER_ENV" REDIS_PORT)"
+METRO_PORT="$(get_env "$DOCKER_ENV" METRO_PORT)"
 {
+  echo "HOST_LAN_IP=${LAN_IP}"
   echo "BACKEND_PORT=${BACKEND_PORT}"
   echo "REDIS_PORT=${REDIS_PORT:-6379}"
+  echo "METRO_PORT=${METRO_PORT:-8081}"
 } > "$DOCKER_ENV"
 
 log "Ambiente pronto."
