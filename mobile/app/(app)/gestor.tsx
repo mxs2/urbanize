@@ -33,9 +33,7 @@ export default function GestorPanel() {
 
   const triagemQueue = useMemo(
     () =>
-      demands.filter(
-        (d) => QUEUE_STATUSES.includes(d.status) && (d.imagemUrl || d.sugestaoEncaminhamento)
-      ),
+      demands.filter((d) => QUEUE_STATUSES.includes(d.status) && (d.imagemUrl || d.sugestaoEncaminhamento)),
     [demands]
   );
 
@@ -65,7 +63,10 @@ export default function GestorPanel() {
         <MetricsCard label="Em atendimento" value={emAtendimento} accentColor={colors.success} />
       </View>
 
-      <SectionTitle title="Triagem Inteligente" subtitle="Demandas com classificação automática pendente de revisão" />
+      <SectionTitle
+        title="Triagem Inteligente"
+        subtitle="Demandas com classificação automática pendente de revisão"
+      />
       {triagemQueue.length === 0 ? (
         <Text style={styles.empty}>Nenhuma demanda pendente de triagem.</Text>
       ) : (
@@ -87,8 +88,15 @@ export default function GestorPanel() {
                   </Text>
                 ) : null}
                 <View style={styles.triagemActions}>
-                  <Button label="Aceitar" onPress={() => handleAccept(demand.id, demand.sugestaoEncaminhamento)} />
-                  <Button label="Revisar" variant="outline" onPress={() => router.push(`/demandas/${demand.id}`)} />
+                  <Button
+                    label="Aceitar"
+                    onPress={() => handleAccept(demand.id, demand.sugestaoEncaminhamento)}
+                  />
+                  <Button
+                    label="Revisar"
+                    variant="outline"
+                    onPress={() => router.push(`/demandas/${demand.id}`)}
+                  />
                 </View>
               </View>
             </View>

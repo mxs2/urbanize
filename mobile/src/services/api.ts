@@ -72,7 +72,9 @@ export const api = {
     }
   },
 
-  async createDemand(payload: Omit<Demand, "id" | "protocolo" | "criadaEm" | "atualizadaEm">): Promise<Demand> {
+  async createDemand(
+    payload: Omit<Demand, "id" | "protocolo" | "criadaEm" | "atualizadaEm">
+  ): Promise<Demand> {
     try {
       return unwrap(await http.post<ApiResponse<Demand>>("/demands", payload));
     } catch (error) {
@@ -82,7 +84,9 @@ export const api = {
 
   async updateDemandStatus(id: string, status: Demand["status"], observacaoGestor?: string): Promise<Demand> {
     try {
-      return unwrap(await http.patch<ApiResponse<Demand>>(`/demands/${id}/status`, { status, observacaoGestor }));
+      return unwrap(
+        await http.patch<ApiResponse<Demand>>(`/demands/${id}/status`, { status, observacaoGestor })
+      );
     } catch (error) {
       return normalizeError(error);
     }
@@ -98,7 +102,9 @@ export const api = {
 
   async login(email: string, senha: string): Promise<{ user: User; token: string }> {
     try {
-      return unwrap(await http.post<ApiResponse<{ user: User; token: string }>>("/auth/login", { email, senha }));
+      return unwrap(
+        await http.post<ApiResponse<{ user: User; token: string }>>("/auth/login", { email, senha })
+      );
     } catch (error) {
       return normalizeError(error);
     }
@@ -163,7 +169,10 @@ export const api = {
 
       return unwrap(
         await http.post<
-          ApiResponse<{ imageUrl: string; triagem: { categoria: DemandCategory; score: number; labels: string[] } }>
+          ApiResponse<{
+            imageUrl: string;
+            triagem: { categoria: DemandCategory; score: number; labels: string[] };
+          }>
         >("/upload/image", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         })

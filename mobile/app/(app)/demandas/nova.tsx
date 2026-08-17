@@ -31,7 +31,11 @@ export default function NovaDemanda() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (ready) api.getOrgans().then(setOrgans).catch(() => undefined);
+    if (ready)
+      api
+        .getOrgans()
+        .then(setOrgans)
+        .catch(() => undefined);
   }, [ready]);
 
   const matchedOrgan = useMemo(
@@ -43,7 +47,9 @@ export default function NovaDemanda() {
   useEffect(() => {
     if (matchedOrgan && !titulo && !descricao) {
       setTitulo(categoryLabel[categoria]);
-      setDescricao(`Demanda referente a "${categoryLabel[categoria]}", possivelmente de responsabilidade de ${matchedOrgan.nome}.`);
+      setDescricao(
+        `Demanda referente a "${categoryLabel[categoria]}", possivelmente de responsabilidade de ${matchedOrgan.nome}.`
+      );
     }
   }, [matchedOrgan, categoria]);
   /* eslint-enable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
@@ -119,14 +125,25 @@ export default function NovaDemanda() {
               />
             ) : null}
             {matchedOrgan.site ? (
-              <Button label="Site oficial" variant="outline" onPress={() => Linking.openURL(matchedOrgan.site!)} />
+              <Button
+                label="Site oficial"
+                variant="outline"
+                onPress={() => Linking.openURL(matchedOrgan.site!)}
+              />
             ) : null}
           </View>
         </View>
       ) : null}
 
       <TextField label="Título" required value={titulo} onChangeText={setTitulo} />
-      <TextField label="Descrição" required multiline numberOfLines={4} value={descricao} onChangeText={setDescricao} />
+      <TextField
+        label="Descrição"
+        required
+        multiline
+        numberOfLines={4}
+        value={descricao}
+        onChangeText={setDescricao}
+      />
       <Select
         label="Prioridade"
         value={prioridade}

@@ -29,7 +29,11 @@ export default function DemandasList() {
         <View style={styles.header}>
           <SectionTitle
             title={isCidadao ? "Minhas Demandas" : "Todas as Demandas"}
-            subtitle={isCidadao ? "Acompanhe o status das demandas que você registrou" : "Fila geral de demandas urbanas"}
+            subtitle={
+              isCidadao
+                ? "Acompanhe o status das demandas que você registrou"
+                : "Fila geral de demandas urbanas"
+            }
           />
           {isCidadao ? <Button label="Nova demanda" onPress={() => router.push("/demandas/nova")} /> : null}
           <DemandFilters />

@@ -32,7 +32,13 @@ describe("API Service", () => {
 
   it("deve registrar um novo usuário com sucesso", async () => {
     mockHttp.post.mockResolvedValueOnce({
-      data: { success: true, data: { user: { id: "1", nome: "Novo Usuário", email: "novo@urbanize.com", role: "cidadao" }, token: "tok" } },
+      data: {
+        success: true,
+        data: {
+          user: { id: "1", nome: "Novo Usuário", email: "novo@urbanize.com", role: "cidadao" },
+          token: "tok",
+        },
+      },
     });
 
     const result = await api.register("Novo Usuário", "novo@urbanize.com", "senha123", "123456789");

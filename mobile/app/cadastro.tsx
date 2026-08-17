@@ -29,7 +29,13 @@ export default function Cadastro() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Criar conta</Text>
       <TextField label="Nome" value={nome} onChangeText={setNome} />
-      <TextField label="Email" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
+      <TextField
+        label="Email"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+      />
       <TextField label="Telefone" keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
       <TextField label="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
       <Select

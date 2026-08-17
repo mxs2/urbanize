@@ -34,14 +34,18 @@ export const requireAuth = async (req: Request, _res: Response, next: NextFuncti
 
     next();
   } catch (error) {
-    next(error instanceof AppError ? error : new AppError("Token inválido ou expirado.", 401, "INVALID_TOKEN"));
+    next(
+      error instanceof AppError ? error : new AppError("Token inválido ou expirado.", 401, "INVALID_TOKEN")
+    );
   }
 };
 
-export const requireRole = (...roles: UserRole[]) => (req: Request, _res: Response, next: NextFunction) => {
-  if (!req.user) return next(new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED"));
-  if (!roles.includes(req.user.role)) {
-    return next(new AppError("Perfil sem permissão para esta ação.", 403, "FORBIDDEN"));
-  }
-  return next();
-};
+export const requireRole =
+  (...roles: UserRole[]) =>
+  (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.user) return next(new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED"));
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError("Perfil sem permissão para esta ação.", 403, "FORBIDDEN"));
+    }
+    return next();
+  };

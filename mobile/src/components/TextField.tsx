@@ -13,11 +13,7 @@ export function TextField({ label, required, style, ...inputProps }: TextFieldPr
         {label}
         {required ? " *" : ""}
       </Text>
-      <TextInput
-        style={[styles.input, style]}
-        placeholderTextColor={colors.textMuted}
-        {...inputProps}
-      />
+      <TextInput style={[styles.input, style]} placeholderTextColor={colors.textMuted} {...inputProps} />
     </View>
   );
 }

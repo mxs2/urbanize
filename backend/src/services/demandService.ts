@@ -1,4 +1,10 @@
-import { DemandCategory, DemandPriority, DemandSource, DemandStatus, UserRole } from "../generated/prisma/client";
+import {
+  DemandCategory,
+  DemandPriority,
+  DemandSource,
+  DemandStatus,
+  UserRole,
+} from "../generated/prisma/client";
 import { cache } from "../config/redis";
 import { demandRepository, DemandFilters } from "../repositories/demandRepository";
 import { AppError } from "../utils/appError";
@@ -18,7 +24,10 @@ const categoryToDepartment: Record<DemandCategory, string> = {
 
 const generateProtocol = () => `URB-${Math.floor(Math.random() * 90000 + 10000)}`;
 
-const ensureAllowed = (demand: Awaited<ReturnType<typeof demandRepository.findById>>, user: { id: string; role: UserRole }) => {
+const ensureAllowed = (
+  demand: Awaited<ReturnType<typeof demandRepository.findById>>,
+  user: { id: string; role: UserRole }
+) => {
   if (!demand) throw new AppError("Demanda não encontrada.", 404, "DEMAND_NOT_FOUND");
   if (user.role !== "gestor" && demand.userId !== user.id) {
     throw new AppError("Você não tem permissão para acessar esta demanda.", 403, "FORBIDDEN");
@@ -27,7 +36,10 @@ const ensureAllowed = (demand: Awaited<ReturnType<typeof demandRepository.findBy
 };
 
 export const demandService = {
-  async list(filters: Omit<DemandFilters, "userId">, user: { id: string; role: UserRole; organId?: string | null }) {
+  async list(
+    filters: Omit<DemandFilters, "userId">,
+    user: { id: string; role: UserRole; organId?: string | null }
+  ) {
     if (user.role === "gestor") {
       const demands = await demandRepository.list(filters);
       return demands.map(toDemandResponse);
@@ -48,7 +60,14 @@ export const demandService = {
       nomeSolicitante?: string;
       emailSolicitante?: string;
       telefoneSolicitante?: string;
-      endereco: { endereco: string; bairro?: string; cidade?: string; referencia?: string; latitude?: number; longitude?: number };
+      endereco: {
+        endereco: string;
+        bairro?: string;
+        cidade?: string;
+        referencia?: string;
+        latitude?: number;
+        longitude?: number;
+      };
       origem?: DemandSource;
       imagemUrl?: string;
     },
@@ -108,7 +127,8 @@ export const demandService = {
     input: { status: DemandStatus; observacaoGestor?: string },
     user: { id: string; nome: string; role: UserRole }
   ) {
-    if (user.role !== "gestor") throw new AppError("Somente gestores podem alterar status.", 403, "FORBIDDEN");
+    if (user.role !== "gestor")
+      throw new AppError("Somente gestores podem alterar status.", 403, "FORBIDDEN");
     ensureAllowed(await demandRepository.findById(id), user);
 
     const updated = await demandRepository.updateStatus(id, {

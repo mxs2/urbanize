@@ -49,7 +49,7 @@ export const useDemandStore = create<DemandState>((set, get) => ({
     set({ loading: true, error: undefined });
     const updated = await demandService.updateStatus(id, status, observacaoGestor);
     set({
-      demands: get().demands.map((d) => (d.id === id ? updated ?? d : d)),
+      demands: get().demands.map((d) => (d.id === id ? (updated ?? d) : d)),
       selected: updated ?? get().selected,
       loading: false,
     });

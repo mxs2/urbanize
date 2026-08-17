@@ -47,7 +47,10 @@ export const demandRepository = {
   create(data: Prisma.DemandCreateInput) {
     return prisma.demand.create({ data, include: includeHistory });
   },
-  updateStatus(id: string, data: { status: DemandStatus; observacaoGestor?: string; descricao: string; autor: string }) {
+  updateStatus(
+    id: string,
+    data: { status: DemandStatus; observacaoGestor?: string; descricao: string; autor: string }
+  ) {
     return prisma.demand.update({
       where: { id },
       data: {

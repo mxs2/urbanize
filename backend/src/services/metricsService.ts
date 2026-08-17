@@ -16,8 +16,12 @@ export interface MetricsSummary {
   tempoMedioAtendimentoDias: number;
 }
 
-export const calculateMetricsSummary = async (user?: { id: string; role: UserRole }): Promise<MetricsSummary> => {
-  const where: Prisma.DemandWhereInput | undefined = user && user.role !== "gestor" ? { userId: user.id } : undefined;
+export const calculateMetricsSummary = async (user?: {
+  id: string;
+  role: UserRole;
+}): Promise<MetricsSummary> => {
+  const where: Prisma.DemandWhereInput | undefined =
+    user && user.role !== "gestor" ? { userId: user.id } : undefined;
   const cacheKey = where ? `metrics:summary:user:${user?.id}` : "metrics:summary:all";
 
   const cached = await cache.getJson<MetricsSummary>(cacheKey);
@@ -27,13 +31,19 @@ export const calculateMetricsSummary = async (user?: { id: string; role: UserRol
     demandRepository.count(where),
     demandRepository.countByStatus(where),
     demandRepository.countByCategory(where),
-    prisma.demand.findMany({ where: { ...where, status: "resolvida" }, select: { createdAt: true, updatedAt: true } }),
+    prisma.demand.findMany({
+      where: { ...where, status: "resolvida" },
+      select: { createdAt: true, updatedAt: true },
+    }),
   ]);
 
   const tempoMedioAtendimentoDias = resolvedDemands.length
     ? Number(
         (
-          resolvedDemands.reduce((sum, demand) => sum + (demand.updatedAt.getTime() - demand.createdAt.getTime()), 0) /
+          resolvedDemands.reduce(
+            (sum, demand) => sum + (demand.updatedAt.getTime() - demand.createdAt.getTime()),
+            0
+          ) /
           resolvedDemands.length /
           86_400_000
         ).toFixed(1)

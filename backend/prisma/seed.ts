@@ -55,8 +55,18 @@ const organs = [
 ];
 
 const usersData = [
-  { nome: "Cidadão Demo", email: "cidadao@urbanize.com", role: "cidadao" as const, organSigla: null as string | null },
-  { nome: "Gestor Emlurb", email: "gestor@urbanize.com", role: "gestor" as const, organSigla: "EMLURB" as string | null },
+  {
+    nome: "Cidadão Demo",
+    email: "cidadao@urbanize.com",
+    role: "cidadao" as const,
+    organSigla: null as string | null,
+  },
+  {
+    nome: "Gestor Emlurb",
+    email: "gestor@urbanize.com",
+    role: "gestor" as const,
+    organSigla: "EMLURB" as string | null,
+  },
 ];
 
 const demandsData = [
@@ -147,7 +157,11 @@ async function main() {
         historico: {
           create: [
             { status: "registrada", descricao: "Registrada pelo cidadão", autor: citizen!.nome },
-            { status: demandData.status, descricao: "Status inicial da base de demonstração", autor: "Sistema" },
+            {
+              status: demandData.status,
+              descricao: "Status inicial da base de demonstração",
+              autor: "Sistema",
+            },
           ],
         },
       },

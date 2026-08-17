@@ -41,7 +41,11 @@ export default function DemandDetail() {
 
   const handleTransition = async (status: DemandStatus) => {
     try {
-      await updateDemandStatus(selected.id, status, observacao || `Status atualizado para ${statusLabel[status]}`);
+      await updateDemandStatus(
+        selected.id,
+        status,
+        observacao || `Status atualizado para ${statusLabel[status]}`
+      );
       Alert.alert("Demanda atualizada", `Status alterado para ${statusLabel[status]}.`);
       setObservacao("");
     } catch {

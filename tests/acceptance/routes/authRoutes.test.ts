@@ -23,19 +23,17 @@ describe("Auth Routes - Login", () => {
 });
 
 describe("Auth Routes - Register", () => {
-    it("deve registrar um novo usuário com sucesso", async () => {
-      const email = `novo-${Date.now()}@urbanize.com`;
-      const response = await request(app)
-        .post("/api/auth/register")
-        .send({
-          nome: "Novo Usuário",
-          email,
-          senha: "senha123",
-          telefone: "123456789",
-        });
-
-      expect(response.status).toBe(201);
-      expect(response.body.data.user.email).toBe(email);
-      expect(response.body.data.token).toBeDefined();
+  it("deve registrar um novo usuário com sucesso", async () => {
+    const email = `novo-${Date.now()}@urbanize.com`;
+    const response = await request(app).post("/api/auth/register").send({
+      nome: "Novo Usuário",
+      email,
+      senha: "senha123",
+      telefone: "123456789",
     });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.user.email).toBe(email);
+    expect(response.body.data.token).toBeDefined();
   });
+});

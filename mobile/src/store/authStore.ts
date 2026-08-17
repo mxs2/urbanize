@@ -10,7 +10,13 @@ interface AuthState {
   loading: boolean;
   hydrated: boolean;
   login: (email: string, senha: string) => Promise<void>;
-  register: (nome: string, email: string, senha: string, telefone?: string, role?: DemandRole) => Promise<void>;
+  register: (
+    nome: string,
+    email: string,
+    senha: string,
+    telefone?: string,
+    role?: DemandRole
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 

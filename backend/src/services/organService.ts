@@ -8,10 +8,12 @@ export const organService = {
 
   async findByCategoria(categoria: DemandCategory) {
     const organs = await prisma.organ.findMany();
-    return organs.find((o) => {
-      const cats: DemandCategory[] = JSON.parse(o.categoriasJson);
-      return cats.includes(categoria);
-    }) ?? null;
+    return (
+      organs.find((o) => {
+        const cats: DemandCategory[] = JSON.parse(o.categoriasJson);
+        return cats.includes(categoria);
+      }) ?? null
+    );
   },
 
   buildWhatsappLink(organ: { whatsapp: string | null; nome: string }, protocolo: string, titulo: string) {
