@@ -6,7 +6,29 @@
 
 > Este projeto era originalmente uma aplicação web (Next.js). O frontend foi removido e substituído por um app mobile (Expo/React Native) — veja o histórico do Git para a versão web.
 
-## Início rápido
+## Início rápido (Docker)
+
+```bash
+./scripts/up.sh
+```
+
+O script gera `backend/.env`, `mobile/.env` e `docker/.env` (detectando o IP desta máquina na rede local e sorteando um `JWT_SECRET`), sobe a API e o Redis em containers, aplica as migrations e popula o banco de demonstração. Ao final a API responde em `http://localhost:4000/api` e no IP da rede local.
+
+```bash
+./scripts/down.sh          # para os containers
+./scripts/down.sh -v       # para e apaga os volumes (força reinstalar e repovoar)
+./scripts/setup-env.sh     # só regenera os .env (use --force ou --ip <endereço>)
+```
+
+O app mobile continua rodando no host, porque o Expo precisa de acesso direto ao dispositivo:
+
+```bash
+cd mobile
+npm install
+npm start
+```
+
+## Início rápido (sem Docker)
 
 ```bash
 # Backend

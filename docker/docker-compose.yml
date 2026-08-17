@@ -1,0 +1,46 @@
+name: urbanize
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    restart: unless-stopped
+    env_file:
+      - ../backend/.env
+    environment:
+      # Sobrescreve o .env: dentro do container o Redis é um serviço da rede do
+      # compose e a API precisa escutar em todas as interfaces.
+      REDIS_URL: redis://redis:6379
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 4000
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    volumes:
+      # Código montado do host: editar um arquivo recarrega a API (tsx watch).
+      - ../backend:/app
+      # Dependências e client do Prisma ficam no volume, compilados para o container.
+      - backend_node_modules:/app/node_modules
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:4000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+volumes:
+  backend_node_modules:
