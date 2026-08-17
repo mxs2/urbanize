@@ -22,11 +22,21 @@ done
 log() { printf '\033[36m[setup]\033[0m %s\n' "$1"; }
 
 detect_lan_ip() {
-  if command -v ip >/dev/null 2>&1; then
-    ip -4 -o addr show scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n1
-  elif command -v ipconfig >/dev/null 2>&1; then
-    ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null
-  fi
+  case "$(uname -s)" in
+    MINGW* | MSYS* | CYGWIN*)
+      # Git Bash no Windows: o PowerShell devolve o IP sem depender do idioma do
+      # `ipconfig`. Menor InterfaceMetric = adaptador realmente usado para sair.
+      powershell.exe -NoProfile -Command \
+        "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { \$_.IPAddress -notlike '127.*' -and \$_.IPAddress -notlike '169.254.*' } | Sort-Object InterfaceMetric | Select-Object -First 1).IPAddress" \
+        2>/dev/null | tr -d '\r\n '
+      ;;
+    Darwin)
+      ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null
+      ;;
+    *)
+      ip -4 -o addr show scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n1
+      ;;
+  esac
 }
 
 random_secret() {

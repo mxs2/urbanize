@@ -14,4 +14,7 @@ fi
 
 "$ROOT_DIR/scripts/setup-env.sh"
 
-exec docker compose -f "$ROOT_DIR/docker/docker-compose.yml" up --build "$@"
+# Entrar na pasta em vez de passar -f evita a conversão de caminho do Git Bash
+# no Windows (/c/... vira C:\... e o compose não acha o arquivo).
+cd "$ROOT_DIR/docker"
+exec docker compose up --build "$@"
