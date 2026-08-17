@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Slot, router, usePathname } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,12 +21,12 @@ export default function AppLayout() {
   const { user, hydrated, logout } = useAuthStore();
   const pathname = usePathname();
 
-  if (!hydrated) return <LoadingState />;
+  // Navegar durante o render quebra o roteador; o redirect fica no efeito.
+  useEffect(() => {
+    if (hydrated && !user) router.replace("/login");
+  }, [hydrated, user]);
 
-  if (!user) {
-    router.replace("/login");
-    return <LoadingState />;
-  }
+  if (!hydrated || !user) return <LoadingState />;
 
   const links = user.role === "gestor" ? GESTOR_LINKS : CIDADAO_LINKS;
 
