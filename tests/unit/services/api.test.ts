@@ -20,14 +20,22 @@ jest.mock("axios", () => {
 });
 
 import { api } from "@/services/api";
+import { resetSessionForTests, setAuthToken } from "@/services/session";
 
 const mockHttp = axios.create() as unknown as {
   post: jest.Mock;
+  interceptors: { request: { use: jest.Mock } };
 };
+
+type RequestInterceptor = (config: {
+  headers: Record<string, string>;
+  url?: string;
+}) => Promise<{ headers: Record<string, string> }>;
 
 describe("API Service", () => {
   beforeEach(() => {
     mockHttp.post.mockReset();
+    resetSessionForTests();
   });
 
   it("deve registrar um novo usuário com sucesso", async () => {
@@ -52,5 +60,22 @@ describe("API Service", () => {
     mockHttp.post.mockRejectedValueOnce(new Error("Email já cadastrado."));
 
     await expect(api.register("Usuário Existente", "cidadao@urbanize.com", "demo")).rejects.toThrow();
+  });
+
+  it("deve enviar o Authorization assim que o token entra em memória, sem depender do storage", async () => {
+    const interceptor = mockHttp.interceptors.request.use.mock.calls[0][0] as RequestInterceptor;
+
+    setAuthToken("token-recem-logado");
+    const config = await interceptor({ headers: {}, url: "/demands" });
+
+    expect(config.headers.Authorization).toBe("Bearer token-recem-logado");
+  });
+
+  it("não deve enviar Authorization quando não há sessão", async () => {
+    const interceptor = mockHttp.interceptors.request.use.mock.calls[0][0] as RequestInterceptor;
+
+    const config = await interceptor({ headers: {}, url: "/demands" });
+
+    expect(config.headers.Authorization).toBeUndefined();
   });
 });

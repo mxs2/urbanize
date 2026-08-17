@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authService } from "@/services/authService";
+import { AUTH_STORAGE_KEY, clearAuthToken, setAuthToken } from "@/services/session";
 import { User, DemandRole } from "@/types/user";
 
 interface AuthState {
@@ -33,6 +34,9 @@ export const useAuthStore = create<AuthState>()(
         set({ loading: true });
         try {
           const { user, token } = await authService.login({ email, senha });
+          // Antes de liberar a UI: o token precisa estar disponível para o interceptor,
+          // senão a primeira requisição da próxima tela sai sem Authorization.
+          setAuthToken(token);
           set({ user, token, loading: false });
         } catch (error) {
           set({ loading: false });
@@ -45,6 +49,7 @@ export const useAuthStore = create<AuthState>()(
         set({ loading: true });
         try {
           const { user, token } = await authService.register({ nome, email, telefone, senha, role });
+          setAuthToken(token);
           set({ user, token, loading: false });
         } catch (error) {
           set({ loading: false });
@@ -53,15 +58,19 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: async () => {
         await authService.logout().catch(() => undefined);
+        clearAuthToken();
         set({ user: null, token: null });
       },
     }),
     {
-      name: "urbanize-auth",
+      name: AUTH_STORAGE_KEY,
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ user: state.user, token: state.token }),
       onRehydrateStorage: () => (state) => {
-        if (state) state.hydrated = true;
+        setAuthToken(state?.token ?? null);
+        // Via setState (e não mutando `state`) para que os componentes já montados
+        // re-renderizem; marcado mesmo em caso de falha, senão a UI fica presa no loading.
+        useAuthStore.setState({ hydrated: true });
       },
     }
   )

@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuthToken } from "./session";
 import { Demand, DemandCategory, FilterState } from "@/types/demand";
 import { MetricsSummary } from "@/types/metrics";
 import { User, DemandRole } from "@/types/user";
@@ -18,25 +18,12 @@ interface ApiErrorResponse {
   };
 }
 
-const AUTH_STORAGE_KEY = "urbanize-auth";
-
-const getStoredToken = async (): Promise<string | null> => {
-  try {
-    const raw = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
-    return parsed.state?.token ?? null;
-  } catch {
-    return null;
-  }
-};
-
 const http = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:4000/api",
 });
 
 http.interceptors.request.use(async (config) => {
-  const token = await getStoredToken();
+  const token = await getAuthToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
