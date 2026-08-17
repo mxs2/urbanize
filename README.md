@@ -35,8 +35,6 @@ Se preferir digitar, a URL é `exp://<IP-da-máquina>:8081` — o IP detectado f
 ./scripts/setup-env.sh     # só regenera os .env (use --force ou --ip <endereço>)
 ```
 
-> O log do serviço `mobile` mostra um erro ao instalar o React Native DevTools (`libglib-2.0.so.0`). É esperado: o DevTools é um app gráfico e o container é headless. O bundler e o app funcionam normalmente.
-
 ## Início rápido (sem Docker)
 
 ```bash
