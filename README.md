@@ -9,8 +9,10 @@
 ## Início rápido (Docker)
 
 ```bash
-./scripts/up.sh
+./scripts/up.sh            # Windows: bash scripts/up.sh (Git Bash ou WSL2)
 ```
+
+> Passo a passo detalhado para Linux, macOS e Windows — incluindo pré-requisitos e solução de problemas — em **[docs/guia-instalacao.md](docs/guia-instalacao.md)**.
 
 O script gera `backend/.env`, `mobile/.env` e `docker/.env` (detectando o IP desta máquina na rede local e sorteando um `JWT_SECRET`), sobe os containers, aplica as migrations e popula o banco de demonstração.
 
