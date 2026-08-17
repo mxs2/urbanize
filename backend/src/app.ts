@@ -21,6 +21,7 @@ app.use(cookieParser());
 // Servir imagens enviadas pelos usuários
 app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
+app.get("/", (_req, res) => res.redirect("/api"));
 app.use("/api", routes);
 
 app.use(notFoundMiddleware);
