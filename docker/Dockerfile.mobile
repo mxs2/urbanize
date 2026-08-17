@@ -30,4 +30,6 @@ EXPOSE 8081 19000 19001
 ENTRYPOINT ["/usr/local/bin/entrypoint-mobile.sh"]
 # --lan imprime o QR code do Expo Go no log; a versão web continua sendo servida
 # pelo mesmo Metro em http://localhost:8081.
-CMD ["npx", "expo", "start", "--lan", "--port", "8081"]
+# O binário local (e não `npx expo`) garante a CLI da SDK do projeto: o cache do
+# npx pode guardar outra versão e servir um manifesto com a SDK errada.
+CMD ["node_modules/.bin/expo", "start", "--lan", "--port", "8081"]
