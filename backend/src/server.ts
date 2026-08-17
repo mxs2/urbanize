@@ -7,8 +7,8 @@ const start = async () => {
   await connectRedis();
   startMetricsJob();
 
-  app.listen(env.port, () => {
-    console.log(`Backend Urbanize disponível em http://localhost:${env.port}/api`);
+  app.listen(env.port, env.host, () => {
+    console.log(`Backend Urbanize escutando em http://${env.host}:${env.port}/api`);
   });
 };
 

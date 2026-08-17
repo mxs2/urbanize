@@ -2,7 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import path from "path";
-import { env } from "./config/env";
+import { isOriginAllowed } from "./config/env";
 import { errorMiddleware, notFoundMiddleware } from "./middlewares/errorMiddleware";
 import { routes } from "./routes";
 import "./types";
@@ -11,7 +11,7 @@ export const app = express();
 
 app.use(
   cors({
-    origin: env.frontendUrl,
+    origin: (origin, callback) => callback(null, isOriginAllowed(origin)),
     credentials: true,
   })
 );
