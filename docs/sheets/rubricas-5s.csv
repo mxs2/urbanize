@@ -1,0 +1,96 @@
+Rubricas do Projeto Integrador — 5º Semestre (bloco PI = ≥40% da nota da unidade),,,,,,,,,,,
+"Como usar: para cada critério, verifique os itens do checklist e selecione o nível correspondente na coluna ""Nível atribuído"" (menu suspenso). A % do nível e a nota do critério são calculadas automaticamente (Peso × % do nível). O total do bloco soma as notas dos critérios.",,,,,,,,,,,
+Disciplina / Unidade,Critério,Peso (%),Checklist de verificação (itens observáveis),Nível atribuído,% do nível,Nota do critério,,,Nível,% do peso,
+"Desenvolvimento Mobile
+— U1",Registro de demanda (foto e GPS),40,"1. Registro de demanda captura foto via câmera do dispositivo.
+2. Localização (GPS) capturada corretamente no registro.
+3. Categoria e descrição da demanda preenchidas e salvas.",,,,,,Excelente,100%,Atende a TODOS os itens do checklist.
+,Navegação e consumo de API,35,"1. Navegação entre as telas (login, registro, acompanhamento) funciona sem erros.
+2. App consome um backend real (não mock/hardcoded).
+3. Listagem de demandas exibida corretamente a partir da API.",,,,,,Bom,75%,"Atende à grande maioria dos itens, apresentando falha pontual, que não compromete o núcleo do critério."
+,Build em dispositivo/emulador,25,"1. App roda em dispositivo físico ou emulador sem crashes.
+2. Build gerado e documentado (como rodar).
+3. Commits distribuídos entre os membros do squad.",,,,,,Suficiente,50%,"Atende a pelo menos metade dos itens do checklist, com lacunas relevantes."
+,Total do bloco PI,100,,,,0.0,,,Insuficiente,25%,Atende a menos da metade dos itens; funcionalidade comprometida.
+"Desenvolvimento Mobile
+— U2",Integração (backend/segurança/dados),40,"1. App integrado aos controles de segurança implementados por SEG.
+2. App integrado à camada de dados/analytics de DADOS.
+3. Fluxo completo registrar→acompanhar→notificar funcional.",,,,,,Não entregue,0%,"Nenhum item atendido; ausente, não funcional ou não demonstrável."
+,Recursos mobile (notificações/offline/UX),35,"1. Notificações implementadas e funcionando.
+2. Modo offline básico implementado (ex.: cache local).
+3. UX refinada em relação à versão da U1 (ajustes reais aplicados).",,,,,,Regra geral válida para todos os critérios da rubrica (o checklist específico de cada critério está na coluna D).,,
+,Empacotamento e qualidade,25,"1. Build empacotado (APK/IPA ou equivalente) gerado.
+2. Código organizado e sem duplicação evidente.",,,,,,,,
+,Total do bloco PI,100,,,,0.0,,,,,
+"Segurança da Informação
+— U1",Análise de riscos e requisitos,40,"1. Relatório de análise de riscos e ameaças apresentado.
+2. Riscos identificados são relevantes para o app real (não genéricos).
+3. Requisitos de segurança derivados dos riscos identificados.",,,,,,,,
+,Modelo de autenticação/autorização,35,"1. Modelo de autenticação definido (ex.: JWT, OAuth).
+2. Modelo de autorização (níveis de acesso) definido.
+3. Modelo aplicável à arquitetura real do app (MOB).",,,,,,,,
+,Plano de conformidade LGPD,25,"1. Dados pessoais tratados pela plataforma identificados.
+2. Plano de conformidade LGPD com ações concretas apresentado.",,,,,,,,
+,Total do bloco PI,100,,,,0.0,,,,,
+"Segurança da Informação
+— U2",Implementação dos controles,45,"1. Autenticação implementada e funcionando no app/backend.
+2. Autorização (controle de acesso) implementada e funcionando.
+3. Logs/auditoria implementados.",,,,,,,,
+,Criptografia e armazenamento seguro,30,"1. Dados criptografados em trânsito (HTTPS/TLS).
+2. Dados sensíveis criptografados em repouso.
+3. Tokens armazenados de forma segura (não em texto puro).",,,,,,,,
+,Conformidade e teste de segurança,25,"1. Relatório de conformidade LGPD apresentado.
+2. Teste de segurança básico realizado (ex.: tentativa de acesso não autorizado) com evidências.",,,,,,,,
+,Total do bloco PI,100,,,,0.0,,,,,
+"Negócios na Internet
+— U1",Modelo de negócio (canvas),40,"1. Canvas de modelo de negócio/serviço preenchido.
+2. Modelo coerente com o contexto de serviço.",,,,,,,,
+,Mapa de jornada,35,"1. Mapa da jornada do usuário elaborado, cobrindo as etapas reais do app.",,,,,,,,
+,Mapa de Stakeholders e Personas,25,"1. Mapa de stakeholders, com ordem de relevância considerada.
+2. Personas documentadas, coerente com o contexto de serviço.",,,,,,,,
+,Total do bloco PI,100,,,,0.0,,,,,
+"Negócios na Internet
+— U2",Plano de sustentabilidade,100,"1. Plano de sustentabilidade, considerando ambientes do modelo de negócio.
+2. Definição dos KPIs do negócio.
+3. Definição dos aspectos legais do negócio.",,,,,,,,
+,Total do bloco PI,100,,,,0.0,,,,,
+"Engenharia e Ciência de Dados e Big Data (Eletiva)
+— U1",Modelo de dados analíticos,35,"1. Modelo de dados analíticos (ex.: esquema estrela) definido.
+2. Modelo coerente com as análises pretendidas na U2.",,,,,,,,
+,Pipeline ETL inicial,40,"1. Pipeline ETL implementado e executando sem erros.
+2. Pipeline extrai dados reais do backend do app (MOB).",,,,,,,,
+,Primeiras análises,25,"1. Análise de volume de demandas por categoria apresentada.
+2. Análise de volume de demandas por região apresentada.
+3. Gráficos legíveis acompanhando as análises.",,,,,,,,
+,Total do bloco PI,100,,,,0.0,,,,,
+"Engenharia e Ciência de Dados e Big Data (Eletiva)
+— U2",Analytics consolidado,40,"1. Tempo de atendimento das demandas analisado.
+2. Regiões críticas identificadas.
+3. Tendências ao longo do tempo analisadas.",,,,,,,,
+,Painel de indicadores,35,"1. Painel funcional exibindo os indicadores.
+2. Painel integrado ao produto (não arquivo solto).",,,,,,,,
+,Qualidade e volume dos dados,25,"1. Dados consistentes, sem valores claramente inválidos.
+2. (Opcional) ingestão em maior volume testada.",,,,,,,,
+,Total do bloco PI,100,,,,0.0,,,,,
+"Testes Automatizados (Eletiva)
+— U1",Plano e modelagem de testes,35,"1. Plano de Testes do Cidade Conectada apresentado (escopo, níveis, riscos e pirâmide de automação).
+2. Casos de teste rastreáveis aos critérios de aceite das histórias.
+3. Plano cobre os fluxos prioritários do app (registro e acompanhamento de demandas).",,,,,,,,
+,Testes automatizados executáveis e reprodutíveis,40,"1. Testes automatizados de unidade e/ou de API implementados sobre o código real do projeto.
+2. Suíte executa por comando único, sem passos manuais, em outra máquina do time.
+3. Resultado da execução registrado (log ou relatório).",,,,,,,,
+,Backlog de automação,25,"1. Declaração do nível de teste (unidade, API ou E2E) e a justificativa de seleção (risco, frequência ou custo do teste manual) de cada item.
+2. Itens priorizados com critério explícito.
+3. Itens rastreáveis aos casos do Plano de Testes.
+4. Registro do que foi deliberadamente deixado fora da automação, com justificativa.",,,,,,,,
+,Total do bloco PI,100,,,,0.0,,,,,
+"Testes Automatizados (Eletiva)
+— U2",Pipeline de testes e Continuous Testing,40,"1. Pipeline de testes implementada e executando no repositório do projeto.
+2. Execução disparada automaticamente por commit ou pull request.
+3. Resultado da pipeline visível para o time (status e relatório de execução).",,,,,,,,
+,Suíte E2E sobre o app integrado,30,"1. Fluxo registrar→acompanhar→notificar coberto por teste E2E automatizado.
+2. Testes E2E executam sobre o app integrado ao backend real (não mock).
+3. Cenários negativos/de exceção incluídos na suíte.",,,,,,,,
+,Métricas e resultados da automação,30,"1. Relatório de métricas de teste apresentado (ex.: taxa de sucesso, cobertura, defeitos, tempo de execução).
+2. Relatório interpreta os resultados e aponta riscos de qualidade (não apenas números).",,,,,,,,
+,Total do bloco PI,100,,,,0.0,,,,,
