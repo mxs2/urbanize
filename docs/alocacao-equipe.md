@@ -9,29 +9,29 @@ Cada pessoa tem uma área **primária** (responsável pela entrega) e uma **secu
 
 | Pessoa | Primário | Secundário |
 |---|---|---|
-| diego | mobile | project-management |
-| mateus xavier | project-management | segurança |
-| Enzo Antuna | testes | documentação |
-| Sobral | testes | branding/design |
-| Pedro Rennil | segurança | testes |
-| Kayky | segurança | dados |
-| Jamilla Lobo | dados | mobile |
-| Jan | negócios | documentação |
-| Pamela | branding/design | mobile |
-| Hyngrid | documentação | negócios |
+| Diego Xavier | Mobile | Project Management |
+| Mateus Xavier | Project Management | Segurança |
+| Enzo Antuna | Testes | Documentação |
+| Alan Sobral | Testes | Branding/Design |
+| Pedro Rennil | Segurança | Testes |
+| Kayky | Segurança | Dados |
+| Jamilla Lobo | Dados | Mobile |
+| Janderson | Negócios | Documentação |
+| Pamela | Branding/Design | Mobile |
+| Hyngrid | Documentação | Negócios |
 
 ## Cobertura por área
 
 | Área | Primários | Secundários |
 |---|---|---|
-| project-management | mateus | diego |
-| mobile | diego | Jamilla, Pamela |
-| testes | Enzo, Sobral | Pedro |
-| segurança | Pedro, Kayky | mateus |
-| dados | Jamilla | Kayky |
-| documentação | Hyngrid | Enzo, Jan |
-| negócios | Jan | Hyngrid |
-| branding/design | Pamela | Sobral |
+| Project Management | Mateus Xavier | Diego |
+| Mobile | Diego Xavier | Jamilla, Pamela |
+| Testes | Enzo, Alan Sobral | Pedro |
+| Segurança | Pedro, Kayky | Mateus Xavier |
+| Dados | Jamilla | Kayky |
+| Documentação | Hyngrid | Enzo, Janderson |
+| Negócios | Janderson | Hyngrid |
+| Branding/Design | Pamela | Alan Sobral |
 
 
 ## Base da enquete
@@ -40,13 +40,13 @@ Interesse e veto declarados por pessoa:
 
 | Pessoa | Quer | Não quer |
 |---|---|---|
-| diego | mobile, segurança, project-management | — |
-| mateus xavier | testes, dados, mobile, segurança, branding/design, project-management | negócios, documentação |
-| Kayky | testes, dados, segurança | mobile |
-| Sobral | testes, documentação, branding/design | mobile |
-| Enzo Antuna | testes, documentação | mobile, branding/design, segurança, negócios, dados |
-| Pedro Rennil | testes, documentação, segurança | mobile |
-| Jan | documentação, dados, negócios | mobile, project-management, testes, branding/design |
-| Jamilla Lobo | documentação, dados, mobile, negócios | project-management, testes, branding/design, segurança |
-| Pamela | mobile, branding/design | project-management, testes |
-| Hyngrid | documentação, negócios | — |
+| Diego Xavier | Mobile, Segurança, Project Management | — |
+| Mateus Xavier | Testes, Dados, Mobile, Segurança, Branding/Design, Project Management | Negócios, Documentação |
+| Kayky | Testes, Dados, Segurança | Mobile |
+| Alan Sobral | Testes, Documentação, Branding/Design | Mobile |
+| Enzo Antuna | Testes, Documentação | Mobile , Branding/Design, Segurança, Negócios, Dados |
+| Pedro Rennil | Testes, Documentação, Segurança | Mobile |
+| Janderson | Documentação, Dados, Negócios | Mobile, Project Management, Testes, Branding/Design |
+| Jamilla Lobo | Documentação, Dados, Mobile, Negócios | Project Management, Testes, Branding/Design, Segurança |
+| Pamela | Mobile, Branding/Design | Project Management, Testes |
+| Hyngrid | Documentação, Negócios | — |
