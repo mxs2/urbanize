@@ -1,0 +1,20 @@
+Selecao de casos de uso para automacao
+"Criterio: repete a cada regressao, alto impacto, deterministico, custo baixo, requisito estavel"
+UC,Caso de uso,Automatizar?,Camada,Prioridade,Justificativa da selecao,Casos AUT gerados
+UC01,Autenticar usuario (cidadao e gestor),Sim,API,P0,Porta de entrada de todo o resto; deterministico e barato,AUT-02
+UC02,Proteger rota por perfil e por token,Sim,API + Componente,P0,Maior risco do sistema; regra impossivel de validar bem na mao,"AUT-01, AUT-03, AUT-10"
+UC03,Criar demanda com foto e triagem automatica,Sim,API,P0,Fluxo central; com Vision mockado o caso fica deterministico,"AUT-04, AUT-06"
+UC04,Alterar status e registrar historico,Sim,API,P0,"Regra exclusiva do gestor, com efeito colateral no historico",AUT-05
+UC05,Cadastrar usuario,Sim,API,P1,"Repetitivo e estavel, porem de menor impacto que UC01/UC02",AUT-07
+UC06,Listar e filtrar demandas por perfil,Sim,API,P1,Cidadao so ve as proprias - e regra de autorizacao disfarcada de filtro,AUT-08
+UC07,Consultar metricas (com e sem Redis),Sim,API,P1,Cobre o requisito de cache e arquitetura distribuida,AUT-09
+UC08,Ver detalhe e timeline da demanda,Sim,API,P1,Contrato simples e alto valor de regressao,AUT-05
+UC09,"Jornada do cidadao (login, criar, listar)",Sim,E2E,P1,Unica forma de provar app e API integrados de ponta a ponta,AUT-12
+UC10,"Jornada do gestor (login, triar, mudar status)",Sim,E2E,P1,"Mesmo motivo, do outro lado do sistema",AUT-13
+UC11,"Estados de tela (loading, empty, error)",Sim,Componente,P2,Barato com Testing Library e evita regressao de UX,AUT-11
+UC12,Acesso concorrente a mesma demanda,Sim,API,P2,Requisito da disciplina de computacao concorrente,AUT-14
+UC13,Idempotencia do cron de metricas,Sim,API,P2,Falha silenciosa e dificil de detectar manualmente,AUT-15
+UC14,Precisao da classificacao de imagem,Nao,Manual,-,Nao-deterministico e com custo por chamada - amostragem manual,-
+UC15,Captura por camera em aparelho fisico,Nao,Manual,-,Depende de hardware; o mock cobre o fluxo logico,-
+UC16,Responsividade em multiplos aparelhos,Nao,Manual,-,Custo alto e valor baixo para o prazo da disciplina,-
+UC17,Usabilidade e teste exploratorio,Nao,Manual,-,"Depende de julgamento humano, nao roteirizavel",-

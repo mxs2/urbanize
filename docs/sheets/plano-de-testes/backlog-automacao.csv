@@ -1,0 +1,21 @@
+Backlog de automacao
+Colunas amarelas sao de preenchimento da equipe. Linha de exemplo no fim da tabela.
+ID,UC,Origem (teste manual),Cenario a automatizar,Camada,Ferramenta,Prioridade,Esforco,Responsavel,Status,Observacoes
+AUT-01,UC02,TS02,Cidadao recebe 403 ao tentar alterar status de demanda,API,Jest + Supertest,P0,1h,,Nao iniciado
+AUT-02,UC01,"TS01, TS02",Login retorna token valido e perfil correto (cidadao e gestor),API,Jest + Supertest,P0,2h,,Nao iniciado
+AUT-03,UC02,-,Rota protegida sem token ou com token invalido retorna 401,API,Jest + Supertest,P0,1h,,Nao iniciado
+AUT-04,UC03,TS04,"Criar demanda com imagem retorna categoria, orgao, titulo e descricao",API,Jest + Supertest + nock,P0,3h,,Nao iniciado
+AUT-05,UC04,"TS07, TS11",Gestor altera status e a mudanca aparece no historico da demanda,API,Jest + Supertest,P0,2h,,Nao iniciado
+AUT-06,UC03,TS10,Vision indisponivel cai no fallback da categoria manual,API,Jest + Supertest + nock,P1,2h,,Nao iniciado
+AUT-07,UC05,"TS03, TS05",Campos obrigatorios ausentes retornam 400 com mensagem clara,API,Jest + Supertest,P1,2h,,Nao iniciado
+AUT-08,UC06,TS06,Filtros de listagem retornam apenas demandas visiveis ao perfil,API,Jest + Supertest,P1,2h,,Nao iniciado
+AUT-09,UC07,"TS08, TS09",Metricas com e sem Redis retornam o mesmo resultado,API,Jest + Supertest,P1,3h,,Nao iniciado
+AUT-10,UC02,-,useRoleGuard redireciona cidadao que abre o painel do gestor,Componente,Jest (jest-expo) + RNTL,P1,2h,,Nao iniciado
+AUT-11,UC11,TS04,"Tela de nova demanda exibe loading, empty e error state",Componente,Jest (jest-expo) + RNTL,P2,3h,,Nao iniciado
+AUT-12,UC09,"TS01, TS04, TS06","E2E: login cidadao, criar demanda com foto, ver na listagem",E2E,Maestro,P1,4h,,Nao iniciado
+AUT-13,UC10,"TS02, TS11","E2E: login gestor, revisar triagem, alterar status",E2E,Maestro,P1,4h,,Nao iniciado
+AUT-14,UC12,-,Dois gestores alteram a mesma demanda em paralelo sem duplicar historico,Concorrencia,Jest + Supertest (Promise.all),P2,3h,,Nao iniciado
+AUT-15,UC13,-,Cron executado duas vezes nao duplica MetricsSnapshot,Concorrencia,Jest + Supertest,P2,2h,,Nao iniciado
+AUT-16,-,TS12,Pipeline de CI executa a suite a cada push e bloqueia merge vermelho,CI,GitHub Actions,P1,3h,,Nao iniciado
+AUT-01,UC02,TS02,(exemplo de preenchimento - apagar antes de usar),API,Jest + Supertest,P0,1h,Diego,Automatizado,Mock do Vision via nock
+"Esforco em horas e estimativa da equipe, nao medicao. Origem cita os casos manuais TS01-TS12 do plano de testes da entrega anterior."
