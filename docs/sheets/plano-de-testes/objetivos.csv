@@ -1,0 +1,10 @@
+Objetivos da automacao
+Cada objetivo tem meta verificavel - serve de criterio de aceite do plano
+#,Objetivo,Meta mensuravel,Como medir
+1.0,Garantir que as regras de autorizacao por perfil nunca regridam,100% dos cenarios de permissao (cidadao x gestor) automatizados em API,Contagem de casos P0 verdes no relatorio do Jest
+2.0,Reduzir o tempo de regressao manual,Os 12 cenarios TS01-TS12 executados em menos de 5 minutos,Tempo total da suite no log do GitHub Actions
+3.0,Detectar quebra de contrato da API antes do app,Toda rota REST com ao menos 1 teste de status code e formato de resposta,Rotas cobertas / rotas existentes em backend/src/routes
+4.0,Tornar a triagem testavel apesar da IA,Nenhum teste da suite chama o Google Vision real; sucesso e fallback cobertos,Ausencia de chamada externa (nock ativo) + 2 casos verdes
+5.0,Rodar a suite sem intervencao humana,"Execucao automatica a cada push/PR, com build vermelho bloqueando merge",Workflow configurado e historico de execucoes no CI
+6.0,Sustentar os requisitos de concorrencia e distribuicao,Acesso concorrente e idempotencia do cron cobertos por teste automatizado,Casos AUT-14 e AUT-15 verdes
+7.0,Manter a suite confiavel,Zero teste flaky tolerado - teste instavel e corrigido ou removido,Reexecucao da suite 3x seguidas sem variacao de resultado

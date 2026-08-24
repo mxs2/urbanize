@@ -249,6 +249,12 @@ backend/src/
 
 ## Documentação
 
+🧪 **[Plano de Testes e Backlog de Automação](docs/plano-de-testes.md)**
+Estratégia de teste, seleção de casos de uso, backlog priorizado (AUT-01–AUT-16), matriz de riscos e decisão de ferramentas por camada
+
+🔒 **[Requisitos e Análise de Riscos de Segurança](docs/requisitos-seguranca.md)**
+Análise de riscos, requisitos de segurança, modelo de autenticação/autorização e plano de conformidade com a LGPD
+
 📌 **[Requisitos da disciplina — Fundamentos de Computação Concorrente, Paralela e Distribuída](docs/requisitos-disciplina-projetos.md)**
 Mapeamento dos requisitos avaliados: arquitetura distribuída, diagrama, concorrência/paralelismo e otimização
 
