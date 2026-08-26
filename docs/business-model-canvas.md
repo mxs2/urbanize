@@ -1,5 +1,7 @@
 # Business Model Canvas — Urbanize
-![Business Model Canvas — Urbanize](bmc-urbanize.png)
+
+<img width="1920" height="1080" alt="bmc-urbanize" src="https://github.com/user-attachments/assets/10538e0b-8a0f-4c82-a0d1-1ebe9c45556a" />
+
 ## Detalhamento dos Blocos
 
 ### 1. Parcerias-Chave (Key Partners)
