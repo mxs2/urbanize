@@ -10,6 +10,7 @@ import { categoryLabel } from "@/utils/categoryLabel";
 import { colors, fontSizes, radii, spacing } from "@/theme";
 import { Button } from "@/components/Button";
 import { ImageUpload, ImageUploadResult } from "@/components/ImageUpload";
+import { Coordinates, LocationCapture } from "@/components/LocationCapture";
 import { Select } from "@/components/Select";
 import { TextField } from "@/components/TextField";
 
@@ -27,6 +28,7 @@ export default function NovaDemanda() {
   const [bairro, setBairro] = useState("");
   const [cidade, setCidade] = useState("Recife");
   const [referencia, setReferencia] = useState("");
+  const [coordenadas, setCoordenadas] = useState<Coordinates | undefined>();
   const [aceite, setAceite] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -81,7 +83,14 @@ export default function NovaDemanda() {
         status: "registrada",
         nomeSolicitante: user.nome,
         emailSolicitante: user.email,
-        endereco: { endereco, bairro, cidade, referencia: referencia || undefined },
+        endereco: {
+          endereco,
+          bairro,
+          cidade,
+          referencia: referencia || undefined,
+          latitude: coordenadas?.latitude,
+          longitude: coordenadas?.longitude,
+        },
         origem: "cidadao",
         imagemUrl,
         historico: [],
@@ -160,6 +169,7 @@ export default function NovaDemanda() {
       <TextField label="Bairro" value={bairro} onChangeText={setBairro} />
       <TextField label="Cidade" value={cidade} onChangeText={setCidade} />
       <TextField label="Ponto de referência" value={referencia} onChangeText={setReferencia} />
+      <LocationCapture value={coordenadas} onChange={setCoordenadas} />
 
       <Pressable style={styles.consentRow} onPress={() => setAceite(!aceite)}>
         <View style={[styles.checkbox, aceite && styles.checkboxChecked]} />

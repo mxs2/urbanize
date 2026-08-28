@@ -26,6 +26,12 @@
       "expo-router",
       "expo-secure-store",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O Urbanize usa sua localização para registrar o local exato da demanda."
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "O Urbanize usa suas fotos para anexar evidências às demandas.",
