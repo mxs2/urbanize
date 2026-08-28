@@ -23,7 +23,12 @@ const priorityOptions = [
 ];
 
 export function DemandFilters() {
-  const { filters, setFilters, fetchDemands } = useDemandStore();
+  const { filters, setFilters, fetchDemands, bairros } = useDemandStore();
+
+  const bairroOptions = [
+    { label: "Todos", value: "" },
+    ...bairros.map((bairro) => ({ label: bairro, value: bairro })),
+  ];
 
   return (
     <View style={styles.container}>
@@ -48,6 +53,12 @@ export function DemandFilters() {
         onChange={(value) =>
           setFilters({ ...filters, categoria: (value || undefined) as DemandCategory | undefined })
         }
+      />
+      <Select
+        label="Bairro"
+        value={filters.bairro ?? ""}
+        options={bairroOptions}
+        onChange={(value) => setFilters({ ...filters, bairro: value || undefined })}
       />
       <Select
         label="Prioridade"

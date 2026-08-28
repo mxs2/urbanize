@@ -2,8 +2,14 @@ import { create } from "zustand";
 import { demandService } from "@/services/demandService";
 import { Demand, FilterState } from "@/types/demand";
 
+const mergeBairros = (current: string[], demands: Demand[]) =>
+  Array.from(new Set([...current, ...demands.map((d) => d.endereco.bairro).filter(Boolean)])).sort((a, b) =>
+    a.localeCompare(b)
+  );
+
 interface DemandState {
   demands: Demand[];
+  bairros: string[];
   selected?: Demand;
   loading: boolean;
   error?: string;
@@ -18,13 +24,14 @@ interface DemandState {
 
 export const useDemandStore = create<DemandState>((set, get) => ({
   demands: [],
+  bairros: [],
   loading: false,
   filters: {},
   async fetchDemands(filters = {}) {
     set({ loading: true, error: undefined, filters });
     try {
       const data = await demandService.getAll(filters);
-      set({ demands: data, loading: false });
+      set({ demands: data, bairros: mergeBairros(get().bairros, data), loading: false });
     } catch {
       set({ error: "Erro ao carregar demandas", loading: false });
     }
