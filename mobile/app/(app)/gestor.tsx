@@ -2,14 +2,17 @@ import { useEffect, useMemo } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
+import { useMetrics } from "@/hooks/useMetrics";
 import { useDemandStore } from "@/store/demandStore";
-import { DemandStatus } from "@/types/demand";
+import { DemandCategory, DemandStatus } from "@/types/demand";
+import { categoryLabel } from "@/utils/categoryLabel";
 import { statusLabel } from "@/utils/statusLabel";
 import { colors, radii, spacing } from "@/theme";
 import { Button } from "@/components/Button";
 import { DemandCard } from "@/components/DemandCard";
 import { MetricsCard } from "@/components/MetricsCard";
 import { SectionTitle } from "@/components/SectionTitle";
+import { ErrorState } from "@/components/ErrorState";
 import { LoadingState } from "@/components/LoadingState";
 import { Select } from "@/components/Select";
 
@@ -25,6 +28,12 @@ const resolveImageUrl = (imagemUrl?: string) => {
 export default function GestorPanel() {
   const { ready, user } = useRoleGuard(["gestor"]);
   const { demands, filters, setFilters, fetchDemands, updateDemandStatus } = useDemandStore();
+  const {
+    metrics,
+    loading: metricsLoading,
+    error: metricsError,
+    refetch: refetchMetrics,
+  } = useMetrics(ready);
 
   useEffect(() => {
     if (ready) fetchDemands({});
@@ -39,13 +48,14 @@ export default function GestorPanel() {
 
   if (!ready || !user) return <LoadingState />;
 
-  const emAnalise = demands.filter((d) => d.status === "em_analise").length;
-  const encaminhadas = demands.filter((d) => d.status === "encaminhada").length;
-  const emAtendimento = demands.filter((d) => d.status === "em_atendimento").length;
+  const porStatus = metrics?.porStatus ?? {};
+  const statusCount = (status: DemandStatus) => porStatus[status] ?? 0;
+  const porCategoria = Object.entries(metrics?.porCategoria ?? {}).sort((a, b) => b[1] - a[1]);
 
   const handleAccept = async (id: string, sugestao?: string) => {
     try {
       await updateDemandStatus(id, "encaminhada", sugestao ?? "Aceito triagem");
+      await refetchMetrics();
       Alert.alert("Triagem aceita", "Demanda encaminhada.");
     } catch {
       Alert.alert("Erro", "Não foi possível aceitar a triagem.");
@@ -56,12 +66,54 @@ export default function GestorPanel() {
     <ScrollView contentContainerStyle={styles.container}>
       <SectionTitle title="Painel do gestor" subtitle={`Olá, ${user.nome}`} />
 
-      <View style={styles.metricsRow}>
-        <MetricsCard label="Total" value={demands.length} />
-        <MetricsCard label="Em análise" value={emAnalise} accentColor={colors.warning} />
-        <MetricsCard label="Encaminhadas" value={encaminhadas} accentColor={colors.brand[500]} />
-        <MetricsCard label="Em atendimento" value={emAtendimento} accentColor={colors.success} />
-      </View>
+      {metricsLoading ? <LoadingState /> : null}
+      {metricsError ? (
+        <View style={styles.metricsError}>
+          <ErrorState message={metricsError} />
+          <Button label="Tentar novamente" variant="outline" onPress={refetchMetrics} />
+        </View>
+      ) : null}
+      {metrics ? (
+        <>
+          <View style={styles.metricsRow}>
+            <MetricsCard label="Total" value={metrics.total} />
+            <MetricsCard label="Em análise" value={statusCount("em_analise")} accentColor={colors.warning} />
+            <MetricsCard
+              label="Encaminhadas"
+              value={statusCount("encaminhada")}
+              accentColor={colors.brand[500]}
+            />
+            <MetricsCard
+              label="Em atendimento"
+              value={statusCount("em_atendimento")}
+              accentColor={colors.success}
+            />
+            <MetricsCard label="Resolvidas" value={statusCount("resolvida")} accentColor={colors.success} />
+            <MetricsCard
+              label="Tempo médio"
+              value={`${metrics.tempoMedioAtendimentoDias}d`}
+              helpText="Média de atendimento das demandas resolvidas"
+              accentColor={colors.warning}
+            />
+          </View>
+
+          <SectionTitle title="Demandas por categoria" />
+          {porCategoria.length === 0 ? (
+            <Text style={styles.empty}>Nenhuma demanda registrada.</Text>
+          ) : (
+            <View style={styles.categoryList}>
+              {porCategoria.map(([categoria, total]) => (
+                <View key={categoria} style={styles.categoryRow}>
+                  <Text style={styles.categoryLabel}>
+                    {categoryLabel[categoria as DemandCategory] ?? categoria}
+                  </Text>
+                  <Text style={styles.categoryValue}>{total}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </>
+      ) : null}
 
       <SectionTitle
         title="Triagem Inteligente"
@@ -129,6 +181,17 @@ const styles = StyleSheet.create({
   container: { padding: spacing.lg, gap: spacing.sm },
   metricsRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.lg },
   empty: { color: colors.textMuted, marginBottom: spacing.md },
+  metricsError: { gap: spacing.sm, marginBottom: spacing.md },
+  categoryList: { marginBottom: spacing.lg },
+  categoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  categoryLabel: { fontSize: 13, color: colors.text },
+  categoryValue: { fontSize: 13, fontWeight: "700", color: colors.text },
   triagemCard: {
     flexDirection: "row",
     gap: spacing.sm,

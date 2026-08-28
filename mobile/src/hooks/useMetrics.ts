@@ -1,19 +1,27 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { metricsService } from "@/services/metricsService";
 import { MetricsSummary } from "@/types/metrics";
 
-export const useMetrics = () => {
+export const useMetrics = (auto = true) => {
   const [metrics, setMetrics] = useState<MetricsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
 
-  useEffect(() => {
-    metricsService
-      .summary()
-      .then(setMetrics)
-      .catch(() => setError("Erro ao carregar métricas"))
-      .finally(() => setLoading(false));
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    try {
+      setMetrics(await metricsService.summary());
+      setError(undefined);
+    } catch {
+      setError("Erro ao carregar métricas");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { metrics, loading, error };
+  useEffect(() => {
+    if (auto) refetch();
+  }, [auto, refetch]);
+
+  return { metrics, loading, error, refetch };
 };
