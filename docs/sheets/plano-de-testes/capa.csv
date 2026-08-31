@@ -1,7 +1,0 @@
-Urbanize - Plano de Testes e Backlog de Automacao
-Projeto,Urbanize - Plataforma de Gestao de Demandas Urbanas
-Equipe,Squad Urbanize
-Curso/Turma,ADS - Embarque
-Data do documento,19/08/2026
-Estrategia de teste
-"Concentrar esforco em teste de API no backend, onde estao as regras de negocio e o maior risco (autorizacao por perfil e integridade da demanda); teste de componente no app para hooks e estados de tela; poucos E2E cobrindo apenas as jornadas criticas de cidadao e gestor."
