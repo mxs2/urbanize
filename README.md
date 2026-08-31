@@ -1,13 +1,13 @@
 # Projeto de Engenharia de Dados - ETL
 
-Pipeline de ETL que extrai dados da PNAD Contínua a partir da API do IBGE, carrega o resultado bruto em uma coleção MongoDB, transforma esses dados com pandas e carrega o resultado final em uma tabela SQLite (com opção de salvar o bruto em arquivo JSON local).
+Pipeline de ETL que extrai dados meteorológicos do INMET (Recife) a partir da API oficial, carrega o resultado bruto em uma coleção MongoDB, transforma esses dados com pandas e carrega o resultado final em uma tabela SQLite (com opção de salvar o bruto em arquivo JSON local).
 
 ## Estrutura do projeto
 
 ```
 src/
-  extract.py    # Extract: busca dados de agregados do IBGE (agregado() é genérico; pnadc() é um atalho para o agregado 4093) e relê dados já carregados no MongoDB
-  transform.py  # Transform: transforma os dados brutos da PNADC em um DataFrame pronto para o SQLite
+  extract.py    # Extract: busca dados do INMET (inmet() para Recife) e relê dados já carregados no MongoDB
+  transform.py  # Transform: transforma os dados brutos do INMET em um DataFrame pronto para o SQLite
   load.py       # Load: salva em JSON local (load_json), no MongoDB (load_mongo) ou em SQLite (load_sqlite)
 run_etl.py      # ponto de entrada do pipeline (Extract -> Load -> Extract -> Transform -> Load), em main()
 jsons/          # saídas de exemplo em JSON
@@ -15,21 +15,21 @@ jsons/          # saídas de exemplo em JSON
 
 ### `Extract`
 
-- `agregado(agregado_id, variavel, estado, periodo_inicio, periodo_fim, classificacao="2[all]")`: método genérico, reutilizável para qualquer agregado (tabela) do IBGE.
-- `pnadc(variavel, estado, periodo_inicio="201201", periodo_fim="202602")`: atalho já configurado para o agregado 4093 (PNAD Contínua). O período tem 2012-01 a 2026-02 como padrão, mas pode ser sobrescrito na chamada.
+- `inmet(cidade, data_inicio, data_fim, frequencia="D")`: busca **medições históricas** da estação automática da cidade na API do INMET (`apitempo.inmet.gov.br`). Se a frequência pedida não retornar dados, tenta a outra (horária/diária). Para **Recife**, se o INMET falhar, usa a [API pública do RadarMeteorológico](https://radarmeteorologico.com.br/api-publica) como reserva (`/api/v1/cidades` + `/api/v1/temperaturas`).
 - `extract_collection_from_mongo(db_name, collection_name)`: relê todos os documentos de uma coleção do MongoDB (por exemplo, a que `Load.load_mongo` acabou de popular), para alimentar a etapa de transformação.
-- `Extract.UFS` e `Extract.VARIAVEIS_PNADC`: dicionários com os códigos válidos de UF e de variável do agregado 4093. `estado` e `variavel` são validados contra esses dicionários — um código inválido gera `ValueError`.
-- A conexão com o MongoDB (`self.client`) é criada uma única vez, no `__init__`, e encerrada com `close()`.
+- `Extract.ESTACOES` e `Extract.FREQUENCIAS`: dicionários com as cidades e frequências válidas. Parâmetros inválidos geram `ValueError`.
+- `Extract.ESTACOES` inclui 14 cidades de Pernambuco com estações operantes; o pipeline padrão usa `recife` (estação `A301`).
+- URLs e cabeçalhos HTTP ficam no `__init__`; a conexão com o MongoDB é encerrada com `close()`.
 
 ### `Transform`
 
-- `transform_pnadc(data)`: recebe a lista de dicionários no formato retornado pela API do IBGE (a mesma salva no MongoDB) e devolve um `DataFrame` com uma linha por período (data, valor), pronto para carga no SQLite.
+- `transform_inmet(data)`: recebe a lista de dicionários retornada pela API do INMET (a mesma salva no MongoDB) e devolve um `DataFrame` limpo, pronto para carga no SQLite.
 
 ### `Load`
 
 - `load_json(nome_arquivo, data)`: salva os dados extraídos em `jsons/<nome_arquivo>.json`.
-- `load_mongo(data, db_name, collection_name)`: insere os dados na coleção informada e fecha a conexão com o MongoDB (`close()`) logo em seguida.
-- `load_sqlite(df, nome_banco="ibge.db", nome_tabela="pnadc")`: salva um `DataFrame` (já transformado) em uma tabela de um banco SQLite local.
+- `load_mongo(data, db_name, collection_name)`: insere o resultado bruto na coleção informada e fecha a conexão com o MongoDB (`close()`) logo em seguida.
+- `load_sqlite(df, nome_banco="inmet.db", nome_tabela="recife")`: salva o DataFrame transformado em uma tabela SQLite local.
 - A conexão com o MongoDB (`self.client`) é criada uma única vez, no `__init__` da classe.
 
 ## Configuração do Ambiente
@@ -80,9 +80,11 @@ python run_etl.py
 
 O pipeline roda em três etapas:
 
-1. Extrai os dados da PNADC via API do IBGE e insere o resultado bruto na coleção `PNADC` do banco `IBGE` no MongoDB configurado.
-2. Relê esses mesmos dados do MongoDB e os transforma em um DataFrame (uma linha por período).
-3. Salva o DataFrame transformado na tabela `pnadc` do banco SQLite local `ibge.db` (arquivo gerado na raiz do projeto, não versionado).
+1. Extrai medições históricas do INMET para Recife e insere o resultado bruto na coleção `RECIFE` do banco `INMET` no MongoDB configurado.
+2. Relê esses mesmos dados do MongoDB e os transforma em um DataFrame (uma linha por medição).
+3. Salva o DataFrame transformado na tabela `recife` do banco SQLite local `inmet.db` (arquivo gerado na raiz do projeto, não versionado).
+
+> A API de estações do INMET limita cada consulta a, no máximo, **6 meses**. Se nenhuma medição for retornada e a cidade for **Recife**, o pipeline consulta o [RadarMeteorológico](https://radarmeteorologico.com.br/previsao/pe/recife) como reserva. Demais cidades interrompem com erro.
 
 ## Ideias para quem quiser ir além
 

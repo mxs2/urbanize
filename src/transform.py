@@ -3,38 +3,87 @@ import pandas as pd
 
 class Transform:
     """
-    Responsável por transformar os dados extraídos, deixando-os prontos
-    para carga em um banco relacional (SQLite).
+    Responsável por transformar medições históricas do INMET, deixando-as
+    prontas para carga em um banco relacional (SQLite).
     """
 
-    def __init__(self):
+    COLUNAS_NUMERICAS = [
+        "TEMP_MED",
+        "TEMP_MAX",
+        "TEMP_MIN",
+        "UMID_MED",
+        "CHUVA",
+        "TEMP_INS",
+        "UMID_INS",
+        "HR_MEDICAO",
+        "VENT_VEL",
+        "CODIGO_WMO",
+        "LATITUDE",
+        "LONGITUDE",
+    ]
+
+    def __init__(self) -> None:
         pass
 
-    def transform_pnadc(self, data: list[dict]) -> pd.DataFrame:
+    def transform_inmet(self, data: list[dict]) -> pd.DataFrame:
         """
-        Converte o resultado bruto da API do IBGE (agregado 4093) em um
-        DataFrame com uma linha por período, pronto para carga no SQLite.
+        Converte medições brutas da API do INMET em um DataFrame limpo,
+        pronto para carga no SQLite.
 
         Atributos:
-            data: lista de dicionários no formato retornado pela API do
-                IBGE (o mesmo salvo por `Load.load_mongo`)
+            data: lista de dicionários retornada pela extração (a mesma
+                salva por `Load.load_mongo`)
         """
-        serie = data[0]["resultados"][0]["series"][0]["serie"]
+        df = pd.DataFrame(data)
+        df = df.drop(columns=["_id"], errors="ignore")
 
-        df = pd.DataFrame.from_dict(serie, orient="index", columns=["valor"])
-        df.index.name = "periodo"
-        df = df.reset_index()
+        if "DT_MEDICAO" in df.columns:
+            df["DT_MEDICAO"] = pd.to_datetime(
+                df["DT_MEDICAO"], format="ISO8601", errors="coerce"
+            )
 
-        df["valor"] = df["valor"].replace("...", "0")
-        df["valor"] = df["valor"].astype(float)
+        for coluna in self.COLUNAS_NUMERICAS:
+            if coluna in df.columns:
+                df[coluna] = (
+                    df[coluna]
+                    .replace("", pd.NA)
+                    .replace("...", pd.NA)
+                    .astype(float)
+                )
 
-        df["ano"] = df["periodo"].str[:4]
-        df["tri"] = df["periodo"].str[-2:].astype(int)
+        colunas_ordenadas = [
+            col
+            for col in [
+                "CD_ESTACAO",
+                "DC_NOME",
+                "SG_ESTADO",
+                "DT_MEDICAO",
+                "HR_MEDICAO",
+                "TEMP_MED",
+                "TEMP_MAX",
+                "TEMP_MIN",
+                "TEMP_INS",
+                "UMID_MED",
+                "UMID_INS",
+                "CHUVA",
+                "VENT_VEL",
+                "PRESS_INS",
+                "CONDICAO",
+                "CODIGO_WMO",
+                "LATITUDE",
+                "LONGITUDE",
+                "FONTE",
+                "URL",
+            ]
+            if col in df.columns
+        ]
+        df = df[colunas_ordenadas + [c for c in df.columns if c not in colunas_ordenadas]]
 
-        df["periodo"] = pd.PeriodIndex(
-            df["ano"] + "Q" + df["tri"].astype(str), freq="Q"
-        )
-        df["periodo"] = df["periodo"].dt.to_timestamp()
+        if "DT_MEDICAO" in df.columns:
+            sort_cols = ["DT_MEDICAO"]
+            if "HR_MEDICAO" in df.columns:
+                sort_cols.append("HR_MEDICAO")
+            df = df.sort_values(sort_cols, na_position="last")
 
         print("Dados transformados com sucesso!")
-        return df
+        return df.reset_index(drop=True)
