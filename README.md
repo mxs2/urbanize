@@ -1,331 +1,94 @@
-# Urbanize
+# Projeto de Engenharia de Dados - ETL
 
-> Plataforma de gestão de demandas urbanas com backend real, banco persistente e diferenciação de perfis (Cidadão e Gestor)
-
-**Stack:** Expo (React Native) • TypeScript • expo-router • Zustand • Node.js • Express • Prisma ORM • JWT • Redis opcional • Cron Jobs
-
-> Este projeto era originalmente uma aplicação web (Next.js). O frontend foi removido e substituído por um app mobile (Expo/React Native) — veja o histórico do Git para a versão web.
-
-## Início rápido (Docker)
-
-```bash
-./scripts/up.sh            # Windows: bash scripts/up.sh (Git Bash ou WSL2)
-```
-
-> Passo a passo detalhado para Linux, macOS e Windows — incluindo pré-requisitos e solução de problemas — em **[docs/guia-instalacao.md](docs/guia-instalacao.md)**.
-
-O script gera `backend/.env`, `mobile/.env` e `docker/.env` (detectando o IP desta máquina na rede local e sorteando um `JWT_SECRET`), sobe os containers, aplica as migrations e popula o banco de demonstração.
-
-| Serviço | Endereço | O que é |
-| --- | --- | --- |
-| `mobile` | http://localhost:8081 | App Urbanize no navegador (Expo web / Metro) |
-| `backend` | http://localhost:4000/api | API REST (índice com os endpoints disponíveis) |
-| `redis` | `localhost:6379` | Cache das métricas |
-
-O mesmo Metro atende o Expo Go. O QR code para escanear com o celular aparece no log do serviço:
-
-```bash
-docker compose -f docker/docker-compose.yml logs mobile     # mostra o QR code
-docker compose -f docker/docker-compose.yml attach mobile   # QR + menu interativo (r, a, w...)
-```
-
-Se preferir digitar, a URL é `exp://<IP-da-máquina>:8081` — o IP detectado fica em `docker/.env` como `HOST_LAN_IP`. O celular precisa estar na mesma rede Wi-Fi.
-
-```bash
-./scripts/down.sh          # para os containers
-./scripts/down.sh -v       # para e apaga os volumes (força reinstalar e repovoar)
-./scripts/setup-env.sh     # só regenera os .env (use --force ou --ip <endereço>)
-```
-
-## Início rápido (sem Docker)
-
-```bash
-# Backend
-cd backend
-npm install
-Copy-Item .env.example .env   # PowerShell (Linux/macOS: cp .env.example .env)
-npx prisma generate
-npm run db:migrate
-npm run db:seed
-npm run dev                    # API em http://localhost:4000/api
-
-# App mobile (em outro terminal)
-cd mobile
-npm install
-Copy-Item .env.example .env    # ajuste EXPO_PUBLIC_API_URL se necessário
-npm start                      # abre o Expo Dev Tools (emulador, dispositivo físico ou navegador)
-```
-
-**Credenciais de teste:**
-- Cidadão: `cidadao@urbanize.com` / `demo`
-- Gestor: `gestor@urbanize.com` / `demo`
-
-**Backend:** `http://localhost:4000/api`
-
-<details>
-<summary>Configurando EXPO_PUBLIC_API_URL</summary>
-
-O app mobile precisa apontar para o endereço do backend acessível pelo dispositivo/emulador usado:
-
-- **iOS Simulator / web:** `http://127.0.0.1:4000/api` (padrão)
-- **Android Emulator:** `http://10.0.2.2:4000/api`
-- **Dispositivo físico:** `http://<IP-da-máquina-na-rede-local>:4000/api`
-
-Configure em `mobile/.env` (a partir de `mobile/.env.example`).
-
-</details>
-
-<details>
-<summary>Scripts disponíveis</summary>
-
-**Backend (`backend/`):**
-- `npm run dev` - API Express com Prisma, JWT, Redis opcional e cron
-- `npm run db:migrate` - Criar/aplicar migrações Prisma
-- `npm run db:seed` - Popular usuários e demandas de demonstração
-- `npm test` - Testes de aceitação (Jest + Supertest)
-- `npm run test:bdd` - Cenários BDD (Cucumber)
-
-**Mobile (`mobile/`):**
-- `npm start` - Abre o Expo Dev Tools
-- `npm run android` / `npm run ios` / `npm run web` - Roda em uma plataforma específica
-- `npm run typecheck` - Verificação de tipos TypeScript
-- `npm run lint` - ESLint (eslint-config-expo)
-- `npm test` - Testes unitários (Jest)
-
-</details>
-
-<details>
-<summary>Solução de problemas</summary>
-
-**Erro ao executar o seed:**
-
-```bash
-Cannot find module '../generated/prisma/client'
-```
-
-Gere novamente o Prisma Client:
-
-```bash
-npx prisma generate
-npm run db:seed
-```
-
-**App mobile não consegue falar com o backend:**
-
-Confira `EXPO_PUBLIC_API_URL` em `mobile/.env` — veja a seção acima sobre emulador Android vs. dispositivo físico vs. simulador iOS.
-
-</details>
-
-## Funcionalidades principais
-
-### Autenticação e perfis
-
-O perfil do usuário é definido no cadastro e validado no backend:
-
-- **Cidadão** → cria e acompanha suas próprias demandas
-- **Gestor público** → visualiza a fila geral, revisa triagens e altera status
-
-A autenticação usa senha com hash, JWT e proteção por perfil. O app mobile mantém a sessão via token Bearer (persistido com AsyncStorage), sem depender de cookies.
-
-### Perfil Cidadão
-
-**Permissões:**
-- ✅ Criar novas demandas
-- ✅ Visualizar suas próprias demandas
-- ✅ Acompanhar status e timeline
-- ✅ Consultar métricas pessoais
-- ❌ Alterar status de demandas
-- ❌ Acessar painel do gestor
-
-**Telas:**
-- Início — visão geral pessoal e métricas
-- Minhas demandas — listagem com filtros
-- Nova demanda — criação com foto, localização e triagem automática
-- Detalhes da demanda — status e histórico
-
-<details>
-<summary>Ver jornada completa do cidadão</summary>
-
-Consulte a [documentação de jornadas](docs/jornada-usuario.md) para fluxos detalhados, permissões e cenários de teste (referência histórica da versão web — a lógica de permissões é a mesma no app mobile).
-
-</details>
-
-### Perfil Gestor
-
-**Permissões:**
-- ✅ Visualizar a fila geral de demandas
-- ✅ Alterar status de demandas
-- ✅ Adicionar observações
-- ✅ Revisar triagem automática
-- ✅ Visualizar métricas gerais
-- ❌ Criar novas demandas
-
-**Telas:**
-- Painel — métricas, fila de triagem inteligente e fila recente
-- Demandas — todas as demandas visíveis ao gestor
-- Detalhes da demanda — ações de triagem (mudança de status, observações)
-
-<details>
-<summary>Ver jornada completa do gestor</summary>
-
-Consulte a [documentação de jornadas](docs/jornada-usuario.md) para fluxos detalhados, permissões e cenários de teste (referência histórica da versão web — a lógica de permissões é a mesma no app mobile).
-
-</details>
-
-### Proteção de rotas
-
-O app implementa controle de acesso automático (`mobile/src/hooks/useRoleGuard.ts`):
-
-- Usuário não autenticado → redirecionado para a tela de login
-- Cidadão tentando acessar o painel do gestor → redirecionado para o início
-- Gestor tentando acessar telas exclusivas do cidadão (ex.: nova demanda) → redirecionado para o painel
-
-### Triagem inteligente
-
-Fluxo de triagem no app mobile:
-- Foto anexada via câmera ou galeria (`expo-image-picker`) na criação da demanda
-- Upload para o backend, que classifica a imagem com Google Vision (`GOOGLE_APPLICATION_CREDENTIALS_JSON`) quando configurado
-- Sugestão de órgão responsável conforme categoria detectada e cadastro de órgãos
-- Título e descrição preenchidos automaticamente após a análise
-- Histórico da demanda gravado no banco
-
-> A versão web anterior também classificava a imagem localmente no navegador com TensorFlow.js/MobileNet como um pré-preenchimento client-side. Esse passo não foi portado para o mobile: a classificação do backend via Google Vision já cobre o mesmo papel (com fallback para a categoria escolhida manualmente quando o Vision não está configurado), e evita embutir um modelo de ML pesado no app.
+Pipeline de ETL que extrai dados da PNAD Contínua a partir da API do IBGE, carrega o resultado bruto em uma coleção MongoDB, transforma esses dados com pandas e carrega o resultado final em uma tabela SQLite (com opção de salvar o bruto em arquivo JSON local).
 
 ## Estrutura do projeto
 
 ```
-mobile/
-├── app/                      # Rotas (expo-router, file-based)
-│   ├── index.tsx            # Home pública
-│   ├── login.tsx
-│   ├── cadastro.tsx
-│   └── (app)/                # Grupo autenticado (guarda de rota + navegação)
-│       ├── dashboard.tsx     # Início do cidadão
-│       ├── gestor.tsx        # Painel do gestor
-│       └── demandas/         # Listagem, detalhe e criação
-├── src/
-│   ├── components/           # UI kit (Button, TextField, Badge, DemandCard, ImageUpload…)
-│   ├── hooks/                # useAuth, useDemands, useFilters, useMetrics, useRoleGuard
-│   ├── services/             # Cliente HTTP (axios) e services por domínio
-│   ├── store/                # Zustand stores (auth com persist via AsyncStorage)
-│   ├── theme/                # Tokens de cor/espaçamento
-│   ├── types/                # TypeScript types compartilhados
-│   └── utils/                # Labels, formatação, detecção de perfil
-
-backend/src/
-├── app.ts                    # Middlewares e rotas Express
-├── server.ts                 # Bootstrap do servidor
-├── config/                   # Variáveis, Prisma e Redis
-├── controllers/               # Entrada HTTP e validação
-├── services/                  # Regras de negócio e triagem
-├── repositories/              # Acesso ao banco
-├── routes/                    # Endpoints REST
-├── middlewares/                # Auth, upload e erros
-└── utils/                     # Mappers e erros
+src/
+  extract.py    # Extract: busca dados de agregados do IBGE (agregado() é genérico; pnadc() é um atalho para o agregado 4093) e relê dados já carregados no MongoDB
+  transform.py  # Transform: transforma os dados brutos da PNADC em um DataFrame pronto para o SQLite
+  load.py       # Load: salva em JSON local (load_json), no MongoDB (load_mongo) ou em SQLite (load_sqlite)
+run_etl.py      # ponto de entrada do pipeline (Extract -> Load -> Extract -> Transform -> Load), em main()
+jsons/          # saídas de exemplo em JSON
 ```
 
-<details>
-<summary>Ver estrutura detalhada do app mobile</summary>
+### `Extract`
 
-**Stores (Zustand):**
-- `authStore` - Autenticação e usuário (persistido via AsyncStorage)
-- `demandStore` - Demandas e filtros
-- `uiStore` - Estado da UI
+- `agregado(agregado_id, variavel, estado, periodo_inicio, periodo_fim, classificacao="2[all]")`: método genérico, reutilizável para qualquer agregado (tabela) do IBGE.
+- `pnadc(variavel, estado, periodo_inicio="201201", periodo_fim="202602")`: atalho já configurado para o agregado 4093 (PNAD Contínua). O período tem 2012-01 a 2026-02 como padrão, mas pode ser sobrescrito na chamada.
+- `extract_collection_from_mongo(db_name, collection_name)`: relê todos os documentos de uma coleção do MongoDB (por exemplo, a que `Load.load_mongo` acabou de popular), para alimentar a etapa de transformação.
+- `Extract.UFS` e `Extract.VARIAVEIS_PNADC`: dicionários com os códigos válidos de UF e de variável do agregado 4093. `estado` e `variavel` são validados contra esses dicionários — um código inválido gera `ValueError`.
+- A conexão com o MongoDB (`self.client`) é criada uma única vez, no `__init__`, e encerrada com `close()`.
 
-**Services:**
-- `api.ts` - Cliente HTTP Axios integrado ao backend Express
-- `authService.ts` - Login e registro
-- `demandService.ts` - CRUD de demandas
-- `metricsService.ts` - Métricas e estatísticas
+### `Transform`
 
-**Hooks:**
-- `useAuth` - Gerenciamento de autenticação
-- `useDemands` - Gerenciamento de demandas
-- `useFilters` - Filtros e busca
-- `useMetrics` - Métricas e estatísticas
-- `useRoleGuard` - Proteção de rotas por perfil
+- `transform_pnadc(data)`: recebe a lista de dicionários no formato retornado pela API do IBGE (a mesma salva no MongoDB) e devolve um `DataFrame` com uma linha por período (data, valor), pronto para carga no SQLite.
 
-</details>
+### `Load`
 
-## Documentação
+- `load_json(nome_arquivo, data)`: salva os dados extraídos em `jsons/<nome_arquivo>.json`.
+- `load_mongo(data, db_name, collection_name)`: insere os dados na coleção informada e fecha a conexão com o MongoDB (`close()`) logo em seguida.
+- `load_sqlite(df, nome_banco="ibge.db", nome_tabela="pnadc")`: salva um `DataFrame` (já transformado) em uma tabela de um banco SQLite local.
+- A conexão com o MongoDB (`self.client`) é criada uma única vez, no `__init__` da classe.
 
-🧪 **[Plano de Testes e Backlog de Automação](docs/plano-de-testes.md)**
-Estratégia de teste, seleção de casos de uso, backlog priorizado (AUT-01–AUT-16), matriz de riscos e decisão de ferramentas por camada
+## Configuração do Ambiente
 
-🔒 **[Requisitos e Análise de Riscos de Segurança](docs/requisitos-seguranca.md)**
-Análise de riscos, requisitos de segurança, modelo de autenticação/autorização e plano de conformidade com a LGPD
+### Windows
 
-📌 **[Requisitos da disciplina — Fundamentos de Computação Concorrente, Paralela e Distribuída](docs/requisitos-disciplina-projetos.md)**
-Mapeamento dos requisitos avaliados: arquitetura distribuída, diagrama, concorrência/paralelismo e otimização
+Criação do venv
+```bash
+python -m venv .venv
+```
 
-📖 **[Documentação da API](docs/api.md)**
-Endpoints REST, autenticação, permissões, payloads, exemplos de resposta e variáveis de ambiente
+Ativação do venv
+```bash
+.venv\Scripts\activate
+```
 
-📖 **[Avaliação 2 — Backend real](docs/avaliacao-2-backend.md)**
-Arquitetura Express, Prisma, autenticação JWT, Redis opcional, cron jobs e endpoints
+### Linux/Mac
 
-📖 **[Jornadas e Perfis de Usuário](docs/jornada-usuario.md)**
-Fluxos detalhados, permissões, matriz de proteção de rotas e guia de testes (documentação histórica da versão web)
+Criação do venv
+```bash
+python3 -m venv .venv
+```
 
-📋 **[Requisitos da Avaliação 1](docs/requisitos-urbanize.md)**
-Checklist completo de conformidade com todos os requisitos implementados (documentação histórica da versão web)
+Ativação do venv
+```bash
+source .venv/bin/activate
+```
 
-## Recursos técnicos
+### Dependências
 
-**Mobile:**
-- Expo SDK 57 (React Native 0.86, React 19)
-- expo-router (navegação baseada em arquivos)
-- TypeScript (strict mode)
-- expo-image-picker (câmera/galeria)
+```bash
+pip install -r requirements.txt
+```
 
-**Estado e dados:**
-- Zustand (gerenciamento de estado)
-- Axios (cliente HTTP)
-- AsyncStorage (persistência de sessão)
-- SQLite via Prisma no backend (persistência local)
+### Variáveis de ambiente
 
-**Qualidade:**
-- ESLint (eslint-config-expo)
-- TypeScript strict mode
-- Componentes de feedback (loading/error/empty)
-- Validação de formulários
+Crie um arquivo `.env` na raiz do projeto com a string de conexão do MongoDB:
 
-## Notas de desenvolvimento
+```
+MONGODB_URI=<sua_connection_string>
+```
 
-**API real:**
-A aplicação usa backend Express em `backend/src`, persistência Prisma/SQLite e autenticação JWT. O Redis é opcional para cache de métricas e o cron consolida snapshots periódicos em `MetricsSnapshot`.
+## Executando o pipeline
 
-**Perfis:**
-O perfil é definido no cadastro e armazenado no banco. O backend valida permissões por rota e impede alterações de status por cidadãos.
+```bash
+python run_etl.py
+```
 
-**Proteção de rotas:**
-Hook `useRoleGuard` em `mobile/src/hooks/` verifica autenticação e permissões antes de renderizar telas protegidas.
+O pipeline roda em três etapas:
 
-**Estados visuais:**
-Todos os componentes de lista implementam loading states, empty states e error states para melhor UX.
+1. Extrai os dados da PNADC via API do IBGE e insere o resultado bruto na coleção `PNADC` do banco `IBGE` no MongoDB configurado.
+2. Relê esses mesmos dados do MongoDB e os transforma em um DataFrame (uma linha por período).
+3. Salva o DataFrame transformado na tabela `pnadc` do banco SQLite local `ibge.db` (arquivo gerado na raiz do projeto, não versionado).
 
-## Status
+## Ideias para quem quiser ir além
 
-✅ **Backend funcional:** Express organizado em rotas, controllers, services e repositories
-✅ **Banco persistente:** Prisma ORM com SQLite e migrações
-✅ **Autenticação real:** Cadastro, login, JWT e logout
-✅ **Perfis:** Cidadão e gestor com permissões distintas
-✅ **CRUD principal:** Demandas com filtros, detalhe, criação e alteração de status
-✅ **Upload de imagem:** Anexo de foto via câmera/galeria, armazenamento local e triagem automática
-✅ **App mobile:** Expo/React Native consumindo a API real via Axios
-✅ **Redis opcional:** Cache de métricas quando `REDIS_URL` está configurado
-✅ **Cron opcional:** Snapshot periódico de métricas
+Este projeto foi pensado como material de estudo, priorizando simplicidade. Um ponto que dá margem para explorar conceitos mais avançados de POO é o gerenciamento das conexões com o MongoDB em `Load` e `Extract`:
 
-Consulte [docs/requisitos-urbanize.md](docs/requisitos-urbanize.md) para o checklist original da avaliação (versão web).
+- Hoje o `MongoClient` é criado uma única vez no `__init__` e fechado ao final de `load_mongo`. Isso funciona bem quando `load_mongo` é chamado uma única vez por execução (como em `run_etl.py`).
+- Se `load_mongo` precisasse ser chamado várias vezes na mesma execução (por exemplo, para inserir em coleções diferentes), a conexão seria reaberta e fechada a cada chamada. Uma otimização possível é criar a conexão de forma "preguiçosa" (lazy), reaproveitando-a entre chamadas e deixando o encerramento por conta de quem orquestra o pipeline.
 
-## Deploy
-
-**Backend (Render):** https://urbanize-backend.onrender.com/api/health
-
-> O backend está hospedado no plano gratuito do Render e pode ficar inativo após alguns minutos sem uso — acesse o link acima antes de testar o app para "acordar" o serviço.
-
-O app mobile não possui deploy público; rode-o localmente com Expo (veja "Início rápido" acima) apontando `EXPO_PUBLIC_API_URL` para o backend acima ou para sua instância local.
-
-**Credenciais de teste:**
-- Cidadão: `cidadao@urbanize.com` / `demo`
-- Gestor: `gestor@urbanize.com` / `demo`
+Fica como desafio para quem quiser se aprofundar em gerenciamento de recursos e ciclo de vida de objetos em Python.
