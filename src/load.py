@@ -29,7 +29,7 @@ class Load:
 
         Atributos:
             nome_arquivo: nome do arquivo de destino, sem extensão
-            data: lista de dicionários retornada pela API do IBGE
+            data: lista de dicionários retornada pela API externa
         """
         with open(f"jsons/{nome_arquivo}.json", "w", encoding="UTF-8") as f:
             f.write(str(data))
@@ -38,10 +38,10 @@ class Load:
 
     def load_mongo(self, data: list[dict], db_name: str, collection_name: str) -> None:
         """
-        Insere o resultado da extração em uma coleção do MongoDB.
+        Insere o resultado bruto da extração em uma coleção do MongoDB.
 
         Atributos:
-            data: lista de dicionários retornada pela API do IBGE
+            data: lista de dicionários retornada pela API externa
             db_name: nome do banco de dados no MongoDB
             collection_name: nome da coleção onde os documentos serão inseridos
         """
@@ -56,14 +56,14 @@ class Load:
     def load_sqlite(
         self,
         df: pd.DataFrame,
-        nome_banco: str = "ibge.db",
-        nome_tabela: str = "pnadc",
+        nome_banco: str = "inmet.db",
+        nome_tabela: str = "recife",
     ) -> None:
         """
-        Salva um DataFrame em uma tabela de um banco SQLite local.
+        Salva um DataFrame transformado em uma tabela de um banco SQLite local.
 
         Atributos:
-            df: DataFrame a ser salvo (ex.: retorno de `Transform.transform_pnadc`)
+            df: DataFrame a ser salvo (ex.: retorno de `Transform.transform_inmet`)
             nome_banco: nome do arquivo do banco SQLite
             nome_tabela: nome da tabela onde os dados serão gravados
         """
