@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { useDemandStore } from "@/store/demandStore";
+import { resolveImageUrl } from "@/services/api";
 import { DemandStatus } from "@/types/demand";
 import { formatDate } from "@/utils/formatDate";
 import { formatLocation } from "@/utils/locationLabel";
@@ -65,6 +66,10 @@ export default function DemandDetail() {
       <Text style={styles.descricao}>{selected.descricao}</Text>
       <Text style={styles.endereco}>{formatLocation(selected.endereco)}</Text>
 
+      {selected.imagemUrl ? (
+        <Image source={{ uri: resolveImageUrl(selected.imagemUrl) }} style={styles.foto} />
+      ) : null}
+
       <SectionTitle title="Histórico" />
       <DemandTimeline historico={selected.historico} />
 
@@ -103,6 +108,7 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: "row", gap: spacing.xs, marginVertical: spacing.xs },
   descricao: { fontSize: fontSizes.sm, color: colors.text, marginBottom: spacing.sm },
   endereco: { fontSize: 13, color: colors.textMuted, marginBottom: spacing.md },
+  foto: { width: "100%", height: 220, borderRadius: 10, marginBottom: spacing.md, backgroundColor: colors.border },
   gestorPanel: {
     marginTop: spacing.lg,
     padding: spacing.md,

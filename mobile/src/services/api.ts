@@ -18,8 +18,14 @@ interface ApiErrorResponse {
   };
 }
 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:4000/api";
+const SERVER_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+
+export const resolveImageUrl = (imagemUrl: string) =>
+  imagemUrl.startsWith("http") ? imagemUrl : `${SERVER_BASE_URL}${imagemUrl}`;
+
 const http = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:4000/api",
+  baseURL: API_BASE_URL,
 });
 
 http.interceptors.request.use(async (config) => {

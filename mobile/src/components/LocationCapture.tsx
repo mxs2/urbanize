@@ -9,12 +9,19 @@ export interface Coordinates {
   longitude: number;
 }
 
+export interface CapturedAddress {
+  endereco?: string;
+  bairro?: string;
+  cidade?: string;
+}
+
 interface LocationCaptureProps {
   value?: Coordinates;
   onChange: (coordinates?: Coordinates) => void;
+  onAddressResolved?: (address: CapturedAddress) => void;
 }
 
-export function LocationCapture({ value, onChange }: LocationCaptureProps) {
+export function LocationCapture({ value, onChange, onAddressResolved }: LocationCaptureProps) {
   const [locating, setLocating] = useState(false);
 
   const capture = async () => {
@@ -31,7 +38,24 @@ export function LocationCapture({ value, onChange }: LocationCaptureProps) {
       const position = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      onChange({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+      const coordinates = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+      onChange(coordinates);
+
+      if (onAddressResolved) {
+        try {
+          const [place] = await Location.reverseGeocodeAsync(coordinates);
+          if (place) {
+            const rua = [place.street, place.streetNumber].filter(Boolean).join(", ");
+            onAddressResolved({
+              endereco: rua || undefined,
+              bairro: place.district ?? place.subregion ?? undefined,
+              cidade: place.city ?? undefined,
+            });
+          }
+        } catch {
+          // reverse geocoding é best-effort: coordenadas já foram salvas acima
+        }
+      }
     } catch {
       Alert.alert("Erro ao localizar", "Não foi possível obter a localização do dispositivo.");
     } finally {

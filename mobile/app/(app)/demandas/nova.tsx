@@ -10,7 +10,7 @@ import { categoryLabel } from "@/utils/categoryLabel";
 import { colors, fontSizes, radii, spacing } from "@/theme";
 import { Button } from "@/components/Button";
 import { ImageUpload, ImageUploadResult } from "@/components/ImageUpload";
-import { Coordinates, LocationCapture } from "@/components/LocationCapture";
+import { CapturedAddress, Coordinates, LocationCapture } from "@/components/LocationCapture";
 import { Select } from "@/components/Select";
 import { TextField } from "@/components/TextField";
 
@@ -55,6 +55,12 @@ export default function NovaDemanda() {
     }
   }, [matchedOrgan, categoria]);
   /* eslint-enable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
+
+  const handleAddressResolved = (address: CapturedAddress) => {
+    if (address.endereco) setEndereco(address.endereco);
+    if (address.bairro) setBairro(address.bairro);
+    if (address.cidade) setCidade(address.cidade);
+  };
 
   const handleImageResult = (result: ImageUploadResult) => {
     setImagemUrl(result.imageUrl);
@@ -169,7 +175,7 @@ export default function NovaDemanda() {
       <TextField label="Bairro" value={bairro} onChangeText={setBairro} />
       <TextField label="Cidade" value={cidade} onChangeText={setCidade} />
       <TextField label="Ponto de referência" value={referencia} onChangeText={setReferencia} />
-      <LocationCapture value={coordenadas} onChange={setCoordenadas} />
+      <LocationCapture value={coordenadas} onChange={setCoordenadas} onAddressResolved={handleAddressResolved} />
 
       <Pressable style={styles.consentRow} onPress={() => setAceite(!aceite)}>
         <View style={[styles.checkbox, aceite && styles.checkboxChecked]} />

@@ -37,7 +37,8 @@
           "photosPermission": "O Urbanize usa suas fotos para anexar evidências às demandas.",
           "cameraPermission": "O Urbanize usa a câmera para fotografar problemas urbanos."
         }
-      ]
+      ],
+      "expo-status-bar"
     ]
   }
 }
