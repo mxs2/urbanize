@@ -3,44 +3,58 @@ import pandas as pd
 
 class Transform:
     """
-    Responsável por transformar medições históricas do INMET, deixando-as
-    prontas para carga em um banco relacional (SQLite).
+    Tratamento e limpeza dos dados brutos do Radar Meteorológico,
+    produzindo um pandas.DataFrame pronto para persistência (SQLite).
     """
 
     COLUNAS_NUMERICAS = [
-        "TEMP_MED",
-        "TEMP_MAX",
-        "TEMP_MIN",
-        "UMID_MED",
-        "CHUVA",
-        "TEMP_INS",
-        "UMID_INS",
-        "HR_MEDICAO",
-        "VENT_VEL",
-        "CODIGO_WMO",
-        "LATITUDE",
-        "LONGITUDE",
+        "ibge",
+        "latitude",
+        "longitude",
+        "temperatura",
+        "temperatura_maxima",
+        "temperatura_minima",
+        "chuva_mm",
+        "codigo_wmo",
     ]
 
-    def __init__(self) -> None:
-        pass
+    COLUNAS_ORDEM = [
+        "ibge",
+        "nome",
+        "uf",
+        "atualizado_em",
+        "temperatura",
+        "temperatura_maxima",
+        "temperatura_minima",
+        "chuva_mm",
+        "condicao",
+        "codigo_wmo",
+        "latitude",
+        "longitude",
+        "fonte",
+        "url_previsao",
+        "ingested_at",
+    ]
 
-    def transform_inmet(self, data: list[dict]) -> pd.DataFrame:
+    def transform_radar(self, data: list[dict]) -> pd.DataFrame:
         """
-        Converte medições brutas da API do INMET em um DataFrame limpo,
-        pronto para carga no SQLite.
+        Converte a lista de documentos brutos (API ou MongoDB) em DataFrame limpo.
 
         Atributos:
-            data: lista de dicionários retornada pela extração (a mesma
-                salva por `Load.load_mongo`)
+            data: lista retornada por `Extract.extract_radar_recife` ou
+                `Extract.extract_collection_from_mongo`
         """
-        df = pd.DataFrame(data)
-        df = df.drop(columns=["_id"], errors="ignore")
+        if not data:
+            raise ValueError("Nenhum documento para transformar.")
 
-        if "DT_MEDICAO" in df.columns:
-            df["DT_MEDICAO"] = pd.to_datetime(
-                df["DT_MEDICAO"], format="ISO8601", errors="coerce"
-            )
+        df = pd.DataFrame(data)
+        df = df.drop(columns=["_id", "_api_cidade", "_api_temperaturas_meta"], errors="ignore")
+
+        for col_data in ("atualizado_em", "ingested_at"):
+            if col_data in df.columns:
+                df[col_data] = pd.to_datetime(
+                    df[col_data], format="ISO8601", errors="coerce"
+                )
 
         for coluna in self.COLUNAS_NUMERICAS:
             if coluna in df.columns:
@@ -51,39 +65,18 @@ class Transform:
                     .astype(float)
                 )
 
-        colunas_ordenadas = [
-            col
-            for col in [
-                "CD_ESTACAO",
-                "DC_NOME",
-                "SG_ESTADO",
-                "DT_MEDICAO",
-                "HR_MEDICAO",
-                "TEMP_MED",
-                "TEMP_MAX",
-                "TEMP_MIN",
-                "TEMP_INS",
-                "UMID_MED",
-                "UMID_INS",
-                "CHUVA",
-                "VENT_VEL",
-                "PRESS_INS",
-                "CONDICAO",
-                "CODIGO_WMO",
-                "LATITUDE",
-                "LONGITUDE",
-                "FONTE",
-                "URL",
-            ]
-            if col in df.columns
-        ]
-        df = df[colunas_ordenadas + [c for c in df.columns if c not in colunas_ordenadas]]
+        if "ibge" in df.columns:
+            df["ibge"] = df["ibge"].astype("Int64")
 
-        if "DT_MEDICAO" in df.columns:
-            sort_cols = ["DT_MEDICAO"]
-            if "HR_MEDICAO" in df.columns:
-                sort_cols.append("HR_MEDICAO")
-            df = df.sort_values(sort_cols, na_position="last")
+        colunas_presentes = [c for c in self.COLUNAS_ORDEM if c in df.columns]
+        restantes = [c for c in df.columns if c not in colunas_presentes]
+        df = df[colunas_presentes + restantes]
+
+        sort_cols = [c for c in ("ingested_at", "atualizado_em") if c in df.columns]
+        if sort_cols:
+            df = df.sort_values(
+                sort_cols, ascending=[False] * len(sort_cols), na_position="last"
+            )
 
         print("Dados transformados com sucesso!")
         return df.reset_index(drop=True)
