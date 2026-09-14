@@ -1,96 +1,105 @@
 # Projeto de Engenharia de Dados - ETL
 
-Pipeline de ETL que extrai dados meteorológicos do INMET (Recife) a partir da API oficial, carrega o resultado bruto em uma coleção MongoDB, transforma esses dados com pandas e carrega o resultado final em uma tabela SQLite (com opção de salvar o bruto em arquivo JSON local).
+Pipeline de ETL que extrai dados meteorológicos de **Recife** pela API pública do [Radar Meteorológico](https://radarmeteorologico.com.br/previsao/pe/recife), carrega o resultado bruto no **MongoDB** (Docker), transforma com **pandas** e persiste o resultado em **SQLite**.
 
 ## Estrutura do projeto
 
 ```
 src/
-  extract.py    # Extract: busca dados do INMET (inmet() para Recife) e relê dados já carregados no MongoDB
-  transform.py  # Transform: transforma os dados brutos do INMET em um DataFrame pronto para o SQLite
-  load.py       # Load: salva em JSON local (load_json), no MongoDB (load_mongo) ou em SQLite (load_sqlite)
-run_etl.py      # ponto de entrada do pipeline (Extract -> Load -> Extract -> Transform -> Load), em main()
-jsons/          # saídas de exemplo em JSON
+  extract.py    # Extract: endpoints da API Radar Meteorológico + leitura do MongoDB
+  transform.py  # Transform: limpeza e DataFrame pronto para carga
+  load.py       # Load: MongoDB (load_mongo) e SQLite (load_sqlite)
+run_etl.py      # ponto de entrada do pipeline
+docker-compose.yml
+.env.example    # modelo de variáveis (copie para .env)
+jsons/          # saídas opcionais em JSON
 ```
 
 ### `Extract`
 
-- `inmet(cidade, data_inicio, data_fim, frequencia="D")`: busca **medições históricas** da estação automática da cidade na API do INMET (`apitempo.inmet.gov.br`). Se a frequência pedida não retornar dados, tenta a outra (horária/diária). Para **Recife**, se o INMET falhar, usa a [API pública do RadarMeteorológico](https://radarmeteorologico.com.br/api-publica) como reserva (`/api/v1/cidades` + `/api/v1/temperaturas`).
-- `extract_collection_from_mongo(db_name, collection_name)`: relê todos os documentos de uma coleção do MongoDB (por exemplo, a que `Load.load_mongo` acabou de popular), para alimentar a etapa de transformação.
-- `Extract.ESTACOES` e `Extract.FREQUENCIAS`: dicionários com as cidades e frequências válidas. Parâmetros inválidos geram `ValueError`.
-- `Extract.ESTACOES` inclui 14 cidades de Pernambuco com estações operantes; o pipeline padrão usa `recife` (estação `A301`).
-- URLs e cabeçalhos HTTP ficam no `__init__`; a conexão com o MongoDB é encerrada com `close()`.
+- `fetch_cidade_por_ibge(ibge)`: GET `/api/v1/cidades`
+- `fetch_temperaturas(limite=107)`: GET `/api/v1/temperaturas`
+- `extract_radar_recife()`: consolida Recife (IBGE `2611606`) para carga bruta
+- `extract_collection_from_mongo(db_name, collection_name)`: relê dados brutos do MongoDB
 
 ### `Transform`
 
-- `transform_inmet(data)`: recebe a lista de dicionários retornada pela API do INMET (a mesma salva no MongoDB) e devolve um `DataFrame` limpo, pronto para carga no SQLite.
+- `transform_radar(data)`: DataFrame limpo a partir dos documentos brutos
 
 ### `Load`
 
-- `load_json(nome_arquivo, data)`: salva os dados extraídos em `jsons/<nome_arquivo>.json`.
-- `load_mongo(data, db_name, collection_name)`: insere o resultado bruto na coleção informada e fecha a conexão com o MongoDB (`close()`) logo em seguida.
-- `load_sqlite(df, nome_banco="inmet.db", nome_tabela="recife")`: salva o DataFrame transformado em uma tabela SQLite local.
-- A conexão com o MongoDB (`self.client`) é criada uma única vez, no `__init__` da classe.
+- `load_mongo(data, db_name, collection_name)`: grava brutos usando `MONGODB_URI` (append histórico por padrão; cada execução adiciona documentos com `ingested_at`)
+- `load_sqlite(df, ...)`: grava tabela SQLite local (`radar.db` por padrão)
 
-## Configuração do Ambiente
+## Configuração do ambiente
 
-### Windows
+### Python (venv)
 
-Criação do venv
-```bash
-python -m venv .venv
-```
+**Linux/Mac**
 
-Ativação do venv
-```bash
-.venv\Scripts\activate
-```
-
-### Linux/Mac
-
-Criação do venv
 ```bash
 python3 -m venv .venv
-```
-
-Ativação do venv
-```bash
 source .venv/bin/activate
-```
-
-### Dependências
-
-```bash
 pip install -r requirements.txt
 ```
 
-### Variáveis de ambiente
+**Windows**
 
-Crie um arquivo `.env` na raiz do projeto com a string de conexão do MongoDB:
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
 
+### MongoDB com Docker
+
+1. Copie as variáveis de ambiente e modifique a .env com suas variáveis:
+
+```bash
+cp .env.example .env
 ```
-MONGODB_URI=<sua_connection_string>
+
+2. Suba o container:
+
+```bash
+docker compose up -d
 ```
+
+3. Confirme que o serviço está saudável:
+
+```bash
+docker compose ps
+```
+
+O `docker-compose.yml` lê usuário, senha e porta do arquivo `.env`. A URI que o Python usa é `MONGODB_URI` (também no `.env`).
+
+### Variáveis de ambiente (`.env`)
+
+| Variável | Descrição |
+|----------|-----------|
+| `MONGODB_URI` | Connection string para o PyMongo |
+| `MONGODB_DB` | Banco dos dados brutos |
+| `MONGODB_RAW_COLLECTION` | Coleção bruta |
+| `MONGO_INITDB_ROOT_USERNAME` / `MONGO_INITDB_ROOT_PASSWORD` | Credenciais do container Mongo |
+| `MONGODB_PORT` | Porta publicada no host |
 
 ## Executando o pipeline
+
+Com o MongoDB em execução e o `.env` configurado:
 
 ```bash
 python run_etl.py
 ```
 
-O pipeline roda em três etapas:
+Fluxo:
 
-1. Extrai medições históricas do INMET para Recife e insere o resultado bruto na coleção `RECIFE` do banco `INMET` no MongoDB configurado.
-2. Relê esses mesmos dados do MongoDB e os transforma em um DataFrame (uma linha por medição).
-3. Salva o DataFrame transformado na tabela `recife` do banco SQLite local `inmet.db` (arquivo gerado na raiz do projeto, não versionado).
-
-> A API de estações do INMET limita cada consulta a, no máximo, **6 meses**. Se nenhuma medição for retornada e a cidade for **Recife**, o pipeline consulta o [RadarMeteorológico](https://radarmeteorologico.com.br/previsao/pe/recife) como reserva. Demais cidades interrompem com erro.
+1. Extração na API Radar Meteorológico (Recife)
+2. Carga bruta no MongoDB
+3. Leitura do MongoDB e transformação em DataFrame
+4. Carga transformada na tabela `recife` do arquivo `radar.db`
 
 ## Ideias para quem quiser ir além
 
-Este projeto foi pensado como material de estudo, priorizando simplicidade. Um ponto que dá margem para explorar conceitos mais avançados de POO é o gerenciamento das conexões com o MongoDB em `Load` e `Extract`:
-
-- Hoje o `MongoClient` é criado uma única vez no `__init__` e fechado ao final de `load_mongo`. Isso funciona bem quando `load_mongo` é chamado uma única vez por execução (como em `run_etl.py`).
-- Se `load_mongo` precisasse ser chamado várias vezes na mesma execução (por exemplo, para inserir em coleções diferentes), a conexão seria reaberta e fechada a cada chamada. Uma otimização possível é criar a conexão de forma "preguiçosa" (lazy), reaproveitando-a entre chamadas e deixando o encerramento por conta de quem orquestra o pipeline.
-
-Fica como desafio para quem quiser se aprofundar em gerenciamento de recursos e ciclo de vida de objetos em Python.
+- Conexão MongoDB **lazy** em `Extract` e `Load`: só conecta quando necessário; o pipeline fecha com `close()` no `finally` de `run_etl.py`.
+- Agendar execuções periódicas (cron, Airflow, etc.) para enriquecer o histórico no MongoDB.
+- Usar `load_mongo(..., substituir=True)` só em desenvolvimento, quando quiser resetar a coleção.

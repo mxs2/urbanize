@@ -64,6 +64,7 @@ db.sqlite3-journal
 
 # Banco SQLite gerado pelo pipeline (run_etl.py)
 ibge.db
+radar.db
 
 # Flask stuff:
 instance/

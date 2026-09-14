@@ -1,30 +1,41 @@
+import os
+
+from dotenv import load_dotenv
+
 from src.extract import Extract
 from src.load import Load
 from src.transform import Transform
 
+load_dotenv()
 
-def main():
+MONGODB_DB = os.getenv("MONGODB_DB", "urbanize_etl")
+MONGODB_RAW_COLLECTION = os.getenv("MONGODB_RAW_COLLECTION", "radar_recife_raw")
+
+
+def main() -> None:
     ext = Extract()
     ld = Load()
     transformer = Transform()
 
-    print("Etapa 1: Extração da API do INMET (Recife)!")
-    data = ext.inmet(
-        cidade="recife",
-        data_inicio="2026-06-01",
-        data_fim="2026-08-31",
-        frequencia="H",
-    )
-    ld.load_mongo(data, "INMET", "RECIFE")
+    try:
+        print("Etapa 1: Extração — API Radar Meteorológico (Recife)")
+        data = ext.extract_radar_recife()
 
-    print("Etapa 2: Transformando os dados!")
-    data = ext.extract_collection_from_mongo("INMET", "RECIFE")
-    df = transformer.transform_inmet(data)
+        print("Etapa 2: Carga bruta — MongoDB")
+        ld.load_mongo(data, MONGODB_DB, MONGODB_RAW_COLLECTION)
 
-    print("Etapa 3: Salvando no SQLite!")
-    ld.load_sqlite(df=df, nome_banco="inmet.db", nome_tabela="recife")
+        print("Etapa 3: Leitura do MongoDB e transformação")
+        raw_from_mongo = ext.extract_collection_from_mongo(
+            MONGODB_DB, MONGODB_RAW_COLLECTION
+        )
+        df = transformer.transform_radar(raw_from_mongo)
+        print(df)
 
-    ext.close()
+        print("Etapa 4: Carga transformada — SQLite")
+        ld.load_sqlite(df=df, nome_banco="radar.db", nome_tabela="recife")
+    finally:
+        ext.close()
+        ld.close()
 
 
 if __name__ == "__main__":
