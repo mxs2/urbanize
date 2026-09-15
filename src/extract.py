@@ -2,6 +2,7 @@ import os
 from typing import Any
 
 import requests
+from bson import ObjectId
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
@@ -147,5 +148,31 @@ class Extract:
         print(
             f"Dados lidos com sucesso da coleção '{collection_name}' "
             f"(banco '{db_name}')!"
+        )
+        return documentos
+
+    def extract_pending_from_mongo(
+        self,
+        db_name: str,
+        collection_name: str,
+        persisted_mongo_ids: set[str],
+    ) -> list[dict]:
+        """
+        Lê documentos da coleção que ainda não foram persistidos no SQLite.
+
+        Usa o `_id` do MongoDB (como string em `mongo_id` no SQLite) para
+        evitar reprocessar todo o histórico a cada execução.
+        """
+        collection = self.mongo_client[db_name][collection_name]
+        if persisted_mongo_ids:
+            object_ids = [ObjectId(mongo_id) for mongo_id in persisted_mongo_ids]
+            filtro: dict[str, Any] = {"_id": {"$nin": object_ids}}
+        else:
+            filtro = {}
+
+        documentos = list(collection.find(filtro))
+        print(
+            f"{len(documentos)} documento(s) pendente(s) na coleção "
+            f"'{collection_name}' (banco '{db_name}')."
         )
         return documentos

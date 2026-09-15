@@ -19,6 +19,7 @@ class Transform:
     ]
 
     COLUNAS_ORDEM = [
+        "mongo_id",
         "ibge",
         "nome",
         "uf",
@@ -48,6 +49,8 @@ class Transform:
             raise ValueError("Nenhum documento para transformar.")
 
         df = pd.DataFrame(data)
+        if "_id" in df.columns:
+            df["mongo_id"] = df["_id"].astype(str)
         df = df.drop(columns=["_id", "_api_cidade", "_api_temperaturas_meta"], errors="ignore")
 
         for col_data in ("atualizado_em", "ingested_at"):
