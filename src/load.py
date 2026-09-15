@@ -96,6 +96,45 @@ class Load:
             f"'{collection_name}' (banco '{db_name}'; total na coleção: {total})."
         )
 
+    def sqlite_mongo_ids(
+        self,
+        nome_banco: str = "radar.db",
+        nome_tabela: str = "recife",
+    ) -> set[str]:
+        """
+        Retorna os `mongo_id` já gravados no SQLite (vazio se a tabela não existir).
+        """
+        if not os.path.isfile(nome_banco):
+            return set()
+
+        conn = sqlite3.connect(nome_banco)
+        try:
+            cursor = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                (nome_tabela,),
+            )
+            if cursor.fetchone() is None:
+                return set()
+
+            colunas = {
+                row[1]
+                for row in conn.execute(f"PRAGMA table_info({nome_tabela})")
+            }
+            if "mongo_id" not in colunas:
+                raise ValueError(
+                    f"A tabela '{nome_tabela}' em '{nome_banco}' não possui coluna "
+                    "'mongo_id'. Remova o arquivo do banco ou recrie a tabela "
+                    "após atualizar o pipeline."
+                )
+
+            ids = pd.read_sql_query(
+                f"SELECT mongo_id FROM {nome_tabela}",
+                conn,
+            )["mongo_id"]
+            return {str(mongo_id) for mongo_id in ids.dropna().tolist()}
+        finally:
+            conn.close()
+
     def load_sqlite(
         self,
         df: pd.DataFrame,
@@ -103,13 +142,51 @@ class Load:
         nome_tabela: str = "recife",
     ) -> None:
         """
-        Salva um DataFrame transformado em uma tabela SQLite local.
+        Acrescenta linhas novas na tabela SQLite (append incremental).
+
+        Ignora registros cujo `mongo_id` já existir na tabela. Cria índice único
+        em `mongo_id` para evitar duplicatas em reexecuções.
         """
+        if df.empty:
+            print("Nenhuma linha nova para gravar no SQLite.")
+            return
+
+        if "mongo_id" not in df.columns:
+            raise ValueError(
+                "O DataFrame precisa da coluna 'mongo_id' (transformação a partir "
+                "de documentos do MongoDB)."
+            )
+
         conn = sqlite3.connect(nome_banco)
-        df.to_sql(nome_tabela, conn, if_exists="replace", index=False)
-        conn.close()
+        try:
+            ja_persistidos = self.sqlite_mongo_ids(nome_banco, nome_tabela)
+            df_novo = df[~df["mongo_id"].isin(ja_persistidos)].copy()
+            if df_novo.empty:
+                print(
+                    f"Todas as linhas já existem na tabela '{nome_tabela}' "
+                    f"('{nome_banco}')."
+                )
+                return
+
+            tabela_existe = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                (nome_tabela,),
+            ).fetchone() is not None
+            df_novo.to_sql(
+                nome_tabela,
+                conn,
+                if_exists="append" if tabela_existe else "replace",
+                index=False,
+            )
+            conn.execute(
+                f"CREATE UNIQUE INDEX IF NOT EXISTS idx_{nome_tabela}_mongo_id "
+                f"ON {nome_tabela}(mongo_id)"
+            )
+            conn.commit()
+        finally:
+            conn.close()
 
         print(
-            f"Dados salvos com sucesso na tabela '{nome_tabela}' "
-            f"do banco '{nome_banco}'!"
+            f"{len(df_novo)} linha(s) inserida(s) na tabela '{nome_tabela}' "
+            f"do banco '{nome_banco}' (carga incremental)."
         )

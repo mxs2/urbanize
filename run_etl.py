@@ -24,15 +24,21 @@ def main() -> None:
         print("Etapa 2: Carga bruta — MongoDB")
         ld.load_mongo(data, MONGODB_DB, MONGODB_RAW_COLLECTION)
 
-        print("Etapa 3: Leitura do MongoDB e transformação")
-        raw_from_mongo = ext.extract_collection_from_mongo(
-            MONGODB_DB, MONGODB_RAW_COLLECTION
+        print("Etapa 3: Documentos pendentes (MongoDB → SQLite)")
+        persistidos = ld.sqlite_mongo_ids(nome_banco="radar.db", nome_tabela="recife")
+        pending = ext.extract_pending_from_mongo(
+            MONGODB_DB, MONGODB_RAW_COLLECTION, persistidos
         )
-        df = transformer.transform_radar(raw_from_mongo)
-        print(df)
 
-        print("Etapa 4: Carga transformada — SQLite")
-        ld.load_sqlite(df=df, nome_banco="radar.db", nome_tabela="recife")
+        if not pending:
+            print("SQLite já está em dia com o MongoDB; nada a transformar.")
+        else:
+            print("Etapa 4: Transformação (somente pendentes)")
+            df = transformer.transform_radar(pending)
+            print(df)
+
+            print("Etapa 5: Carga incremental — SQLite")
+            ld.load_sqlite(df=df, nome_banco="radar.db", nome_tabela="recife")
     finally:
         ext.close()
         ld.close()

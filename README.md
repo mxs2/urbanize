@@ -20,7 +20,8 @@ jsons/          # saídas opcionais em JSON
 - `fetch_cidade_por_ibge(ibge)`: GET `/api/v1/cidades`
 - `fetch_temperaturas(limite=107)`: GET `/api/v1/temperaturas`
 - `extract_radar_recife()`: consolida Recife (IBGE `2611606`) para carga bruta
-- `extract_collection_from_mongo(db_name, collection_name)`: relê dados brutos do MongoDB
+- `extract_collection_from_mongo(db_name, collection_name)`: relê todos os dados brutos do MongoDB
+- `extract_pending_from_mongo(db_name, collection_name, persisted_mongo_ids)`: só documentos ainda não gravados no SQLite
 
 ### `Transform`
 
@@ -29,7 +30,8 @@ jsons/          # saídas opcionais em JSON
 ### `Load`
 
 - `load_mongo(data, db_name, collection_name)`: grava brutos usando `MONGODB_URI` (append histórico por padrão; cada execução adiciona documentos com `ingested_at`)
-- `load_sqlite(df, ...)`: grava tabela SQLite local (`radar.db` por padrão)
+- `sqlite_mongo_ids(...)`: `mongo_id` já presentes no SQLite
+- `load_sqlite(df, ...)`: **append incremental** em `radar.db` (chave `mongo_id`, sem regravar a tabela inteira)
 
 ## Configuração do ambiente
 
@@ -94,9 +96,12 @@ python run_etl.py
 Fluxo:
 
 1. Extração na API Radar Meteorológico (Recife)
-2. Carga bruta no MongoDB
-3. Leitura do MongoDB e transformação em DataFrame
-4. Carga transformada na tabela `recife` do arquivo `radar.db`
+2. Carga bruta no MongoDB (append com `ingested_at`)
+3. Leitura **apenas** dos documentos do Mongo que ainda não estão no SQLite (`mongo_id`)
+4. Transformação desse lote pendente
+5. Append na tabela `recife` do arquivo `radar.db`
+
+Se você tinha um `radar.db` antigo **sem** a coluna `mongo_id`, apague o arquivo e rode o ETL de novo para backfill a partir do MongoDB.
 
 ## Ideias para quem quiser ir além
 
