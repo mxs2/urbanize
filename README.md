@@ -249,7 +249,7 @@ backend/src/
 
 ## Documentação
 
-🧪 **[Plano de Testes e Backlog de Automação](docs/plano-de-testes.md)**
+🧪 **[Plano de Testes](docs/tests/plano-de-testes.md)** · **[Como rodar cada nível de teste](docs/tests/organizacao-e-execucao.md)**
 Estratégia de teste, seleção de casos de uso, backlog priorizado (AUT-01–AUT-16), matriz de riscos e decisão de ferramentas por camada
 
 🔒 **[Requisitos e Análise de Riscos de Segurança](docs/requisitos-seguranca.md)**

@@ -150,8 +150,9 @@ export default function NovaDemanda() {
         </View>
       ) : null}
 
-      <TextField label="Título" required value={titulo} onChangeText={setTitulo} />
+      <TextField testID="input-titulo" label="Título" required value={titulo} onChangeText={setTitulo} />
       <TextField
+        testID="input-descricao"
         label="Descrição"
         required
         multiline
@@ -171,13 +172,13 @@ export default function NovaDemanda() {
       />
 
       <Text style={styles.sectionLabel}>Localização</Text>
-      <TextField label="Endereço/Rua" required value={endereco} onChangeText={setEndereco} />
+      <TextField testID="input-endereco" label="Endereço/Rua" required value={endereco} onChangeText={setEndereco} />
       <TextField label="Bairro" value={bairro} onChangeText={setBairro} />
       <TextField label="Cidade" value={cidade} onChangeText={setCidade} />
       <TextField label="Ponto de referência" value={referencia} onChangeText={setReferencia} />
       <LocationCapture value={coordenadas} onChange={setCoordenadas} onAddressResolved={handleAddressResolved} />
 
-      <Pressable style={styles.consentRow} onPress={() => setAceite(!aceite)}>
+      <Pressable testID="checkbox-aceite" style={styles.consentRow} onPress={() => setAceite(!aceite)}>
         <View style={[styles.checkbox, aceite && styles.checkboxChecked]} />
         <Text style={styles.consentText}>
           Concordo em compartilhar estes dados com o órgão responsável pela demanda.
@@ -185,7 +186,7 @@ export default function NovaDemanda() {
       </Pressable>
 
       <View style={styles.footerActions}>
-        <Button label="Registrar demanda" onPress={handleSubmit} loading={submitting} />
+        <Button testID="btn-registrar" label="Registrar demanda" onPress={handleSubmit} loading={submitting} />
         <Button label="Cancelar" variant="ghost" onPress={() => router.push("/demandas")} />
       </View>
     </ScrollView>

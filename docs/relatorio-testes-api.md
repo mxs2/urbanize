@@ -101,11 +101,13 @@ A suíte conta com **41 cenários automatizados**, distribuídos conforme a matr
 
 ### 4. Código-Fonte e Arquitetura da Suíte de Testes
 
-Os testes foram construídos dentro do diretório `SUT - Testing/`, com estrutura isolada e de fácil manutenção:
-- **`package.json` & `jest.config.js`:** configuram o runner Jest, definindo a resolução de módulos TypeScript (`ts-jest`) e referenciando de forma absoluta a base de dados de teste.
-- **`tests/helpers/authHelper.ts`:** provê abstração para geração rápida de sessões de cidadão (`getCidadaoSession()`), gestor (`getGestorSession()`) e usuários dinâmicos descartáveis (`createUniqueUser()`).
-- **`tests/helpers/testDb.ts`:** gerencia o ciclo de vida do Prisma Client e limpeza determinística de dados gerados durante os testes.
-- **`tests/*.test.ts`:** quatro suítes modulares contendo asserções de cabeçalhos (`Content-Type: application/json`), formatos de payload, integridade de tokens e regras de negócio.
+Os testes foram consolidados em `tests/acceptance/`, junto com os demais testes de aceitação do
+backend, e rodam pelo `jest.config.js` já existente em `backend/` (mesmo runner usado por
+`npm test` no backend):
+- **`backend/jest.config.js`:** configura o runner Jest, com resolução de módulos TypeScript (`ts-jest`) e `roots` apontando para `tests/acceptance`.
+- **`tests/acceptance/helpers/authHelper.ts`:** provê abstração para geração rápida de sessões de cidadão (`getCidadaoSession()`), gestor (`getGestorSession()`) e usuários dinâmicos descartáveis (`createUniqueUser()`).
+- **`tests/acceptance/helpers/testDb.ts`:** gerencia o ciclo de vida do Prisma Client e limpeza determinística de dados gerados durante os testes.
+- **`tests/acceptance/01_auth.test.ts` a `04_general.test.ts`:** quatro suítes modulares contendo asserções de cabeçalhos (`Content-Type: application/json`), formatos de payload, integridade de tokens e regras de negócio.
 
 ---
 
@@ -123,43 +125,32 @@ Para reproduzir a execução dos testes em qualquer máquina com Node.js (v20+):
    npm run db:seed
    ```
 
-2. **Execução dos testes automatizados (no diretório `SUT - Testing`):**
+2. **Execução dos testes automatizados (ainda no diretório `backend`):**
    ```bash
-   cd "SUT - Testing"
    npm test
    ```
 
-3. **Execução com geração automática de relatório de evidências:**
-   - **No Windows (PowerShell):**
-     ```powershell
-     .\run-tests.ps1
-     ```
-   - **No Linux / macOS (Bash):**
-     ```bash
-     chmod +x run-tests.sh
-     ./run-tests.sh
-     ```
+   Para rodar só a suíte de API/aceitação isoladamente:
+   ```bash
+   npx jest tests/acceptance
+   ```
 
 ---
 
 ### 6. Evidências da Execução dos Testes
 
-A execução da suíte completa resultou em **100% de sucesso (41 de 41 testes)** em aproximadamente **4 segundos**:
+A execução da suíte completa (agora incluindo também `tests/acceptance/routes/authRoutes.test.ts`,
+pré-existente) resultou em **100% de sucesso (44 de 44 testes)**:
 
 ```text
-PASS tests/02_demands.test.ts (21 tests)
-PASS tests/01_auth.test.ts (11 tests)
-PASS tests/03_metrics_and_organs.test.ts (5 tests)
-PASS tests/04_general.test.ts (4 tests)
-
-Test Suites: 4 passed, 4 total
-Tests:       41 passed, 41 total
+Test Suites: 5 passed, 5 total
+Tests:       44 passed, 44 total
 Snapshots:   0 total
-Time:        4.066 s
+Time:        3.284 s
 ```
 
-O log detalhado e auditável gerado pela execução do Jest foi salvo no arquivo:
-`SUT - Testing/evidencias/test-run-output.txt`
+O log original desta entrega (41 de 41, antes da consolidação em `tests/acceptance/`) foi salvo em:
+`docs/evidencias-testes-api/test-run-output.txt`
 
 ---
 

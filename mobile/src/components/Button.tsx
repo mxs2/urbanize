@@ -7,12 +7,14 @@ interface ButtonProps {
   variant?: "solid" | "outline" | "ghost";
   disabled?: boolean;
   loading?: boolean;
+  testID?: string;
 }
 
-export function Button({ label, onPress, variant = "solid", disabled, loading }: ButtonProps) {
+export function Button({ label, onPress, variant = "solid", disabled, loading, testID }: ButtonProps) {
   const isDisabled = disabled || loading;
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
       disabled={isDisabled}
       style={[

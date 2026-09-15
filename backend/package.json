@@ -9,7 +9,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "test": "jest --config jest.config.js",
+    "test": "jest --config jest.config.js --runInBand",
     "test:bdd": "cross-env NODE_PATH=./node_modules cucumber-js --config ../tests/cucumber.js"
   },
   "prisma": {

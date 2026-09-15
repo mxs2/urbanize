@@ -32,14 +32,15 @@ export default function Login() {
     <View style={styles.container}>
       <Text style={styles.title}>Entrar</Text>
       <TextField
+        testID="input-email"
         label="Email"
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
-      <TextField label="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
-      <Button label="Entrar" onPress={handleSubmit} loading={loading} />
+      <TextField testID="input-senha" label="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
+      <Button testID="btn-entrar" label="Entrar" onPress={handleSubmit} loading={loading} />
       <Link href="/cadastro" style={styles.link}>
         Ainda não tem conta? Criar conta
       </Link>

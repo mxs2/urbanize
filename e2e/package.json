@@ -1,0 +1,14 @@
+{
+  "name": "urbanize-e2e",
+  "version": "1.0.0",
+  "description": "Suíte de testes E2E (ponta a ponta, via UI web) do Urbanize",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "install-browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}

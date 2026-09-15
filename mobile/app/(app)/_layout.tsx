@@ -39,7 +39,12 @@ export default function AppLayout() {
         {links.map((link) => {
           const active = pathname === link.href;
           return (
-            <Pressable key={link.href} style={styles.tabItem} onPress={() => router.push(link.href as never)}>
+            <Pressable
+              key={link.href}
+              testID={`tab-${link.href}`}
+              style={styles.tabItem}
+              onPress={() => router.push(link.href as never)}
+            >
               <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{link.label}</Text>
             </Pressable>
           );
