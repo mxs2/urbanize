@@ -84,6 +84,7 @@ O `docker-compose.yml` lê usuário, senha e porta do arquivo `.env`. A URI que 
 | `MONGODB_RAW_COLLECTION` | Coleção bruta |
 | `MONGO_INITDB_ROOT_USERNAME` / `MONGO_INITDB_ROOT_PASSWORD` | Credenciais do container Mongo |
 | `MONGODB_PORT` | Porta publicada no host |
+| `DATABASE_URL` | Connection string do NeonDB (Postgres em nuvem) |
 
 ## Executando o pipeline
 
@@ -100,6 +101,7 @@ Fluxo:
 3. Leitura **apenas** dos documentos do Mongo que ainda não estão no SQLite (`mongo_id`)
 4. Transformação desse lote pendente
 5. Append na tabela `recife` do arquivo `database/radar.db`
+6. Append na tabela `recife` do NeonDB (`DATABASE_URL`)
 
 Se você tinha um `database/radar.db` antigo **sem** a coluna `mongo_id`, apague o arquivo e rode o ETL de novo para backfill a partir do MongoDB.
 

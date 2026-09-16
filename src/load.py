@@ -6,6 +6,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
+from sqlalchemy import create_engine
 
 load_dotenv()
 
@@ -191,3 +192,30 @@ class Load:
             f"{len(df_novo)} linha(s) inserida(s) na tabela '{nome_tabela}' "
             f"do banco '{nome_banco}' (carga incremental)."
         )
+
+    def load_neon(self, df: pd.DataFrame, nome_tabela: str = "recife") -> None:
+        """
+        Grava o DataFrame transformado no NeonDB (Postgres em nuvem).
+
+        Usa a variável de ambiente DATABASE_URL (arquivo .env). Faz **append**
+        incremental: cada chamada recebe apenas o lote pendente (já filtrado
+        por `mongo_id` antes da transformação).
+        """
+        if df.empty:
+            print(f"Nenhuma linha nova para gravar em '{nome_tabela}' (NeonDB).")
+            return
+
+        database_url = os.getenv("DATABASE_URL")
+        if not database_url:
+            raise ValueError(
+                "DATABASE_URL não definida. Configure a connection string do "
+                "NeonDB no .env."
+            )
+
+        engine = create_engine(database_url)
+        try:
+            df.to_sql(nome_tabela, engine, if_exists="append", index=False)
+        finally:
+            engine.dispose()
+
+        print(f"{len(df)} linha(s) inserida(s) na tabela '{nome_tabela}' do NeonDB!")

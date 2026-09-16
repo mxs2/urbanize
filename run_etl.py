@@ -39,6 +39,9 @@ def main() -> None:
 
             print("Etapa 5: Carga incremental — SQLite")
             ld.load_sqlite(df=df, nome_banco="database/radar.db", nome_tabela="recife")
+
+            print("Etapa 6: Carga incremental — NeonDB")
+            ld.load_neon(df=df, nome_tabela="recife")
     finally:
         ext.close()
         ld.close()
