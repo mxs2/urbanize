@@ -1,10 +1,18 @@
 import os
+import sys
 
 from dotenv import load_dotenv
 
 from src.extract import Extract
 from src.load import Load
 from src.transform import Transform
+
+for _stream in (sys.stdout, sys.stderr):
+    if _stream is not None and hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            pass
 
 load_dotenv()
 
