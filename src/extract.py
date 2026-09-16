@@ -42,9 +42,7 @@ class Extract:
                     "MONGODB_URI não definida. Copie .env.example para .env "
                     "e suba o MongoDB com: docker compose up -d"
                 )
-            self._mongo_client = MongoClient(
-                self.mongo_uri, server_api=ServerApi("1")
-            )
+            self._mongo_client = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
         return self._mongo_client
 
     def close(self) -> None:
@@ -82,9 +80,7 @@ class Extract:
 
         Retorna ranking de temperaturas e timestamp de atualização.
         """
-        return self._get_json(
-            self.ENDPOINT_TEMPERATURAS, params={"limite": limite}
-        )
+        return self._get_json(self.ENDPOINT_TEMPERATURAS, params={"limite": limite})
 
     def _temperatura_por_ibge(
         self, payload_temperaturas: dict[str, Any], ibge: str
@@ -95,9 +91,7 @@ class Extract:
         for item in registros:
             if str(item.get("ibge")) == ibge:
                 return item
-        raise ValueError(
-            f"IBGE {ibge} ausente em {self.ENDPOINT_TEMPERATURAS}."
-        )
+        raise ValueError(f"IBGE {ibge} ausente em {self.ENDPOINT_TEMPERATURAS}.")
 
     def extract_radar_recife(self) -> list[dict[str, Any]]:
         """

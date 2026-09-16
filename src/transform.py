@@ -51,7 +51,9 @@ class Transform:
         df = pd.DataFrame(data)
         if "_id" in df.columns:
             df["mongo_id"] = df["_id"].astype(str)
-        df = df.drop(columns=["_id", "_api_cidade", "_api_temperaturas_meta"], errors="ignore")
+        df = df.drop(
+            columns=["_id", "_api_cidade", "_api_temperaturas_meta"], errors="ignore"
+        )
 
         for col_data in ("atualizado_em", "ingested_at"):
             if col_data in df.columns:
@@ -62,10 +64,7 @@ class Transform:
         for coluna in self.COLUNAS_NUMERICAS:
             if coluna in df.columns:
                 df[coluna] = (
-                    df[coluna]
-                    .replace("", pd.NA)
-                    .replace("...", pd.NA)
-                    .astype(float)
+                    df[coluna].replace("", pd.NA).replace("...", pd.NA).astype(float)
                 )
 
         if "ibge" in df.columns:

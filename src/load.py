@@ -28,9 +28,7 @@ class Load:
                     "MONGODB_URI não definida. Copie .env.example para .env "
                     "e suba o MongoDB com: docker compose up -d"
                 )
-            self._mongo_client = MongoClient(
-                self.mongo_uri, server_api=ServerApi("1")
-            )
+            self._mongo_client = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
         return self._mongo_client
 
     def close(self) -> None:
@@ -86,9 +84,7 @@ class Load:
         collection.create_index([("atualizado_em", -1)])
 
         ingested_at = datetime.now(timezone.utc)
-        documentos = [
-            {**doc, "ingested_at": ingested_at.isoformat()} for doc in data
-        ]
+        documentos = [{**doc, "ingested_at": ingested_at.isoformat()} for doc in data]
         collection.insert_many(documentos)
 
         total = collection.count_documents({})
@@ -118,8 +114,7 @@ class Load:
                 return set()
 
             colunas = {
-                row[1]
-                for row in conn.execute(f"PRAGMA table_info({nome_tabela})")
+                row[1] for row in conn.execute(f"PRAGMA table_info({nome_tabela})")
             }
             if "mongo_id" not in colunas:
                 raise ValueError(
@@ -170,10 +165,13 @@ class Load:
                 )
                 return
 
-            tabela_existe = conn.execute(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
-                (nome_tabela,),
-            ).fetchone() is not None
+            tabela_existe = (
+                conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                    (nome_tabela,),
+                ).fetchone()
+                is not None
+            )
             df_novo.to_sql(
                 nome_tabela,
                 conn,

@@ -25,7 +25,9 @@ def main() -> None:
         ld.load_mongo(data, MONGODB_DB, MONGODB_RAW_COLLECTION)
 
         print("Etapa 3: Documentos pendentes (MongoDB → SQLite)")
-        persistidos = ld.sqlite_mongo_ids(nome_banco="database/radar.db", nome_tabela="recife")
+        persistidos = ld.sqlite_mongo_ids(
+            nome_banco="database/radar.db", nome_tabela="recife"
+        )
         pending = ext.extract_pending_from_mongo(
             MONGODB_DB, MONGODB_RAW_COLLECTION, persistidos
         )
