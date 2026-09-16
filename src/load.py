@@ -98,7 +98,7 @@ class Load:
 
     def sqlite_mongo_ids(
         self,
-        nome_banco: str = "radar.db",
+        nome_banco: str = "database/radar.db",
         nome_tabela: str = "recife",
     ) -> set[str]:
         """
@@ -138,7 +138,7 @@ class Load:
     def load_sqlite(
         self,
         df: pd.DataFrame,
-        nome_banco: str = "radar.db",
+        nome_banco: str = "database/radar.db",
         nome_tabela: str = "recife",
     ) -> None:
         """
@@ -157,6 +157,7 @@ class Load:
                 "de documentos do MongoDB)."
             )
 
+        os.makedirs(os.path.dirname(nome_banco) or ".", exist_ok=True)
         conn = sqlite3.connect(nome_banco)
         try:
             ja_persistidos = self.sqlite_mongo_ids(nome_banco, nome_tabela)

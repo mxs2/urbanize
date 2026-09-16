@@ -31,7 +31,7 @@ jsons/          # saídas opcionais em JSON
 
 - `load_mongo(data, db_name, collection_name)`: grava brutos usando `MONGODB_URI` (append histórico por padrão; cada execução adiciona documentos com `ingested_at`)
 - `sqlite_mongo_ids(...)`: `mongo_id` já presentes no SQLite
-- `load_sqlite(df, ...)`: **append incremental** em `radar.db` (chave `mongo_id`, sem regravar a tabela inteira)
+- `load_sqlite(df, ...)`: **append incremental** em `database/radar.db` (chave `mongo_id`, sem regravar a tabela inteira)
 
 ## Configuração do ambiente
 
@@ -99,9 +99,9 @@ Fluxo:
 2. Carga bruta no MongoDB (append com `ingested_at`)
 3. Leitura **apenas** dos documentos do Mongo que ainda não estão no SQLite (`mongo_id`)
 4. Transformação desse lote pendente
-5. Append na tabela `recife` do arquivo `radar.db`
+5. Append na tabela `recife` do arquivo `database/radar.db`
 
-Se você tinha um `radar.db` antigo **sem** a coluna `mongo_id`, apague o arquivo e rode o ETL de novo para backfill a partir do MongoDB.
+Se você tinha um `database/radar.db` antigo **sem** a coluna `mongo_id`, apague o arquivo e rode o ETL de novo para backfill a partir do MongoDB.
 
 ## Ideias para quem quiser ir além
 
