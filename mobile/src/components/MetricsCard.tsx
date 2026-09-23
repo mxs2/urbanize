@@ -6,13 +6,22 @@ interface MetricsCardProps {
   value: string | number;
   helpText?: string;
   accentColor?: string;
+  testID?: string;
 }
 
-export function MetricsCard({ label, value, helpText, accentColor = colors.brand[500] }: MetricsCardProps) {
+export function MetricsCard({
+  label,
+  value,
+  helpText,
+  accentColor = colors.brand[500],
+  testID,
+}: MetricsCardProps) {
   return (
     <View style={[styles.card, { borderTopColor: accentColor }]}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+      <Text testID={testID} style={styles.value}>
+        {value}
+      </Text>
       {helpText ? <Text style={styles.helpText}>{helpText}</Text> : null}
     </View>
   );
