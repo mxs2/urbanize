@@ -77,8 +77,14 @@ export default function GestorPanel() {
         <>
           <View style={styles.metricsRow}>
             <MetricsCard label="Total" value={metrics.total} />
-            <MetricsCard label="Em análise" value={statusCount("em_analise")} accentColor={colors.warning} />
             <MetricsCard
+              testID="metrica-em-analise"
+              label="Em análise"
+              value={statusCount("em_analise")}
+              accentColor={colors.warning}
+            />
+            <MetricsCard
+              testID="metrica-encaminhadas"
               label="Encaminhadas"
               value={statusCount("encaminhada")}
               accentColor={colors.brand[500]}
@@ -126,7 +132,7 @@ export default function GestorPanel() {
           const imageUri = resolveImageUrl(demand.imagemUrl);
           const score = Math.round((demand.scoreTriagem ?? 0.7) * 100);
           return (
-            <View key={demand.id} style={styles.triagemCard}>
+            <View key={demand.id} testID={`triagem-${demand.protocolo}`} style={styles.triagemCard}>
               {imageUri ? <Image source={{ uri: imageUri }} style={styles.triagemImage} /> : null}
               <View style={styles.triagemInfo}>
                 <Text style={styles.triagemProtocolo}>{demand.protocolo}</Text>
@@ -141,10 +147,12 @@ export default function GestorPanel() {
                 ) : null}
                 <View style={styles.triagemActions}>
                   <Button
+                    testID={`btn-aceitar-${demand.protocolo}`}
                     label="Aceitar"
                     onPress={() => handleAccept(demand.id, demand.sugestaoEncaminhamento)}
                   />
                   <Button
+                    testID={`btn-revisar-${demand.protocolo}`}
                     label="Revisar"
                     variant="outline"
                     onPress={() => router.push(`/demandas/${demand.id}`)}

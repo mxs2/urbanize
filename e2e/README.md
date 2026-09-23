@@ -28,6 +28,19 @@ atendimento até "Resolvida":
 7. Logout, login como o cidadão que registrou a demanda e confirmação de que ele também vê o
    status "Resolvida" em "Minhas demandas".
 
+**`tests/gestor-aceita-triagem.spec.ts`** — Gestor aceita a sugestão de encaminhamento da
+Triagem Inteligente:
+
+1. Pré-condição: um cidadão registra uma demanda pela API; o backend faz a triagem automática
+   e sugere o órgão responsável com um grau de confiança.
+2. Login com credenciais de gestor demo e leitura das métricas "Em análise" e "Encaminhadas".
+3. Verificação de que a demanda aparece na "Triagem Inteligente" com o órgão sugerido e a
+   confiança calculada pelo backend.
+4. Clique em "Aceitar": a demanda sai da fila de triagem, "Encaminhadas" aumenta em 1 e
+   "Em análise" diminui em 1.
+5. Na "Fila recente", a demanda aparece como "Encaminhada"; no detalhe, o histórico mostra a
+   triagem automática e o encaminhamento para o órgão sugerido.
+
 ## Pré-requisitos
 
 - Node.js 24+ (mesma versão usada em `backend/` e `mobile/`).

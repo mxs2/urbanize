@@ -1,6 +1,10 @@
 import { prisma } from "../src/config/prisma";
 
-const E2E_TITULO_PREFIXES = ["Buraco na via - teste e2e", "Poste apagado - teste e2e gestor"];
+const E2E_TITULO_PREFIXES = [
+  "Buraco na via - teste e2e",
+  "Poste apagado - teste e2e gestor",
+  "Lâmpada queimada - teste e2e triagem",
+];
 
 async function main() {
   const { count } = await prisma.demand.deleteMany({
