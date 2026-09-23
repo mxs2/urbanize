@@ -3,11 +3,12 @@ import { StyleSheet, Text, View } from "react-native";
 interface BadgeProps {
   label: string;
   color: string;
+  testID?: string;
 }
 
-export function Badge({ label, color }: BadgeProps) {
+export function Badge({ label, color, testID }: BadgeProps) {
   return (
-    <View style={[styles.badge, { backgroundColor: `${color}22`, borderColor: color }]}>
+    <View testID={testID} style={[styles.badge, { backgroundColor: `${color}22`, borderColor: color }]}>
       <Text style={[styles.label, { color }]}>{label}</Text>
     </View>
   );

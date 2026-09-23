@@ -10,7 +10,11 @@ import { StatusBadge } from "./StatusBadge";
 
 export function DemandCard({ demand }: { demand: Demand }) {
   return (
-    <Pressable style={styles.card} onPress={() => router.push(`/demandas/${demand.id}`)}>
+    <Pressable
+      testID={`card-demanda-${demand.protocolo}`}
+      style={styles.card}
+      onPress={() => router.push(`/demandas/${demand.id}`)}
+    >
       <View style={styles.headerRow}>
         <Text style={styles.protocolo}>{demand.protocolo}</Text>
         <PriorityBadge priority={demand.prioridade} />

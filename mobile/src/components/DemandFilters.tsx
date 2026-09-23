@@ -33,6 +33,7 @@ export function DemandFilters() {
   return (
     <View style={styles.container}>
       <TextField
+        testID="input-busca"
         label="Buscar"
         placeholder="Título, descrição ou protocolo"
         value={filters.busca ?? ""}
@@ -68,7 +69,7 @@ export function DemandFilters() {
           setFilters({ ...filters, prioridade: (value || undefined) as DemandPriority | undefined })
         }
       />
-      <Button label="Aplicar filtros" onPress={() => fetchDemands(filters)} />
+      <Button testID="btn-aplicar-filtros" label="Aplicar filtros" onPress={() => fetchDemands(filters)} />
     </View>
   );
 }

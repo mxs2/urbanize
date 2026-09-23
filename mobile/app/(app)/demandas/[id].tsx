@@ -60,7 +60,7 @@ export default function DemandDetail() {
       <Text style={styles.titulo}>{selected.titulo}</Text>
       <Text style={styles.data}>{formatDate(selected.criadaEm)}</Text>
       <View style={styles.badgeRow}>
-        <StatusBadge status={selected.status} />
+        <StatusBadge testID="status-atual" status={selected.status} />
         <PriorityBadge priority={selected.prioridade} />
       </View>
       <Text style={styles.descricao}>{selected.descricao}</Text>
@@ -77,6 +77,7 @@ export default function DemandDetail() {
         <View style={styles.gestorPanel}>
           <SectionTitle title="Ação do gestor" />
           <TextField
+            testID="input-observacao"
             label="Observação"
             multiline
             numberOfLines={3}
@@ -87,6 +88,7 @@ export default function DemandDetail() {
             {GESTOR_TRANSITIONS.map((status) => (
               <Button
                 key={status}
+                testID={`btn-status-${status}`}
                 label={statusLabel[status]}
                 variant={status === selected.status ? "ghost" : "outline"}
                 disabled={status === selected.status}
