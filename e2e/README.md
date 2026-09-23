@@ -41,6 +41,22 @@ Triagem Inteligente:
 5. Na "Fila recente", a demanda aparece como "Encaminhada"; no detalhe, o histórico mostra a
    triagem automática e o encaminhamento para o órgão sugerido.
 
+**`tests/buscar-demandas.spec.ts`** — Cidadão pesquisa demandas na listagem:
+
+1. Login com credenciais de cidadão demo.
+2. Navegação até "Demandas" pela tab bar.
+3. Preenchimento do campo de busca com um termo ("Buraco").
+4. Confirmação de que o resultado correspondente aparece na listagem.
+
+**`tests/triagem-gestor.spec.ts`** — Cidadão registra pela interface e o gestor aceita a triagem
+em outra sessão:
+
+1. Cidadão faz login, registra uma demanda pela UI e guarda o protocolo (`URB-XXXXX`).
+2. Em um contexto separado, o gestor faz login e a demanda aparece na "Triagem Inteligente" com
+   a porcentagem de confiança.
+3. Clique em "Aceitar": a demanda sai da fila.
+4. Após recarregar a página, a demanda continua fora da fila (status persistido no backend).
+
 ## Pré-requisitos
 
 - Node.js 24+ (mesma versão usada em `backend/` e `mobile/`).

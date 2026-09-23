@@ -93,13 +93,18 @@ SLOWMO=800 npm run test:headed   # mais devagar, dá pra acompanhar cada passo
 ```
 
 Antes de cada execução, `e2e/global-setup.ts` roda `backend/scripts/e2eCleanup.ts`, que apaga
-demandas de execuções anteriores do teste (filtra pelo título usado no cenário) — a listagem não
+demandas de execuções anteriores dos testes (filtra pelos prefixos de título usados nos cenários) — a listagem não
 fica acumulando repetição a cada rodada.
 
-Cenário automatizado: [`e2e/tests/registrar-demanda.spec.ts`](../../e2e/tests/registrar-demanda.spec.ts)
-— login de cidadão, navegação até "Nova demanda" pela tab bar, preenchimento do formulário,
-aceite dos termos, submissão, confirmação do protocolo gerado e verificação de que a demanda
-aparece em "Minhas demandas". Detalhes de setup em [`e2e/README.md`](../../e2e/README.md).
+Cenários automatizados (detalhes em [`e2e/README.md`](../../e2e/README.md)):
+
+| Spec | O que cobre |
+|---|---|
+| [`registrar-demanda.spec.ts`](../../e2e/tests/registrar-demanda.spec.ts) | Cidadão faz login, registra uma demanda pelo formulário e a vê em "Minhas demandas" |
+| [`buscar-demandas.spec.ts`](../../e2e/tests/buscar-demandas.spec.ts) | Cidadão busca demandas na listagem |
+| [`gestor-aceita-triagem.spec.ts`](../../e2e/tests/gestor-aceita-triagem.spec.ts) | Gestor aceita a sugestão da Triagem Inteligente; métricas e histórico atualizam |
+| [`gestor-gerencia-demanda.spec.ts`](../../e2e/tests/gestor-gerencia-demanda.spec.ts) | Gestor conduz a demanda até "Resolvida"; cidadão vê o status final |
+| [`triagem-gestor.spec.ts`](../../e2e/tests/triagem-gestor.spec.ts) | Cidadão registra pela UI, gestor aceita a triagem em outra sessão; persiste após reload |
 
 ## Como os níveis se complementam
 

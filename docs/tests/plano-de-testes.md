@@ -41,7 +41,7 @@ não-determinismo do modelo dentro da suíte.
 | AUT-10 | `useRoleGuard` redireciona cidadão do painel de gestor | Componente | P1 | Não iniciado |
 | AUT-11 | Tela de nova demanda exibe loading, empty e error state | Componente | P2 | Não iniciado |
 | AUT-12 | E2E: login cidadão, criar demanda, ver na listagem | E2E | P1 | **Automatizado** |
-| AUT-13 | E2E: login gestor, revisar triagem, alterar status | E2E | P1 | Não iniciado |
+| AUT-13 | E2E: login gestor, revisar triagem, alterar status | E2E | P1 | **Automatizado** |
 | AUT-14 | Dois gestores alteram a mesma demanda em paralelo sem duplicar histórico | Concorrência | P2 | Não iniciado |
 | AUT-15 | Cron executado duas vezes não duplica `MetricsSnapshot` | Concorrência | P2 | Não iniciado |
 | AUT-16 | Pipeline de CI roda a suíte a cada push e bloqueia merge vermelho | CI | P1 | Não iniciado |
