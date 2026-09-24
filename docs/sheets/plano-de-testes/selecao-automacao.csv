@@ -1,0 +1,99 @@
+Selecao para automacao
+Casos TC01-TC94 da rodada 2 (docs/tests/ia/saida-rodada-2.md). Preencher em selecao-automacao.xlsx (calcula a decisao) e reexportar esta aba. Vazio = a preencher pela equipe.
+Horizonte (meses restantes),A CONFIRMAR
+ID,Nivel,Tm manual/exec (min),Ti implementar (min),Ta auto/exec (s),Mn manut./mes (min),F exec./mes,Automatizar?,Situacao atual,Titulo do caso,HU,Teste automatizado que cobre,Observacoes
+TC01,Integração de componentes,,,0.347,,,,Automatizado,Cadastrar usuário com dados válidos.,HU-01 Cadastro de conta,tests/acceptance/01_auth.test.ts › CT-AUTH-01,Ta medido
+TC02,Integração de componentes,,,0.024,,,,Não automatizado,Verificar que o cadastro cria o cookie de sessão HTTP-only.,HU-01 Cadastro de conta,,"Ta: referencia por analogia; CT-AUTH-01 confere só o nome do cookie (urbanize_session), não o atributo HttpOnly. Falta 1 assert."
+TC03,Integração de componentes,,,0.024,,,,Não automatizado,Atribuir o perfil cidadao quando role é omitido.,HU-01 Cadastro de conta,,Ta: referencia por analogia; CT-AUTH-01 envia role explicitamente; nenhum teste omite role.
+TC04,Integração de componentes,,,0.024,,,,Não automatizado,Cadastrar usuário com perfil gestor.,HU-01 Cadastro de conta,,Ta: referencia por analogia
+TC05,Integração de componentes,,,0.024,,,,Não automatizado,Recusar cadastro com role fora do enum.,HU-01 Cadastro de conta,,Ta: referencia por analogia; CT-AUTH-03 não envia role fora do enum.
+TC06,Integração de componentes,,,0.024,,,,Não automatizado,Recusar cadastro com nome de 1 caractere.,HU-01 Cadastro de conta,,Ta: referencia por analogia; CT-AUTH-03 manda nome curto E e-mail inválido no mesmo payload: não isola esta regra.
+TC07,Integração de componentes,,,0.024,,,,Não automatizado,Aceitar cadastro com nome de 2 caracteres.,HU-01 Cadastro de conta,,Ta: referencia por analogia
+TC08,Integração de componentes,,,0.024,,,,Não automatizado,Recusar cadastro com senha vazia.,HU-01 Cadastro de conta,,Ta: referencia por analogia
+TC09,Integração de componentes,,,0.024,,,,Não automatizado,Aceitar cadastro com senha de 1 caractere.,HU-01 Cadastro de conta,,Ta: referencia por analogia
+TC10,Integração de componentes,,,0.024,,,,Não automatizado,Recusar cadastro com e-mail em formato inválido.,HU-01 Cadastro de conta,,Ta: referencia por analogia; CT-AUTH-03 manda nome curto E e-mail inválido no mesmo payload: não isola esta regra.
+TC11,Integração de componentes,,,0.213,,,,Automatizado,Recusar cadastro com e-mail já cadastrado.,HU-01 Cadastro de conta,tests/acceptance/01_auth.test.ts › CT-AUTH-02,Ta medido
+TC12,Sistema,,,2.706,,,,Não automatizado,Criar conta de cidadão pela tela de cadastro.,HU-01 Cadastro de conta,,Ta: referencia por analogia
+TC13,Integração de componentes,,,0.17,,,,Automatizado,Autenticar usuário com perfil cidadão.,HU-02 Login,tests/acceptance/01_auth.test.ts › CT-AUTH-04,Ta medido
+TC14,Integração de componentes,,,0.138,,,,Automatizado,Autenticar usuário com perfil gestor.,HU-02 Login,tests/acceptance/01_auth.test.ts › CT-AUTH-05,Ta medido
+TC15,Integração de componentes,,,0.153,,,,Automatizado,Recusar login com senha incorreta.,HU-02 Login,tests/acceptance/01_auth.test.ts › CT-AUTH-06,Ta medido
+TC16,Integração de componentes,,,0.012,,,,Automatizado,Recusar login com e-mail não cadastrado.,HU-02 Login,tests/acceptance/01_auth.test.ts › CT-AUTH-07,Ta medido
+TC17,Integração de componentes,,,0.024,,,,Não automatizado,Recusar login sem o campo email.,HU-02 Login,,Ta: referencia por analogia
+TC18,Sistema,,,1.923,,,,Automatizado,Entrar pela tela de login com perfil cidadão.,HU-02 Login,e2e/tests/buscar-demandas.spec.ts (login do cidadão e /dashboard),Ta medido
+TC19,Sistema,,,2.377,,,,Automatizado,Entrar pela tela de login com perfil gestor.,HU-02 Login,e2e/tests/gestor-aceita-triagem.spec.ts (login do gestor e 'Painel do gestor'),Ta medido
+TC20,Componente,,,0.013,,,,Não automatizado,Guardar na sessão o token retornado pelo login.,HU-02 Login,,"Ta: referencia por analogia; authService.test confere o token devolvido pelo login, mas não lê o token da session depois."
+TC21,Componente,,,0.005,,,,Automatizado,Enviar o token da sessão no cabeçalho Authorization das requisições.,HU-02 Login,tests/unit/services/api.test.ts › envia Authorization assim que o token entra em memória,Ta medido
+TC22,Integração de componentes,,,0.017,,,,Automatizado,Recusar acesso a rota protegida sem credencial.,HU-02 Login,tests/acceptance/01_auth.test.ts › CT-AUTH-09,Ta medido
+TC23,Integração de componentes,,,0.02,,,,Automatizado,Recusar acesso com token adulterado.,HU-02 Login,tests/acceptance/01_auth.test.ts › CT-AUTH-10,Ta medido
+TC24,Integração de componentes,,,0.024,,,,Não automatizado,Recusar acesso com token expirado.,HU-02 Login,,"Ta: referencia por analogia; CT-AUTH-10 usa token forjado, não token expirado."
+TC25,Integração de componentes,,,0.024,,,,Não automatizado,Autenticar requisição usando só o cookie de sessão.,HU-02 Login,,Ta: referencia por analogia
+TC26,Integração de componentes,,,0.009,,,,Automatizado,Remover o cookie de sessão no logout.,HU-02 Login,tests/acceptance/01_auth.test.ts › CT-AUTH-11,Ta medido
+TC27,Integração de componentes,,,0.011,,,,Automatizado,Retornar erro padronizado para rota inexistente.,SUPOSIÇÃO (nenhuma HU. Regra do contrato de API),tests/acceptance/04_general.test.ts › CT-GEN-03,Ta medido
+TC28,Integração de componentes,,,0.187,,,,Automatizado,Gerar protocolo ao criar demanda válida.,HU-03 Registro de demanda,tests/acceptance/02_demands.test.ts › CT-DEM-01,Ta medido
+TC29,Integração de componentes,,,0.024,,,,Não automatizado,Criar a demanda com status inicial registrada.,HU-03 Registro de demanda,,"Ta: referencia por analogia; CONFLITO: TC29 espera status 'registrada', mas a API cria em 'em_analise' e CT-DEM-01 valida 'em_analise'. Resolver a lacuna L05 antes de automatizar."
+TC30,Integração de componentes,,,0.024,,,,Não automatizado,Aplicar prioridade padrão media quando prioridade é omitida.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC31,Integração de componentes,,,0.024,,,,Não automatizado,Aplicar bairro e cidade padrão quando omitidos.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC32,Integração de componentes,,,0.024,,,,Não automatizado,Preencher o solicitante com os dados do usuário autenticado.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC33,Integração de componentes,,,0.025,,,,Automatizado,Recusar demanda com titulo de 2 caracteres.,HU-03 Registro de demanda,tests/acceptance/02_demands.test.ts › CT-DEM-03,Ta medido
+TC34,Integração de componentes,,,0.024,,,,Não automatizado,Aceitar demanda com todos os obrigatórios no tamanho mínimo.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC35,Integração de componentes,,,0.012,,,,Automatizado,Recusar demanda com descricao de 4 caracteres.,HU-03 Registro de demanda,tests/acceptance/02_demands.test.ts › CT-DEM-04,Ta medido
+TC36,Integração de componentes,,,0.024,,,,Não automatizado,Recusar demanda com endereco.endereco de 2 caracteres.,HU-03 Registro de demanda,,Ta: referencia por analogia; CT-DEM-06 omite o objeto endereco inteiro; não testa endereco com 2 caracteres (valor limite).
+TC37,Integração de componentes,,,0.024,,,,Não automatizado,Recusar demanda sem categoria.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC38,Integração de componentes,,,0.015,,,,Automatizado,Recusar demanda com categoria fora do enum.,HU-03 Registro de demanda,tests/acceptance/02_demands.test.ts › CT-DEM-05,Ta medido
+TC39,Integração de componentes,,,0.024,,,,Não automatizado,Recusar demanda com prioridade fora do enum.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC40,Integração de componentes,,,0.02,,,,Automatizado,Recusar criação de demanda sem autenticação.,HU-03 Registro de demanda,tests/acceptance/02_demands.test.ts › CT-DEM-02,Ta medido
+TC41,Sistema,,,3.035,,,,Automatizado,Abrir a tela de detalhe com o protocolo depois de registrar a demanda.,HU-03 Registro de demanda,e2e/tests/registrar-demanda.spec.ts,Ta medido
+TC42,Sistema,,,2.706,,,,Não automatizado,Impedir o envio da demanda sem localização.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC43,Sistema,,,2.706,,,,Não automatizado,Impedir o envio da demanda sem aceite de compartilhamento de dados.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC44,Componente,,,0.013,,,,Não automatizado,Preencher título e descrição com a sugestão da triagem depois do upload.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC45,Sistema,,,2.706,,,,Não automatizado,Vincular à demanda criada a foto anexada no formulário.,HU-12 Anexar fotos,,Ta: referencia por analogia
+TC46,Integração de componentes,,,0.024,,,,Não automatizado,Receber a URL da imagem ao enviar arquivo válido.,HU-12 Anexar fotos,,Ta: referencia por analogia
+TC47,Integração de componentes,,,0.024,,,,Não automatizado,Recusar upload sem arquivo.,HU-12 Anexar fotos,,Ta: referencia por analogia
+TC48,Integração de componentes,,,0.024,,,,Não automatizado,Recusar upload sem autenticação.,HU-12 Anexar fotos,,Ta: referencia por analogia
+TC49,Integração de componentes,,,0.024,,,,Não automatizado,Usar a categoria enviada pelo frontend quando o Google Vision não está configurado.,HU-08 Revisão da triagem,,Ta: referencia por analogia
+TC50,Integração de componentes,,,0.024,,,,Não automatizado,Usar a categoria enviada quando o Google Vision configurado falha.,HU-08 Revisão da triagem,,Ta: referencia por analogia
+TC51,Sistema,,,2.706,,,,Não automatizado,Registrar demanda com a categoria escolhida manualmente quando o Vision está indisponível.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC52,Integração de componentes,,,0.447,,,,Automatizado,Listar para o cidadão só as próprias demandas.,HU-06 Visualizar e filtrar demandas,tests/acceptance/02_demands.test.ts › CT-DEM-07,Ta medido
+TC53,Integração de componentes,,,0.024,,,,Automatizado,Listar a fila geral para gestor sem vínculo com órgão.,HU-06 Visualizar e filtrar demandas,tests/acceptance/02_demands.test.ts › CT-DEM-08,Ta medido
+TC54,Integração de componentes,,,0.024,,,,Não automatizado,Listar para gestor vinculado só as demandas do seu órgão.,HU-06 Visualizar e filtrar demandas,,Ta: referencia por analogia
+TC55,Integração de componentes,,,0.015,,,,Automatizado,Filtrar demandas por status.,HU-06 Visualizar e filtrar demandas,tests/acceptance/02_demands.test.ts › CT-DEM-09,Ta medido
+TC56,Integração de componentes,,,0.014,,,,Automatizado,Filtrar demandas por categoria.,HU-06 Visualizar e filtrar demandas,tests/acceptance/02_demands.test.ts › CT-DEM-10,Ta medido
+TC57,Integração de componentes,,,0.024,,,,Não automatizado,Filtrar demandas por prioridade.,HU-06 Visualizar e filtrar demandas,,Ta: referencia por analogia
+TC58,Integração de componentes,,,0.024,,,,Não automatizado,Filtrar demandas por bairro.,HU-06 Visualizar e filtrar demandas,,Ta: referencia por analogia
+TC59,Integração de componentes,,,0.017,,,,Automatizado,Filtrar demandas por texto em busca.,HU-06 Visualizar e filtrar demandas,tests/acceptance/02_demands.test.ts › CT-DEM-11,Ta medido
+TC60,Integração de componentes,,,0.024,,,,Não automatizado,Combinar filtros status e categoria.,HU-06 Visualizar e filtrar demandas,,Ta: referencia por analogia
+TC61,Integração de componentes,,,0.024,,,,Não automatizado,Recusar filtro com status fora do enum.,HU-06 Visualizar e filtrar demandas,,Ta: referencia por analogia
+TC62,Sistema,,,2.706,,,,Não automatizado,Aplicar filtro de status na tela de listagem.,HU-06 Visualizar e filtrar demandas,,"Ta: referencia por analogia; buscar-demandas.spec.ts testa busca por texto, não o filtro de status."
+TC63,Sistema,,,2.706,,,,Não automatizado,Exibir estado vazio na listagem de cidadão sem demandas.,HU-06 Visualizar e filtrar demandas,,Ta: referencia por analogia
+TC64,Sistema,,,2.706,,,,Não automatizado,Exibir estado de erro na listagem quando a API está indisponível.,HU-06 Visualizar e filtrar demandas,,Ta: referencia por analogia
+TC65,Componente,,,0.013,,,,Não automatizado,Expor estado de carregamento enquanto a listagem está pendente.,HU-06 Visualizar e filtrar demandas,,Ta: referencia por analogia
+TC66,Integração de componentes,,,0.014,,,,Automatizado,Consultar detalhe de demanda própria.,HU-04 Acompanhar status e histórico,tests/acceptance/02_demands.test.ts › CT-DEM-13,Ta medido
+TC67,Integração de componentes,,,0.202,,,,Automatizado,Recusar ao cidadão o detalhe de demanda de outra pessoa.,HU-04 Acompanhar status e histórico,tests/acceptance/02_demands.test.ts › CT-DEM-14,Ta medido
+TC68,Integração de componentes,,,0.029,,,,Automatizado,Retornar erro para demanda inexistente.,HU-04 Acompanhar status e histórico,tests/acceptance/02_demands.test.ts › CT-DEM-16,Ta medido
+TC69,Sistema,,,2.706,,,,Não automatizado,Exibir no detalhe os seis dados exigidos da demanda.,HU-04 Acompanhar status e histórico,,Ta: referencia por analogia
+TC70,Integração de componentes,,,0.087,,,,Automatizado,Atualizar o status da demanda como gestor.,HU-05 Atualização de status,tests/acceptance/02_demands.test.ts › CT-DEM-18,Ta medido
+TC71,Integração de componentes,,,0.087,,,,Automatizado,Acrescentar item ao histórico ao atualizar o status.,HU-05 Atualização de status,tests/acceptance/02_demands.test.ts › CT-DEM-18 (mesmo teste do TC70),Ta medido
+TC72,Integração de componentes,,,0.029,,,,Automatizado,Recusar atualização de status feita por cidadão.,HU-05 Atualização de status,tests/acceptance/02_demands.test.ts › CT-DEM-17,Ta medido
+TC73,Integração de componentes,,,0.007,,,,Automatizado,Recusar atualização de status sem autenticação.,HU-05 Atualização de status,tests/acceptance/02_demands.test.ts › CT-DEM-21,Ta medido
+TC74,Integração de componentes,,,0.022,,,,Automatizado,Recusar atualização com status fora do enum.,HU-05 Atualização de status,tests/acceptance/02_demands.test.ts › CT-DEM-19,Ta medido
+TC75,Integração de componentes,,,0.018,,,,Automatizado,Recusar atualização de status de demanda inexistente.,HU-05 Atualização de status,tests/acceptance/02_demands.test.ts › CT-DEM-20,Ta medido
+TC76,Integração de componentes,,,0.024,,,,Não automatizado,Percorrer o ciclo nominal de status até resolvida.,HU-05 Atualização de status,,"Ta: referencia por analogia; O ciclo até 'resolvida' está coberto no nível Sistema (gestor-gerencia-demanda.spec.ts), não na API como pede o TC."
+TC77,Integração de componentes,,,0.024,,,,Não automatizado,Cancelar demanda com status registrada.,HU-05 Atualização de status,,Ta: referencia por analogia
+TC78,Sistema,,,2.706,,,,Não automatizado,Exibir ao cidadão o status alterado pelo gestor.,HU-04 Acompanhar status e histórico,,"Ta: referencia por analogia; gestor-gerencia-demanda.spec.ts mostra ao cidadão o status final no card da lista, não o detalhe com 'em atendimento'."
+TC79,Sistema,,,4.383,,,,Automatizado,Exibir no histórico a observação registrada pelo gestor.,HU-05 Atualização de status,e2e/tests/gestor-gerencia-demanda.spec.ts (observação visível a cada etapa),Ta medido
+TC80,Sistema,,,2.706,,,,Não automatizado,Exibir no painel do gestor o total de demandas das métricas gerais.,HU-07 Painel do gestor,,"Ta: referencia por analogia; gestor-aceita-triagem.spec.ts confere as métricas Encaminhadas e Em análise, não o Total."
+TC81,Sistema,,,2.706,,,,Não automatizado,Exibir na fila recente a demanda criada por último.,HU-07 Painel do gestor,,Ta: referencia por analogia
+TC82,Sistema,,,2.706,,,,Não automatizado,"Exibir categoria, confiança e sugestão de encaminhamento na triagem.",HU-08 Revisão da triagem,,Ta: referencia por analogia; gestor-aceita-triagem.spec.ts confere sugestão e % de confiança; a categoria não é verificada.
+TC83,Integração de componentes,,,0.024,,,,Não automatizado,Sugerir o órgão cujo categoriasJson contém a categoria da demanda.,HU-08 Revisão da triagem,,Ta: referencia por analogia
+TC84,Integração de componentes,,,0.03,,,,Automatizado,Retornar ao cidadão métricas só das próprias demandas.,HU-10 Dashboard do cidadão,tests/acceptance/03_metrics_and_organs.test.ts › CT-MET-02,Ta medido
+TC85,Integração de componentes,,,0.026,,,,Automatizado,Retornar ao gestor métricas gerais.,HU-07 Painel do gestor,tests/acceptance/03_metrics_and_organs.test.ts › CT-MET-01,Ta medido
+TC86,Integração de componentes,,,0.024,,,,Não automatizado,Responder métricas sem Redis configurado.,HU-07 Painel do gestor,,Ta: referencia por analogia
+TC87,Integração de componentes,,,0.024,,,,Não automatizado,Responder métricas com Redis configurado mas inacessível.,HU-07 Painel do gestor,,Ta: referencia por analogia
+TC88,Sistema,,,2.706,,,,Não automatizado,Exibir no dashboard do cidadão o total das próprias solicitações.,HU-10 Dashboard do cidadão,,Ta: referencia por analogia
+TC89,Sistema,,,2.706,,,,Não automatizado,Navegar da home para a tela de login.,HU-02 Login,,Ta: referencia por analogia
+TC90,Sistema,,,2.706,,,,Não automatizado,Navegar da home para a tela de cadastro.,HU-01 Cadastro de conta,,Ta: referencia por analogia
+TC91,Sistema,,,2.706,,,,Não automatizado,Navegar da home para a tela de demandas.,HU-06 Visualizar e filtrar demandas,,Ta: referencia por analogia
+TC92,Sistema,,,2.706,,,,Não automatizado,Registrar demanda em viewport mobile sem rolagem horizontal.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC93,Sistema,,,2.706,,,,Não automatizado,Registrar demanda em viewport tablet sem rolagem horizontal.,HU-03 Registro de demanda,,Ta: referencia por analogia
+TC94,Sistema,,,2.706,,,,Não automatizado,Registrar demanda em viewport desktop sem rolagem horizontal.,HU-03 Registro de demanda,,Ta: referencia por analogia
+Ta medido em 23/09/2026 (duracao do proprio teste). Nao automatizados: Ta de referencia = mediana do mesmo nivel.
