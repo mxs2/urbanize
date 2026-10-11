@@ -40,7 +40,7 @@ class Extract:
             if not self.mongo_uri:
                 raise ValueError(
                     "MONGODB_URI não definida. Copie .env.example para .env "
-                    "e suba o MongoDB com: docker compose up -d"
+                    "e informe a connection string do MongoDB (Atlas ou local)."
                 )
             self._mongo_client = MongoClient(self.mongo_uri, server_api=ServerApi("1"))
         return self._mongo_client
