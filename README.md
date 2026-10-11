@@ -1,6 +1,6 @@
 # Projeto de Engenharia de Dados - ETL
 
-Pipeline de ETL que extrai dados meteorológicos de **Recife** pela API pública do [Radar Meteorológico](https://radarmeteorologico.com.br/previsao/pe/recife), carrega o resultado bruto no **MongoDB** (Docker), transforma com **pandas** e persiste o resultado em **SQLite**.
+Pipeline de ETL que extrai dados meteorológicos de **Recife** pela API pública do [Radar Meteorológico](https://radarmeteorologico.com.br/previsao/pe/recife), carrega o resultado bruto no **MongoDB Atlas** (NoSQL), transforma com **pandas** e persiste o resultado em **SQLite** (local) e **NeonDB** (Postgres em nuvem).
 
 ## Estrutura do projeto
 
@@ -10,7 +10,7 @@ src/
   transform.py  # Transform: limpeza e DataFrame pronto para carga
   load.py       # Load: MongoDB (load_mongo) e SQLite (load_sqlite)
 run_etl.py      # ponto de entrada do pipeline
-docker-compose.yml
+docker-compose.yml  # opcional: MongoDB local (alternativa ao Atlas)
 .env.example    # modelo de variáveis (copie para .env)
 jsons/          # saídas opcionais em JSON
 ```
@@ -32,6 +32,7 @@ jsons/          # saídas opcionais em JSON
 - `load_mongo(data, db_name, collection_name)`: grava brutos usando `MONGODB_URI` (append histórico por padrão; cada execução adiciona documentos com `ingested_at`)
 - `sqlite_mongo_ids(...)`: `mongo_id` já presentes no SQLite
 - `load_sqlite(df, ...)`: **append incremental** em `database/radar.db` (chave `mongo_id`, sem regravar a tabela inteira)
+- `load_neon(df, nome_tabela)`: append no NeonDB (Postgres) via `DATABASE_URL`
 
 ## Configuração do ambiente
 
@@ -53,42 +54,45 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### MongoDB com Docker
+### MongoDB (Atlas)
 
-1. Copie as variáveis de ambiente e modifique a .env com suas variáveis:
+O pipeline usa um cluster **MongoDB Atlas** por padrão.
+
+1. Copie o modelo de variáveis e preencha o `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Suba o container:
+2. Em `MONGODB_URI`, use a connection string do seu cluster (Atlas → **Connect** → **Drivers**), no formato `mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/`.
+3. No Atlas, em **Security → Network Access**, libere o IP da sua máquina. Sem isso a conexão falha com `SSL handshake failed` / `ServerSelectionTimeoutError`.
+4. Para ver os dados brutos: **Database → Clusters → Browse Collections** → banco `urbanize_etl` → coleção `radar_recife_raw`.
+
+#### Alternativa: MongoDB local com Docker (opcional)
+
+Se preferir não usar o Atlas, suba um MongoDB local e aponte o `MONGODB_URI` para ele (`mongodb://urbanize:urbanize_secret@localhost:27017/?authSource=admin`):
 
 ```bash
 docker compose up -d
-```
-
-3. Confirme que o serviço está saudável:
-
-```bash
 docker compose ps
 ```
 
-O `docker-compose.yml` lê usuário, senha e porta do arquivo `.env`. A URI que o Python usa é `MONGODB_URI` (também no `.env`).
+O `docker-compose.yml` lê usuário, senha e porta do `.env`.
 
 ### Variáveis de ambiente (`.env`)
 
 | Variável | Descrição |
 |----------|-----------|
-| `MONGODB_URI` | Connection string para o PyMongo |
+| `MONGODB_URI` | Connection string do MongoDB (Atlas `mongodb+srv://...` ou local) |
 | `MONGODB_DB` | Banco dos dados brutos |
 | `MONGODB_RAW_COLLECTION` | Coleção bruta |
-| `MONGO_INITDB_ROOT_USERNAME` / `MONGO_INITDB_ROOT_PASSWORD` | Credenciais do container Mongo |
-| `MONGODB_PORT` | Porta publicada no host |
+| `MONGO_INITDB_ROOT_USERNAME` / `MONGO_INITDB_ROOT_PASSWORD` | Só para o Docker local: credenciais do container |
+| `MONGODB_PORT` | Só para o Docker local: porta publicada no host |
 | `DATABASE_URL` | Connection string do NeonDB (Postgres em nuvem) |
 
 ## Executando o pipeline
 
-Com o MongoDB em execução e o `.env` configurado:
+Com o `.env` configurado (e o IP liberado no Atlas):
 
 ```bash
 python run_etl.py
