@@ -1,7 +1,15 @@
 name: Regressão Completa
 
 on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: regressao-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   regressao-completa:
