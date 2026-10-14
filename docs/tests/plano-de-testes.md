@@ -6,6 +6,7 @@
 Como os testes estão organizados e como rodar cada um: [organizacao-e-execucao.md](organizacao-e-execucao.md).
 Histórias de usuário e critérios de aceite: [historias-de-usuario.md](historias-de-usuario.md).
 Casos de teste: [casos-de-teste.md](casos-de-teste.md).
+Checklist de implementação dos casos: [checklist-implementacao.md](checklist-implementacao.md).
 
 ## Estratégia
 
