@@ -106,6 +106,21 @@ Cenários automatizados (detalhes em [`e2e/README.md`](../../e2e/README.md)):
 | [`gestor-gerencia-demanda.spec.ts`](../../e2e/tests/gestor-gerencia-demanda.spec.ts) | Gestor conduz a demanda até "Resolvida"; cidadão vê o status final |
 | [`triagem-gestor.spec.ts`](../../e2e/tests/triagem-gestor.spec.ts) | Cidadão registra pela UI, gestor aceita a triagem em outra sessão; persiste após reload |
 
+## Pipeline no GitHub Actions — como acionar
+
+O workflow [`.github/workflows/regressao.yml`](../../.github/workflows/regressao.yml) roda os três
+níveis num único job (`regressao-completa`), com um step por nível: **🧪 Testes Unitários**,
+**🔌 Testes de API** (Jest + BDD) e **🌐 Testes E2E**. Só é acionado manualmente:
+
+1. No GitHub, aba **Actions** → **Regressão Completa**.
+2. **Run workflow** → escolher a branch → **Run workflow**.
+3. Abrir a execução para ver o resultado de cada step. Um nível que falha não impede os
+   seguintes de rodar, mas o job termina vermelho.
+
+No CI o app web não roda com `expo start --web`: é gerado com `npx expo export -p web` e servido
+estático em `:8081` (`npx serve dist -s`), o que é mais rápido e estável. O relatório do
+Playwright fica em **Artifacts → playwright-report** da execução.
+
 ## Como os níveis se complementam
 
 - **Unitário** garante que cada serviço isolado (parsing de resposta, guarda de sessão) se

@@ -1,0 +1,78 @@
+name: Regressão Completa
+
+on:
+  workflow_dispatch:
+
+jobs:
+  regressao-completa:
+    name: Regressão completa
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: 📦 Instalar dependências
+        run: |
+          npm ci --prefix backend
+          npm ci --prefix mobile
+          npm ci --prefix e2e
+
+      - name: 🗄️ Preparar banco (SQLite + seed)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          cp ../mobile/.env.example ../mobile/.env
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run db:seed
+
+      - name: 🧪 Testes Unitários
+        working-directory: mobile
+        run: npm test -- --ci
+
+      - name: 🔌 Testes de API
+        if: ${{ !cancelled() }}
+        working-directory: backend
+        run: |
+          npm test -- --ci
+          npm run test:bdd
+
+      - name: 🚀 Subir backend e app web
+        if: ${{ !cancelled() }}
+        env:
+          EXPO_PUBLIC_API_URL: http://localhost:4000/api
+        run: |
+          (cd backend && nohup npm start > ../backend.log 2>&1 &)
+          (cd mobile && npx expo export -p web > ../web.log 2>&1)
+          (cd mobile && nohup npx --yes serve dist -s -l 8081 >> ../web.log 2>&1 &)
+          npx --yes wait-on -t 120000 http://localhost:4000/api/health http://localhost:8081
+
+      - name: 🌐 Testes E2E
+        if: ${{ !cancelled() }}
+        working-directory: e2e
+        run: |
+          npx playwright install --with-deps chromium
+          npm test
+
+      - name: Relatório do Playwright
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          if-no-files-found: ignore
+
+      - name: Logs dos servidores (em caso de falha)
+        if: failure()
+        run: |
+          echo "::group::backend.log"; tail -n 100 backend.log || true; echo "::endgroup::"
+          echo "::group::web.log"; tail -n 100 web.log || true; echo "::endgroup::"
