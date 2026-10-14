@@ -21,6 +21,7 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: 📦 Instalar dependências
+        id: deps
         run: |
           npm ci --prefix backend
           npm ci --prefix mobile
@@ -40,14 +41,14 @@ jobs:
         run: npm test -- --ci
 
       - name: 🔌 Testes de API
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         working-directory: backend
         run: |
           npm test -- --ci
           npm run test:bdd
 
       - name: 🚀 Subir backend e app web
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         env:
           EXPO_PUBLIC_API_URL: http://localhost:4000/api
         run: |
@@ -57,7 +58,7 @@ jobs:
           npx --yes wait-on -t 120000 http://localhost:4000/api/health http://localhost:8081
 
       - name: 🌐 Testes E2E
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         working-directory: e2e
         run: |
           npx playwright install --with-deps chromium
