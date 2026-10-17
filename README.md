@@ -10,6 +10,7 @@ src/
   transform.py  # Transform: limpeza e DataFrame pronto para carga
   load.py       # Load: MongoDB (load_mongo) e SQLite (load_sqlite)
 run_etl.py      # ponto de entrada do pipeline
+orchestration_prefect.py  # o mesmo pipeline orquestrado com Prefect (tasks + flow etl_radar_flow)
 docker-compose.yml  # opcional: MongoDB local (alternativa ao Atlas)
 .env.example    # modelo de variáveis (copie para .env)
 jsons/          # saídas opcionais em JSON
@@ -109,8 +110,41 @@ Fluxo:
 
 Se você tinha um `database/radar.db` antigo **sem** a coluna `mongo_id`, apague o arquivo e rode o ETL de novo para backfill a partir do MongoDB.
 
+## Orquestração com Prefect
+
+O arquivo `orchestration_prefect.py` define o mesmo pipeline como um *flow* do [Prefect](https://www.prefect.io) (`etl_radar_flow`, nome "ETL Radar Recife Prefect"), dividido em *tasks*:
+
+| Task | O que faz | Retentativas |
+|------|-----------|--------------|
+| `extract` | busca Recife na API Radar Meteorológico (`Extract.extract_radar_recife`) | 3, com 10 s de intervalo |
+| `load_data` | insere o resultado bruto no MongoDB (`Load.load_mongo`) | — |
+| `extract_pending` | lê do MongoDB só os documentos que ainda não estão no SQLite | — |
+| `transform` | gera o DataFrame a partir dos pendentes (`Transform.transform_radar`) | — |
+| `load_sqlite` | append incremental na tabela `recife` de `database/radar.db` | — |
+| `load_neon` | append na tabela `recife` do NeonDB | 3, com 10 s de intervalo |
+
+As tasks são chamadas em sequência dentro do flow, e cada uma recebe o resultado da anterior. Por isso, se uma etapa falhar (depois das retentativas), as seguintes não chegam a rodar. Se não houver documentos pendentes, o flow termina depois de `extract_pending`. O flow também tem `retries=3` e usa o logger do Prefect (`get_run_logger`) para registrar quantos registros passaram por cada etapa.
+
+Para acompanhar as execuções pela interface web, suba o servidor local em um terminal:
+
+```bash
+prefect server start
+```
+
+Em outro terminal (com o venv ativo), aponte o cliente para esse servidor (só na primeira vez) e rode o flow:
+
+```bash
+prefect config set PREFECT_API_URL=http://127.0.0.1:4200/api
+```
+
+```bash
+python orchestration_prefect.py
+```
+
+Acesse http://127.0.0.1:4200: em **Runs** aparecem as execuções do flow, com o grafo das tasks, o estado de cada uma (Completed, Failed), os logs e as retentativas.
+
 ## Ideias para quem quiser ir além
 
 - Conexão MongoDB **lazy** em `Extract` e `Load`: só conecta quando necessário; o pipeline fecha com `close()` no `finally` de `run_etl.py`.
-- Agendar execuções periódicas (cron, Airflow, etc.) para enriquecer o histórico no MongoDB.
+- Agendar execuções periódicas (por exemplo com `etl_radar_flow.serve(cron="0 * * * *")` no Prefect) para enriquecer o histórico no MongoDB.
 - Usar `load_mongo(..., substituir=True)` só em desenvolvimento, quando quiser resetar a coleção.
