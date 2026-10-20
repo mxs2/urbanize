@@ -1,17 +1,11 @@
-import os
-
 import pandas as pd
-from dotenv import load_dotenv
 from prefect import flow, get_run_logger, task
 
+import src.config as config
 from src.extract import Extract
 from src.load import Load
 from src.transform import Transform
 
-load_dotenv()
-
-MONGODB_DB = os.getenv("MONGODB_DB", "urbanize_etl")
-MONGODB_RAW_COLLECTION = os.getenv("MONGODB_RAW_COLLECTION", "radar_recife_raw")
 SQLITE_DB = "database/radar.db"
 
 
@@ -34,23 +28,17 @@ def load_data(data: list[dict], db_name: str, collection_name: str):
 
 
 @task
-def extract_pending(db_name: str, collection_name: str, nome_tabela: str) -> list[dict]:
+def transform(db_name: str, collection_name: str) -> pd.DataFrame:
     logger = get_run_logger()
     extractor = Extract()
-    loader = Load()
-    persistidos = loader.sqlite_mongo_ids(nome_banco=SQLITE_DB, nome_tabela=nome_tabela)
-    data = extractor.extract_pending_from_mongo(db_name, collection_name, persistidos)
-    extractor.close()
-    logger.info(f"{len(data)} documento(s) pendente(s) em {db_name}.{collection_name}")
-    return data
-
-
-@task
-def transform(data: list[dict]) -> pd.DataFrame:
-    logger = get_run_logger()
     transformer = Transform()
+    data = extractor.extract_latest_from_mongo(db_name, collection_name)
+    extractor.close()
     df = transformer.transform_radar(data)
-    logger.info(f"{len(df)} linha(s) transformada(s)")
+    logger.info(
+        f"{len(df)} linha(s) transformada(s) a partir de {len(data)} documento(s) "
+        f"da carga mais recente em {db_name}.{collection_name}"
+    )
     return df
 
 
@@ -72,16 +60,13 @@ def load_neon(df: pd.DataFrame, nome_tabela: str):
 
 @flow(name="ETL Radar Recife Prefect", retries=3, log_prints=True)
 def etl_radar_flow(
-    db_name: str = MONGODB_DB, collection_name: str = MONGODB_RAW_COLLECTION
+    db_name: str = config.MONGODB_DB,
+    collection_name: str = config.MONGODB_RAW_COLLECTION,
 ):
 
     data = extract()
     load_data(data, db_name, collection_name)
-    pending = extract_pending(db_name, collection_name, "recife")
-    if not pending:
-        print("SQLite já está em dia com o MongoDB; nada a transformar.")
-        return
-    df = transform(pending)
+    df = transform(db_name, collection_name)
     load_sqlite(df, "recife")
     load_neon(df, "recife")
 

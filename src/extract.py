@@ -1,13 +1,10 @@
-import os
 from typing import Any
 
 import requests
-from bson import ObjectId
-from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
-load_dotenv()
+import src.config as config
 
 
 class Extract:
@@ -31,7 +28,7 @@ class Extract:
             "User-Agent": "Urbanize-ETL/1.0",
             "Accept": "application/json",
         }
-        self.mongo_uri = os.getenv("MONGODB_URI")
+        self.mongo_uri = config.MONGODB_URI
         self._mongo_client: MongoClient | None = None
 
     @property
@@ -69,9 +66,15 @@ class Extract:
         Retorna metadados da cidade (coordenadas, nome, etc.).
         """
         payload = self._get_json(self.ENDPOINT_CIDADES, params={"ibge": ibge})
-        cidades = payload.get("cidades") or []
-        if not cidades:
-            raise ValueError(f"Cidade IBGE {ibge} não encontrada na API.")
+        # Filtra pelo código em vez de confiar em `cidades[0]`: se a API
+        # devolver mais de uma cidade, nenhuma é descartada sem aviso.
+        cidades = [
+            c for c in payload.get("cidades") or [] if str(c.get("ibge")) == ibge
+        ]
+        if len(cidades) != 1:
+            raise ValueError(
+                f"Esperava 1 cidade com IBGE {ibge} na API, veio {len(cidades)}."
+            )
         return cidades[0]
 
     def fetch_temperaturas(self, limite: int = 107) -> dict[str, Any]:
@@ -145,28 +148,26 @@ class Extract:
         )
         return documentos
 
-    def extract_pending_from_mongo(
-        self,
-        db_name: str,
-        collection_name: str,
-        persisted_mongo_ids: set[str],
+    def extract_latest_from_mongo(
+        self, db_name: str, collection_name: str
     ) -> list[dict]:
         """
-        Lê documentos da coleção que ainda não foram persistidos no SQLite.
-
-        Usa o `_id` do MongoDB (como string em `mongo_id` no SQLite) para
-        evitar reprocessar todo o histórico a cada execução.
+        Lê, em uma coleção do MongoDB, apenas os documentos da carga mais
+        recente (maior `data_extracao`). As cargas anteriores continuam
+        guardadas na camada bronze; só não são relidas.
         """
         collection = self.mongo_client[db_name][collection_name]
-        if persisted_mongo_ids:
-            object_ids = [ObjectId(mongo_id) for mongo_id in persisted_mongo_ids]
-            filtro: dict[str, Any] = {"_id": {"$nin": object_ids}}
-        else:
-            filtro = {}
 
-        documentos = list(collection.find(filtro))
+        ultimo = collection.find_one(
+            {"data_extracao": {"$exists": True}}, sort=[("data_extracao", -1)]
+        )
+        if ultimo is None:
+            return []
+
+        documentos = list(collection.find({"data_extracao": ultimo["data_extracao"]}))
         print(
-            f"{len(documentos)} documento(s) pendente(s) na coleção "
-            f"'{collection_name}' (banco '{db_name}')."
+            f"{len(documentos)} documento(s) da carga mais recente "
+            f"({ultimo['data_extracao']:%Y-%m-%d %H:%M:%S} UTC) lido(s) da "
+            f"coleção '{collection_name}' (banco '{db_name}')."
         )
         return documentos

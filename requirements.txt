@@ -6,3 +6,5 @@ pandas
 sqlalchemy
 psycopg2-binary
 prefect
+streamlit
+plotly
