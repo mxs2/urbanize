@@ -1,11 +1,8 @@
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-import os
-from dotenv import load_dotenv
+import src.config as config
 
-load_dotenv()
-
-MONGO_URI = os.getenv("MONGODB_URI")
+MONGO_URI = config.MONGODB_URI
 
 # crie um env e guarde as credenciais
 uri = MONGO_URI

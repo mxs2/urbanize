@@ -3,21 +3,21 @@ import sqlite3
 from datetime import datetime, timezone
 
 import pandas as pd
-from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 
-load_dotenv()
+import src.config as config
 
 
 class Load:
     """
-    Persistência do pipeline: dados brutos no MongoDB e dados transformados no SQLite.
+    Persistência do pipeline: dados brutos no MongoDB (bronze) e dados
+    transformados no SQLite e no NeonDB.
     """
 
     def __init__(self) -> None:
-        self.mongo_uri = os.getenv("MONGODB_URI")
+        self.mongo_uri = config.MONGODB_URI
         self._mongo_client: MongoClient | None = None
 
     @property
@@ -47,44 +47,29 @@ class Load:
 
         print(f"Dados salvos com sucesso em 'jsons/{nome_arquivo}.json'!")
 
-    def load_mongo(
-        self,
-        data: list[dict],
-        db_name: str,
-        collection_name: str,
-        *,
-        substituir: bool = False,
-    ) -> None:
+    def load_mongo(self, data: list[dict], db_name: str, collection_name: str) -> None:
         """
-        Insere o resultado bruto da extração em uma coleção do MongoDB.
+        Insere o resultado bruto da extração em uma coleção do MongoDB
+        (camada bronze).
 
-        Usa a variável de ambiente MONGODB_URI (arquivo .env na raiz do projeto).
-
-        Por padrão faz **append** (histórico): cada execução adiciona novos
-        documentos com `ingested_at`. Use `substituir=True` apenas para limpar
-        a coleção antes de inserir.
+        A coleção nunca é apagada: cada execução **acrescenta** documentos,
+        todos marcados com o mesmo `data_extracao` (data e hora da carga, em
+        UTC), que identifica a carga a que pertencem.
 
         Atributos:
             data: documentos retornados pela API
             db_name: nome do banco MongoDB
             collection_name: nome da coleção
-            substituir: se True, remove documentos anteriores antes de inserir
         """
         if not data:
             print(f"Nenhum documento para inserir em '{collection_name}'.")
             return
 
         collection = self.mongo_client[db_name][collection_name]
+        collection.create_index([("data_extracao", -1)])
 
-        if substituir:
-            collection.delete_many({})
-            print(f"Coleção '{collection_name}' esvaziada (substituir=True).")
-
-        collection.create_index([("ibge", 1), ("ingested_at", -1)])
-        collection.create_index([("atualizado_em", -1)])
-
-        ingested_at = datetime.now(timezone.utc)
-        documentos = [{**doc, "ingested_at": ingested_at.isoformat()} for doc in data]
+        data_extracao = datetime.now(timezone.utc)
+        documentos = [{**doc, "data_extracao": data_extracao} for doc in data]
         collection.insert_many(documentos)
 
         total = collection.count_documents({})
@@ -191,29 +176,49 @@ class Load:
             f"do banco '{nome_banco}' (carga incremental)."
         )
 
+    def neon_mongo_ids(self, nome_tabela: str = "recife") -> set[str]:
+        """
+        Retorna os `mongo_id` já gravados no NeonDB (vazio se a tabela não existir).
+        """
+        engine = create_engine(config.DATABASE_URL)
+        try:
+            if not inspect(engine).has_table(nome_tabela):
+                return set()
+            ids = pd.read_sql(f"SELECT mongo_id FROM {nome_tabela}", engine)
+            return {str(mongo_id) for mongo_id in ids["mongo_id"].dropna()}
+        finally:
+            engine.dispose()
+
     def load_neon(self, df: pd.DataFrame, nome_tabela: str = "recife") -> None:
         """
         Grava o DataFrame transformado no NeonDB (Postgres em nuvem).
 
-        Usa a variável de ambiente DATABASE_URL (arquivo .env). Faz **append**
-        incremental: cada chamada recebe apenas o lote pendente (já filtrado
-        por `mongo_id` antes da transformação).
+        Usa `config.DATABASE_URL`. Faz **append** incremental e ignora as
+        linhas cujo `mongo_id` já existir na tabela, para que uma reexecução
+        (por exemplo, uma retentativa do Prefect) não duplique registros.
         """
         if df.empty:
             print(f"Nenhuma linha nova para gravar em '{nome_tabela}' (NeonDB).")
             return
 
-        database_url = os.getenv("DATABASE_URL")
-        if not database_url:
+        if not config.DATABASE_URL:
             raise ValueError(
                 "DATABASE_URL não definida. Configure a connection string do "
                 "NeonDB no .env."
             )
 
-        engine = create_engine(database_url)
+        ja_persistidos = self.neon_mongo_ids(nome_tabela)
+        df_novo = df[~df["mongo_id"].isin(ja_persistidos)]
+        if df_novo.empty:
+            print(f"Todas as linhas já existem na tabela '{nome_tabela}' do NeonDB.")
+            return
+
+        engine = create_engine(config.DATABASE_URL)
         try:
-            df.to_sql(nome_tabela, engine, if_exists="append", index=False)
+            df_novo.to_sql(nome_tabela, engine, if_exists="append", index=False)
         finally:
             engine.dispose()
 
-        print(f"{len(df)} linha(s) inserida(s) na tabela '{nome_tabela}' do NeonDB!")
+        print(
+            f"{len(df_novo)} linha(s) inserida(s) na tabela '{nome_tabela}' do NeonDB!"
+        )
