@@ -1,5 +1,7 @@
+import jwt from "jsonwebtoken";
 import request from "supertest";
 import { app } from "../../backend/src/app";
+import { env } from "../../backend/src/config/env";
 import { getCidadaoSession, getGestorSession, createUniqueUser } from "./helpers/authHelper";
 import { testDb } from "./helpers/testDb";
 
@@ -129,6 +131,15 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.error.code).toBe("INVALID_CREDENTIALS");
       expect(response.body.error.message).toBe("Credenciais inválidas.");
     });
+
+    it("TC17: Deve rejeitar login sem o campo email e retornar status 422 sem emitir cookie", async () => {
+      const response = await request(app).post("/api/auth/login").send({ senha: "demo" });
+
+      expect(response.status).toBe(422);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe("VALIDATION_ERROR");
+      expect(response.headers["set-cookie"]).toBeUndefined();
+    });
   });
 
   describe("GET /api/auth/me - Perfil do Usuário Autenticado", () => {
@@ -165,6 +176,36 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe("INVALID_TOKEN");
       expect(response.body.error.message).toBe("Token inválido ou expirado.");
+    });
+
+    it("TC24: Deve rejeitar token JWT expirado e retornar status 401 INVALID_TOKEN", async () => {
+      const { user } = await getCidadaoSession();
+      // Token com a assinatura correta, mas já vencido (exp no passado).
+      const expired = jwt.sign({ role: user.role, email: user.email, exp: Math.floor(Date.now() / 1000) - 10 }, env.jwtSecret, {
+        subject: user.id,
+      });
+
+      const response = await request(app).get("/api/auth/me").set("Authorization", `Bearer ${expired}`);
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe("INVALID_TOKEN");
+    });
+
+    it("TC25: Deve autenticar a requisição usando só o cookie de sessão, sem Authorization", async () => {
+      const login = await request(app)
+        .post("/api/auth/login")
+        .send({ email: "cidadao@urbanize.com", senha: "demo" });
+      const cookie = (login.headers["set-cookie"] as unknown as string[]).find((c) =>
+        c.startsWith(`${env.cookieName}=`)
+      );
+      expect(cookie).toBeDefined();
+
+      const response = await request(app).get("/api/auth/me").set("Cookie", cookie!.split(";")[0]);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.user.email).toBe("cidadao@urbanize.com");
     });
   });
 

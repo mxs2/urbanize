@@ -29,8 +29,9 @@ export default function Cadastro() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Criar conta</Text>
-      <TextField label="Nome" value={nome} onChangeText={setNome} />
+      <TextField testID="input-nome" label="Nome" value={nome} onChangeText={setNome} />
       <TextField
+        testID="input-email"
         label="Email"
         autoCapitalize="none"
         keyboardType="email-address"
@@ -38,7 +39,7 @@ export default function Cadastro() {
         onChangeText={setEmail}
       />
       <TextField label="Telefone" keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
-      <TextField label="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
+      <TextField testID="input-senha" label="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
       <Select
         label="Perfil"
         value={role}
@@ -48,7 +49,7 @@ export default function Cadastro() {
         ]}
         onChange={(value) => setRole(value as DemandRole)}
       />
-      <Button label="Criar conta" onPress={handleSubmit} loading={loading} />
+      <Button testID="btn-criar-conta" label="Criar conta" onPress={handleSubmit} loading={loading} />
       <Link href="/login" style={styles.link}>
         Já tem conta? Entrar
       </Link>
