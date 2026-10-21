@@ -1,21 +1,88 @@
-name: Regressão Completa
+name: Regressão
 
+# O que roda em cada etapa:
+# - push (qualquer branch): Unitários + API
+# - pull_request para main: Unitários + API + E2E smoke (@smoke) — checks exigidos pelo Quality Gate
+# - diário (schedule) e manual: Unitários + API + E2E completo
 on:
+  push:
+    branches: ['**']
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
   schedule:
-    - cron: '0 2 * * *' # 23h em Brasília (cron do Actions é em UTC)
+    - cron: '0 2 * * *' # 23h em Brasília (cron do Actions é em UTC; execução best-effort, pode atrasar)
   workflow_dispatch:
 
 concurrency:
-  group: regressao-${{ github.ref }}
+  # O evento entra no grupo para um push na main não cancelar a regressão agendada.
+  group: regressao-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  regressao-completa:
-    name: Regressão completa
+  unitarios:
+    name: Unitários
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: 📦 Instalar dependências
+        run: npm ci --prefix mobile
+
+      - name: 🧪 Testes Unitários
+        working-directory: mobile
+        run: |
+          cp .env.example .env
+          npm test -- --ci
+
+  api:
+    name: API
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Instalar dependências
+        run: npm ci --prefix backend
+
+      - name: 🗄️ Preparar banco (SQLite + seed)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run db:seed
+
+      - name: 🔌 Testes de API (Jest)
+        working-directory: backend
+        run: npm test -- --ci
+
+      - name: 🥒 Testes de API (BDD)
+        if: ${{ !cancelled() }}
+        working-directory: backend
+        run: npm run test:bdd
+
+  e2e:
+    name: E2E
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -31,7 +98,6 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: 📦 Instalar dependências
-        id: deps
         run: |
           npm ci --prefix backend
           npm ci --prefix mobile
@@ -46,33 +112,20 @@ jobs:
           npx prisma migrate deploy
           npm run db:seed
 
-      - name: 🧪 Testes Unitários
-        working-directory: mobile
-        run: npm test -- --ci
-
-      - name: 🔌 Testes de API
-        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
-        working-directory: backend
-        run: |
-          npm test -- --ci
-          npm run test:bdd
-
       - name: 🚀 Subir backend e app web
-        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
         env:
           EXPO_PUBLIC_API_URL: http://localhost:4000/api
         run: |
           (cd backend && nohup npm start > ../backend.log 2>&1 &)
           (cd mobile && npx expo export -p web > ../web.log 2>&1)
-          (cd mobile && nohup npx --yes serve dist -s -l 8081 >> ../web.log 2>&1 &)
-          npx --yes wait-on -t 120000 http://localhost:4000/api/health http://localhost:8081
+          (cd mobile && nohup npx --yes serve@14.2.4 dist -s -l 8081 >> ../web.log 2>&1 &)
+          npx --yes wait-on@8.0.1 -t 120000 http://localhost:4000/api/health http://localhost:8081
 
-      - name: 🌐 Testes E2E
-        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+      - name: 🌐 Testes E2E (${{ github.event_name == 'pull_request' && 'smoke' || 'completo' }})
         working-directory: e2e
         run: |
           npx playwright install --with-deps chromium
-          npm test
+          npm test -- ${{ github.event_name == 'pull_request' && '--grep @smoke' || '' }}
 
       - name: Relatório do Playwright
         if: always()
