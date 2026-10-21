@@ -11,7 +11,7 @@ import { expect, test } from "@playwright/test";
  *   4. Submissão e verificação do protocolo gerado na tela de detalhe (demandas/[id].tsx).
  *   5. Confirmação de que a demanda aparece na listagem "Minhas demandas" (demandas/index.tsx).
  */
-test("cidadão registra uma nova demanda e a vê na listagem", async ({ page }) => {
+test("cidadão registra uma nova demanda e a vê na listagem", { tag: "@smoke" }, async ({ page }) => {
   const titulo = `Buraco na via - teste e2e ${Date.now()}`;
 
   await page.goto("/login");

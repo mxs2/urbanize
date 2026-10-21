@@ -17,7 +17,7 @@ const API_URL = process.env.API_URL ?? "http://127.0.0.1:4000/api";
  *   5. A listagem do gestor reflete o status "Resolvida".
  *   6. O cidadão que registrou a demanda vê o status "Resolvida" em "Minhas demandas".
  */
-test("gestor conduz uma demanda da triagem até Resolvida", async ({ page, request }) => {
+test("gestor conduz uma demanda da triagem até Resolvida", { tag: "@smoke" }, async ({ page, request }) => {
   const titulo = `Poste apagado - teste e2e gestor ${Date.now()}`;
 
   const login = await request.post(`${API_URL}/auth/login`, {
