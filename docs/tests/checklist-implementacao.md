@@ -19,7 +19,7 @@ componentes, testada pela API) e Sistema (E2E pela interface).
 | CT-GEN | `tests/acceptance/04_general.test.ts` |
 | BDD login | `tests/bdd/features/login.feature` |
 | unit api / unit session | `tests/unit/services/api.test.ts` / `session.test.ts` |
-| E2E <nome> | `e2e/tests/<nome>.spec.ts` |
+| E2E `<nome>` | `e2e/tests/<nome>.spec.ts` |
 
 **Pipeline:** em que etapas do [workflow de regressão](../../.github/workflows/regressao.yml) o teste roda — `push`
 (qualquer branch: unitários e API), `PR` (antes do merge na main: unitários, API e E2E `@smoke`) e `diário` (suíte
@@ -43,14 +43,11 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 44 formam o backlog de automaç
 
 | Responsável | Casos | Tema |
 | --- | --- | --- |
-| Enzo Antuna | TC02, TC03, TC04, TC05, TC06, TC07 | Cadastro (API) |
-| Alan Sobral | TC08, TC09, TC10, TC17, TC26 | Validação de cadastro, login e logout (API) |
-| Pedro Rennil | TC24, TC25, TC46, TC47, TC48 | Token expirado, sessão por cookie e upload (API) |
-| Kayky | TC54, TC57, TC58, TC60, TC61 | Listagem e filtros (API) |
-| Hyngrid | TC29, TC30, TC31, TC32, TC34, TC36 | Criação de demanda e valores padrão (API) |
-| Janderson | TC37, TC39, TC76, TC77, TC86, TC87 | Enums da demanda, ciclo de status e métricas sem Redis (API) |
-| Pamela | TC12, TC62, TC92, TC93, TC94 | Cadastro, filtro e responsividade (E2E) |
-| Diego Xavier | TC44, TC49, TC50, TC65, TC82, TC83 | Componentes do app e triagem/Vision |
+| Enzo Antuna | TC02, TC03, TC04, TC05, TC06, TC07, TC08, TC09, TC10 | Cadastro e validação de cadastro (API) |
+| Hyngrid | TC29, TC30, TC31, TC32, TC34, TC36, TC57, TC58, TC60 | Criação de demanda, valores padrão e filtros (API) |
+| Janderson | TC37, TC39, TC54, TC61, TC76, TC77, TC86, TC87 | Enums, listagem por órgão, ciclo de status e métricas sem Redis (API) |
+| Pamela | TC12, TC17, TC24, TC25, TC26, TC62, TC92, TC93, TC94 | Login, sessão e logout (API); cadastro, filtro e responsividade (E2E) |
+| Diego Xavier | TC44, TC46, TC47, TC48, TC49, TC50, TC65, TC82, TC83 | Componentes do app, upload e triagem/Vision |
 
 ## Checklist
 
@@ -63,25 +60,25 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 44 formam o backlog de automaç
 | ⬜ | [TC05](casos-de-teste.md#tc05) | HU-01 | Recusar cadastro com role fora do enum. | Integração | — | — | Enzo Antuna |
 | 🟡 | [TC06](casos-de-teste.md#tc06) | HU-01 | Recusar cadastro com nome de 1 caractere. | Integração | CT-AUTH-03 | push · PR · diário | Enzo Antuna |
 | ⬜ | [TC07](casos-de-teste.md#tc07) | HU-01 | Aceitar cadastro com nome de 2 caracteres. | Integração | — | — | Enzo Antuna |
-| 🟡 | [TC08](casos-de-teste.md#tc08) | HU-01 | Recusar cadastro com senha vazia. | Integração | CT-AUTH-03 | push · PR · diário | Alan Sobral |
-| ⬜ | [TC09](casos-de-teste.md#tc09) | HU-01 | Aceitar cadastro com senha de 1 caractere. | Integração | — | — | Alan Sobral |
-| 🟡 | [TC10](casos-de-teste.md#tc10) | HU-01 | Recusar cadastro com e-mail em formato inválido. | Integração | CT-AUTH-03 | push · PR · diário | Alan Sobral |
+| 🟡 | [TC08](casos-de-teste.md#tc08) | HU-01 | Recusar cadastro com senha vazia. | Integração | CT-AUTH-03 | push · PR · diário | Enzo Antuna |
+| ⬜ | [TC09](casos-de-teste.md#tc09) | HU-01 | Aceitar cadastro com senha de 1 caractere. | Integração | — | — | Enzo Antuna |
+| 🟡 | [TC10](casos-de-teste.md#tc10) | HU-01 | Recusar cadastro com e-mail em formato inválido. | Integração | CT-AUTH-03 | push · PR · diário | Enzo Antuna |
 | ✅ | [TC11](casos-de-teste.md#tc11) | HU-01 | Recusar cadastro com e-mail já cadastrado. | Integração | CT-AUTH-02 | push · PR · diário | — |
 | ⬜ | [TC12](casos-de-teste.md#tc12) | HU-01 | Criar conta de cidadão pela tela de cadastro. | Sistema | — | — | Pamela |
 | ✅ | [TC13](casos-de-teste.md#tc13) | HU-02 | Autenticar usuário com perfil cidadão. | Integração | CT-AUTH-04, BDD login | push · PR · diário | — |
 | ✅ | [TC14](casos-de-teste.md#tc14) | HU-02 | Autenticar usuário com perfil gestor. | Integração | CT-AUTH-05 | push · PR · diário | — |
 | ✅ | [TC15](casos-de-teste.md#tc15) | HU-02 | Recusar login com senha incorreta. | Integração | CT-AUTH-06 | push · PR · diário | — |
 | ✅ | [TC16](casos-de-teste.md#tc16) | HU-02 | Recusar login com e-mail não cadastrado. | Integração | CT-AUTH-07 | push · PR · diário | — |
-| ⬜ | [TC17](casos-de-teste.md#tc17) | HU-02 | Recusar login sem o campo email. | Integração | — | — | Alan Sobral |
+| ⬜ | [TC17](casos-de-teste.md#tc17) | HU-02 | Recusar login sem o campo email. | Integração | — | — | Pamela |
 | ✅ | [TC18](casos-de-teste.md#tc18) | HU-02 | Entrar pela tela de login com perfil cidadão. | Sistema | E2E registrar-demanda | PR (smoke) · diário | — |
 | ✅ | [TC19](casos-de-teste.md#tc19) | HU-02 | Entrar pela tela de login com perfil gestor. | Sistema | E2E gestor-gerencia-demanda | PR (smoke) · diário | — |
 | ✅ | [TC20](casos-de-teste.md#tc20) | HU-02 | Guardar na sessão o token retornado pelo login. | Componente | unit session | push · PR · diário | — |
 | ✅ | [TC21](casos-de-teste.md#tc21) | HU-02 | Enviar o token da sessão no cabeçalho Authorization das requisições. | Componente | unit api | push · PR · diário | — |
 | ✅ | [TC22](casos-de-teste.md#tc22) | HU-02 | Recusar acesso a rota protegida sem credencial. | Integração | CT-AUTH-09 | push · PR · diário | — |
 | ✅ | [TC23](casos-de-teste.md#tc23) | HU-02 | Recusar acesso com token adulterado. | Integração | CT-AUTH-10 | push · PR · diário | — |
-| ⬜ | [TC24](casos-de-teste.md#tc24) | HU-02 | Recusar acesso com token expirado. | Integração | — | — | Pedro Rennil |
-| ⬜ | [TC25](casos-de-teste.md#tc25) | HU-02 | Autenticar requisição usando só o cookie de sessão. | Integração | — | — | Pedro Rennil |
-| 🟡 | [TC26](casos-de-teste.md#tc26) | HU-02 | Remover o cookie de sessão no logout. | Integração | CT-AUTH-11 | push · PR · diário | Alan Sobral |
+| ⬜ | [TC24](casos-de-teste.md#tc24) | HU-02 | Recusar acesso com token expirado. | Integração | — | — | Pamela |
+| ⬜ | [TC25](casos-de-teste.md#tc25) | HU-02 | Autenticar requisição usando só o cookie de sessão. | Integração | — | — | Pamela |
+| 🟡 | [TC26](casos-de-teste.md#tc26) | HU-02 | Remover o cookie de sessão no logout. | Integração | CT-AUTH-11 | push · PR · diário | Pamela |
 | ✅ | [TC27](casos-de-teste.md#tc27) | SUPOSIÇÃO | Retornar erro padronizado para rota inexistente. | Integração | CT-GEN-03 | push · PR · diário | — |
 | ✅ | [TC28](casos-de-teste.md#tc28) | HU-03 | Gerar protocolo ao criar demanda válida. | Integração | CT-DEM-01 | push · PR · diário | — |
 | 🟡 | [TC29](casos-de-teste.md#tc29) | HU-03 | Criar a demanda com status inicial registrada. | Integração | CT-DEM-01 | push · PR · diário | Hyngrid |
@@ -101,22 +98,22 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 44 formam o backlog de automaç
 | ⬜ | [TC43](casos-de-teste.md#tc43) | HU-03 | Impedir o envio da demanda sem aceite de compartilhamento de dados. | Sistema | — | manual | — |
 | ⬜ | [TC44](casos-de-teste.md#tc44) | HU-03 | Preencher título e descrição com a sugestão da triagem depois do upload. | Componente | — | — | Diego Xavier |
 | ⬜ | [TC45](casos-de-teste.md#tc45) | HU-12 | Vincular à demanda criada a foto anexada no formulário. | Sistema | — | manual | — |
-| ⬜ | [TC46](casos-de-teste.md#tc46) | HU-12 | Receber a URL da imagem ao enviar arquivo válido. | Integração | — | — | Pedro Rennil |
-| ⬜ | [TC47](casos-de-teste.md#tc47) | HU-12 | Recusar upload sem arquivo. | Integração | — | — | Pedro Rennil |
-| ⬜ | [TC48](casos-de-teste.md#tc48) | HU-12 | Recusar upload sem autenticação. | Integração | — | — | Pedro Rennil |
+| ⬜ | [TC46](casos-de-teste.md#tc46) | HU-12 | Receber a URL da imagem ao enviar arquivo válido. | Integração | — | — | Diego Xavier |
+| ⬜ | [TC47](casos-de-teste.md#tc47) | HU-12 | Recusar upload sem arquivo. | Integração | — | — | Diego Xavier |
+| ⬜ | [TC48](casos-de-teste.md#tc48) | HU-12 | Recusar upload sem autenticação. | Integração | — | — | Diego Xavier |
 | ⬜ | [TC49](casos-de-teste.md#tc49) | HU-08 | Usar a categoria enviada pelo frontend quando o Google Vision não está configurado. | Integração | — | — | Diego Xavier |
 | ⬜ | [TC50](casos-de-teste.md#tc50) | HU-08 | Usar a categoria enviada quando o Google Vision configurado falha. | Integração | — | — | Diego Xavier |
 | ⬜ | [TC51](casos-de-teste.md#tc51) | HU-03 | Registrar demanda com a categoria escolhida manualmente quando o Vision está indisponível. | Sistema | — | manual | — |
 | ✅ | [TC52](casos-de-teste.md#tc52) | HU-06 | Listar para o cidadão só as próprias demandas. | Integração | CT-DEM-07 | push · PR · diário | — |
 | ✅ | [TC53](casos-de-teste.md#tc53) | HU-06 | Listar a fila geral para gestor sem vínculo com órgão. | Integração | CT-DEM-08 | push · PR · diário | — |
-| ⬜ | [TC54](casos-de-teste.md#tc54) | HU-06 | Listar para gestor vinculado só as demandas do seu órgão. | Integração | — | — | Kayky |
+| ⬜ | [TC54](casos-de-teste.md#tc54) | HU-06 | Listar para gestor vinculado só as demandas do seu órgão. | Integração | — | — | Janderson |
 | ✅ | [TC55](casos-de-teste.md#tc55) | HU-06 | Filtrar demandas por status. | Integração | CT-DEM-09 | push · PR · diário | — |
 | ✅ | [TC56](casos-de-teste.md#tc56) | HU-06 | Filtrar demandas por categoria. | Integração | CT-DEM-10 | push · PR · diário | — |
-| ⬜ | [TC57](casos-de-teste.md#tc57) | HU-06 | Filtrar demandas por prioridade. | Integração | — | — | Kayky |
-| ⬜ | [TC58](casos-de-teste.md#tc58) | HU-06 | Filtrar demandas por bairro. | Integração | — | — | Kayky |
+| ⬜ | [TC57](casos-de-teste.md#tc57) | HU-06 | Filtrar demandas por prioridade. | Integração | — | — | Hyngrid |
+| ⬜ | [TC58](casos-de-teste.md#tc58) | HU-06 | Filtrar demandas por bairro. | Integração | — | — | Hyngrid |
 | ✅ | [TC59](casos-de-teste.md#tc59) | HU-06 | Filtrar demandas por texto em busca. | Integração | CT-DEM-11 | push · PR · diário | — |
-| ⬜ | [TC60](casos-de-teste.md#tc60) | HU-06 | Combinar filtros status e categoria. | Integração | — | — | Kayky |
-| ⬜ | [TC61](casos-de-teste.md#tc61) | HU-06 | Recusar filtro com status fora do enum. | Integração | — | — | Kayky |
+| ⬜ | [TC60](casos-de-teste.md#tc60) | HU-06 | Combinar filtros status e categoria. | Integração | — | — | Hyngrid |
+| ⬜ | [TC61](casos-de-teste.md#tc61) | HU-06 | Recusar filtro com status fora do enum. | Integração | — | — | Janderson |
 | ⬜ | [TC62](casos-de-teste.md#tc62) | HU-06 | Aplicar filtro de status na tela de listagem. | Sistema | — | — | Pamela |
 | ⬜ | [TC63](casos-de-teste.md#tc63) | HU-06 | Exibir estado vazio na listagem de cidadão sem demandas. | Sistema | — | manual | — |
 | ⬜ | [TC64](casos-de-teste.md#tc64) | HU-06 | Exibir estado de erro na listagem quando a API está indisponível. | Sistema | — | manual | — |
