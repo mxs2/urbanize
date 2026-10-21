@@ -437,27 +437,27 @@ prioridade = (Risco × Frequência) ÷ Custo
 
 *Uma linha por caso selecionado para automação.*
 
-**Critérios das escalas.** Risco 3 = autenticação, controle de acesso, criação da demanda, mudança de status ou fallback do Vision (quebra silenciosa expõe dados ou impede o fluxo principal); 2 = validação, filtros, métricas e exibição; 1 = valores padrão, navegação e layout. Custo 1 = Ti ≤ 20 min e Mn ≤ 5 min/mês; 3 = Ti ≥ 90 min ou Mn ≥ 20 min/mês; 2 = o restante. Frequência 3 = a cada push (20/mês); 2 = antes de cada merge (8/mês); 1 = semanal (4/mês). Empates são ordenados por maior risco e menor custo. Status "Existe" indica teste já presente no repositório (CT-\* em tests/acceptance, testes unitários em tests/unit ou spec em e2e/), que precisa ter o oráculo revisado contra a matriz 4.5. "Bloqueado" indica caso que depende de decisão de produto sobre a lacuna indicada.
+**Critérios das escalas.** Risco 3 = autenticação, controle de acesso, criação da demanda, mudança de status ou fallback do Vision (quebra silenciosa expõe dados ou impede o fluxo principal); 2 = validação, filtros, métricas e exibição; 1 = valores padrão, navegação e layout. Custo 1 = Ti ≤ 20 min e Mn ≤ 5 min/mês; 3 = Ti ≥ 90 min ou Mn ≥ 20 min/mês; 2 = o restante. Frequência 3 = a cada push (20/mês); 2 = antes de cada merge (8/mês); 1 = semanal (4/mês). Empates são ordenados por maior risco e menor custo. Status "Existe" indica teste já presente no repositório (CT-\* em tests/acceptance, testes unitários em tests/unit ou spec em e2e/), que precisa ter o oráculo revisado contra a matriz 4.5. "Parcial" indica teste existente que ainda não cobre tudo o que o caso pede (ver notas em checklist-implementacao.md). "Bloqueado" indica caso que depende de decisão de produto sobre a lacuna indicada. O status espelha [checklist-implementacao.md](checklist-implementacao.md), que é a fonte da verdade.
 
 | Ordem | ID do caso | HU | Nível | Risco | Custo | Frequência | Prioridade | Responsável | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | TC01 | HU-01 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-01) |
 | 2 | TC03 | HU-01 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | A fazer |
 | 3 | TC04 | HU-01 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | A fazer |
-| 4 | TC13 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-04) |
+| 4 | TC13 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-04, BDD login) |
 | 5 | TC14 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-05) |
 | 6 | TC15 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-06) |
 | 7 | TC16 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-07) |
-| 8 | TC20 | HU-02 | Componente | 3 | 1 | 3 | 9,0 | Diego David | Existe (teste unitário de session) |
-| 9 | TC21 | HU-02 | Componente | 3 | 1 | 3 | 9,0 | Diego David | Existe (teste unitário de api) |
+| 8 | TC20 | HU-02 | Componente | 3 | 1 | 3 | 9,0 | Diego David | Existe (unit session) |
+| 9 | TC21 | HU-02 | Componente | 3 | 1 | 3 | 9,0 | Diego David | Existe (unit api) |
 | 10 | TC22 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-09) |
 | 11 | TC23 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-10) |
-| 12 | TC25 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | A fazer |
-| 13 | TC26 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-11) |
+| 12 | TC25 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Pedro Rennil | A fazer |
+| 13 | TC26 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Alan Sobral | Parcial (CT-AUTH-11) |
 | 14 | TC28 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-01) |
-| 15 | TC29 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | A fazer |
+| 15 | TC29 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid | Parcial (CT-DEM-01) |
 | 16 | TC40 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-02) |
-| 17 | TC48 | HU-12 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | A fazer |
+| 17 | TC48 | HU-12 | Integração | 3 | 1 | 3 | 9,0 | Pedro Rennil | A fazer |
 | 18 | TC52 | HU-06 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-07) |
 | 19 | TC53 | HU-06 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-08) |
 | 20 | TC67 | HU-04 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-14) |
@@ -465,63 +465,63 @@ prioridade = (Risco × Frequência) ÷ Custo
 | 22 | TC71 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-18) |
 | 23 | TC72 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-17) |
 | 24 | TC73 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-21) |
-| 25 | TC02 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
+| 25 | TC02 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Parcial (CT-AUTH-01) |
 | 26 | TC05 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
-| 27 | TC06 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
+| 27 | TC06 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Parcial (CT-AUTH-03) |
 | 28 | TC07 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
-| 29 | TC08 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
-| 30 | TC09 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
-| 31 | TC10 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
+| 29 | TC08 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Alan Sobral | Parcial (CT-AUTH-03) |
+| 30 | TC09 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Alan Sobral | A fazer |
+| 31 | TC10 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Alan Sobral | Parcial (CT-AUTH-03) |
 | 32 | TC11 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-AUTH-02) |
-| 33 | TC17 | HU-02 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
+| 33 | TC17 | HU-02 | Integração | 2 | 1 | 3 | 6,0 | Alan Sobral | A fazer |
 | 34 | TC33 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-03) |
-| 35 | TC34 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
+| 35 | TC34 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | A fazer |
 | 36 | TC35 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-04) |
-| 37 | TC36 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
-| 38 | TC37 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
+| 37 | TC36 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | A fazer |
+| 38 | TC37 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Janderson | A fazer |
 | 39 | TC38 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-05) |
-| 40 | TC39 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
-| 41 | TC47 | HU-12 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
+| 40 | TC39 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Janderson | A fazer |
+| 41 | TC47 | HU-12 | Integração | 2 | 1 | 3 | 6,0 | Pedro Rennil | A fazer |
 | 42 | TC55 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-09) |
 | 43 | TC56 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-10) |
-| 44 | TC57 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
-| 45 | TC58 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
+| 44 | TC57 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Kayky | A fazer |
+| 45 | TC58 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Kayky | A fazer |
 | 46 | TC59 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-11) |
-| 47 | TC60 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
-| 48 | TC61 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
+| 47 | TC60 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Kayky | A fazer |
+| 48 | TC61 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Kayky | A fazer |
 | 49 | TC66 | HU-04 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-13) |
 | 50 | TC68 | HU-04 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-16) |
 | 51 | TC74 | HU-05 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-DEM-19) |
 | 52 | TC75 | HU-05 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-DEM-20) |
 | 53 | TC84 | HU-10 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-MET-02) |
 | 54 | TC85 | HU-07 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-MET-01) |
-| 55 | TC86 | HU-07 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | A fazer |
-| 56 | TC24 | HU-02 | Integração | 3 | 2 | 3 | 4,5 | Enzo Antuna | A fazer |
-| 57 | TC49 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Hyngrid Souza | A fazer |
-| 58 | TC50 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Hyngrid Souza | A fazer |
-| 59 | TC54 | HU-06 | Integração | 3 | 2 | 3 | 4,5 | Hyngrid Souza | Bloqueado (L09) |
-| 60 | TC76 | HU-05 | Integração | 3 | 2 | 3 | 4,5 | Enzo Antuna | Bloqueado (L05) |
-| 61 | TC77 | HU-05 | Integração | 3 | 2 | 3 | 4,5 | Enzo Antuna | Bloqueado (L05) |
-| 62 | TC18 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | A fazer |
-| 63 | TC19 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | A fazer |
-| 64 | TC41 | HU-03 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (registrar-demanda.spec) |
-| 65 | TC44 | HU-03 | Componente | 2 | 2 | 3 | 3,0 | Diego David | A fazer |
-| 66 | TC46 | HU-12 | Integração | 2 | 2 | 3 | 3,0 | Hyngrid Souza | A fazer |
-| 67 | TC83 | HU-08 | Integração | 2 | 2 | 3 | 3,0 | Hyngrid Souza | A fazer |
-| 68 | TC87 | HU-07 | Integração | 2 | 2 | 3 | 3,0 | Hyngrid Souza | Bloqueado (L14) |
+| 55 | TC86 | HU-07 | Integração | 2 | 1 | 3 | 6,0 | Janderson | A fazer |
+| 56 | TC24 | HU-02 | Integração | 3 | 2 | 3 | 4,5 | Pedro Rennil | A fazer |
+| 57 | TC49 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | A fazer |
+| 58 | TC50 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | A fazer |
+| 59 | TC54 | HU-06 | Integração | 3 | 2 | 3 | 4,5 | Kayky | Bloqueado (L09) |
+| 60 | TC76 | HU-05 | Integração | 3 | 2 | 3 | 4,5 | Janderson | Parcial (E2E gestor-gerencia-demanda); API bloqueado (L05) |
+| 61 | TC77 | HU-05 | Integração | 3 | 2 | 3 | 4,5 | Janderson | Bloqueado (L05) |
+| 62 | TC18 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E registrar-demanda) |
+| 63 | TC19 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
+| 64 | TC41 | HU-03 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E registrar-demanda) |
+| 65 | TC44 | HU-03 | Componente | 2 | 2 | 3 | 3,0 | Diego Xavier | A fazer |
+| 66 | TC46 | HU-12 | Integração | 2 | 2 | 3 | 3,0 | Pedro Rennil | A fazer |
+| 67 | TC83 | HU-08 | Integração | 2 | 2 | 3 | 3,0 | Diego Xavier | A fazer |
+| 68 | TC87 | HU-07 | Integração | 2 | 2 | 3 | 3,0 | Janderson | Bloqueado (L14) |
 | 69 | TC27 | — | Integração | 1 | 1 | 3 | 3,0 | Enzo Antuna | Existe (CT-GEN-03) |
-| 70 | TC30 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid Souza | A fazer |
-| 71 | TC31 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid Souza | A fazer |
-| 72 | TC32 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid Souza | A fazer |
-| 73 | TC78 | HU-04 | Sistema | 3 | 3 | 2 | 2,0 | Diego David | A fazer |
-| 74 | TC12 | HU-01 | Sistema | 2 | 2 | 2 | 2,0 | Diego David | A fazer |
-| 75 | TC62 | HU-06 | Sistema | 2 | 2 | 2 | 2,0 | Diego David | Existe (buscar-demandas.spec) |
-| 76 | TC79 | HU-05 | Sistema | 2 | 2 | 2 | 2,0 | Diego David | A fazer |
-| 77 | TC82 | HU-08 | Sistema | 2 | 2 | 2 | 2,0 | Diego David | Existe (triagem-gestor.spec) |
-| 78 | TC65 | HU-06 | Componente | 1 | 2 | 3 | 1,5 | Diego David | A fazer |
-| 79 | TC92 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Diego David | A fazer |
-| 80 | TC93 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Diego David | A fazer |
-| 81 | TC94 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Diego David | A fazer |
+| 70 | TC30 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | A fazer |
+| 71 | TC31 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | A fazer |
+| 72 | TC32 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | A fazer |
+| 73 | TC78 | HU-04 | Sistema | 3 | 3 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
+| 74 | TC12 | HU-01 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | A fazer |
+| 75 | TC62 | HU-06 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | A fazer |
+| 76 | TC79 | HU-05 | Sistema | 2 | 2 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
+| 77 | TC82 | HU-08 | Sistema | 2 | 2 | 2 | 2,0 | Diego Xavier | Parcial (E2E gestor-aceita-triagem) |
+| 78 | TC65 | HU-06 | Componente | 1 | 2 | 3 | 1,5 | Diego Xavier | A fazer |
+| 79 | TC92 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | A fazer |
+| 80 | TC93 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | A fazer |
+| 81 | TC94 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | A fazer |
 
 **Verificação**
 

@@ -47,7 +47,7 @@ não-determinismo do modelo dentro da suíte.
 | AUT-13 | E2E: login gestor, revisar triagem, alterar status | E2E | P1 | **Automatizado** |
 | AUT-14 | Dois gestores alteram a mesma demanda em paralelo sem duplicar histórico | Concorrência | P2 | Não iniciado |
 | AUT-15 | Cron executado duas vezes não duplica `MetricsSnapshot` | Concorrência | P2 | Não iniciado |
-| AUT-16 | Pipeline de CI roda a suíte a cada push e bloqueia merge vermelho | CI | P1 | Não iniciado |
+| AUT-16 | Pipeline de CI roda a suíte a cada push e bloqueia merge vermelho | CI | P1 | Em andamento (pipeline por etapa pronto; Quality Gate aguardando acesso admin) |
 
 **Critério de seleção:** repete a cada regressão, alto impacto, determinístico, custo baixo.
 
