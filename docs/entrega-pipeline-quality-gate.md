@@ -122,8 +122,11 @@ Testes smoke (2):
 
 ## 4. Quality Gate ✅
 
-A regra é uma *branch protection rule* da `main`, configurada no GitHub em **Settings → Branches**, e não no
-repositório. Ela exige:
+O Quality Gate é configurado no GitHub, e não no repositório, em duas camadas.
+
+### Branch protection rule da `main` (Settings → Branches)
+
+É a camada que impede merge com teste falhando. Ela exige:
 
 - **Status checks obrigatórios:** `Unitários`, `API` e `E2E`. Os nomes são os `name:` dos jobs no workflow.
 - **Pull request com 1 aprovação** de alguém com permissão de escrita.
@@ -138,6 +141,22 @@ Configuração lida pela API do GitHub (`gh api repos/mxs2/urbanize/branches/mai
   "enforcement_level": "non_admins"
 }
 ```
+
+### Ruleset "Hay" (Settings → Rules → Rulesets)
+
+Vale para todas as branches (`~ALL`), está ativo e tem a lista de bypass vazia, ou seja, se aplica também a admins.
+Regras aplicadas:
+
+| Regra | Efeito |
+| --- | --- |
+| Restrict deletions (`deletion`) | Impede apagar a branch |
+| Block force pushes (`non_fast_forward`) | Impede reescrever o histórico com force push |
+| Require code scanning results (`code_scanning`) | Bloqueia o merge se o CodeQL encontrar alerta de segurança `high_or_higher` ou alerta com severidade `errors` |
+| Require status checks to pass (`required_status_checks`) | Exige a branch atualizada com a base antes do merge (`strict`); a lista de checks está vazia, porque os checks de teste são exigidos pela branch protection acima |
+
+O CodeQL roda pelo *default setup* do code scanning (workflows `CodeQL` e `GitHub Advanced Security` na aba Actions),
+sem arquivo no repositório. No [PR #42](https://github.com/mxs2/urbanize/pull/42), os checks `Analyze (actions)`,
+`Analyze (javascript-typescript)` e `CodeQL` passaram.
 
 ### Evidência: merge bloqueado com teste falhando
 
@@ -165,5 +184,7 @@ desabilitado.
 
 ### Ponto de atenção
 
-`enforcement_level: non_admins` indica que administradores do repositório não ficam presos à regra. Para fechar essa
-brecha, um admin deve ativar **Do not allow bypassing the above settings** na regra da `main`.
+`enforcement_level: non_admins` indica que administradores do repositório não ficam presos à branch protection, então
+um admin consegue mergear com teste falhando. O ruleset "Hay" não tem essa brecha, mas não exige os testes. Para
+fechar, um admin deve ativar **Do not allow bypassing the above settings** na regra da `main` ou incluir `Unitários`,
+`API` e `E2E` nos status checks do ruleset.
