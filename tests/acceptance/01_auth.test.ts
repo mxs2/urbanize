@@ -44,6 +44,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       const setCookie = response.headers["set-cookie"];
       expect(setCookie).toBeDefined();
       expect(setCookie[0]).toMatch(/urbanize_session=/);
+      expect(setCookie[0]).toMatch(/HttpOnly/i);
     });
 
     it("CT-AUTH-02: Deve rejeitar cadastro com email duplicado e retornar status 409", async () => {
@@ -82,6 +83,125 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.error.code).toBe("VALIDATION_ERROR");
       expect(Array.isArray(response.body.error.details)).toBe(true);
       expect(response.body.error.details.length).toBeGreaterThan(0);
+    });
+
+    it("TC02: Deve verificar que o cadastro cria o cookie de sessão HTTP-only", async () => {
+      const email = `novo02-${Date.now()}@urbanize.test`;
+      const response = await request(app).post("/api/auth/register").send({
+        nome: "Maria Silva",
+        email,
+        senha: "demo",
+      });
+
+      expect(response.status).toBe(201);
+      const setCookie = response.headers["set-cookie"];
+      expect(setCookie).toBeDefined();
+      expect(setCookie[0]).toMatch(/urbanize_session=/);
+      expect(setCookie[0]).toMatch(/HttpOnly/i);
+    });
+
+    it("TC03: Deve atribuir o perfil cidadao quando role é omitido", async () => {
+      const email = `novo03-${Date.now()}@urbanize.test`;
+      const response = await request(app).post("/api/auth/register").send({
+        nome: "Maria Silva",
+        email,
+        senha: "demo",
+      });
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.user.role).toBe("cidadao");
+    });
+
+    it("TC04: Deve cadastrar usuário com perfil gestor", async () => {
+      const email = `novo04-${Date.now()}@urbanize.test`;
+      const response = await request(app).post("/api/auth/register").send({
+        nome: "Gestor Teste",
+        email,
+        senha: "demo",
+        role: "gestor",
+      });
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.user.role).toBe("gestor");
+    });
+
+    it("TC05: Deve recusar cadastro com role fora do enum e retornar status 422", async () => {
+      const email = `novo05-${Date.now()}@urbanize.test`;
+      const response = await request(app).post("/api/auth/register").send({
+        nome: "Maria Silva",
+        email,
+        senha: "demo",
+        role: "admin",
+      });
+
+      expect(response.status).toBe(422);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("TC06: Deve recusar cadastro com nome de 1 caractere e retornar status 422", async () => {
+      const email = `novo06-${Date.now()}@urbanize.test`;
+      const response = await request(app).post("/api/auth/register").send({
+        nome: "M",
+        email,
+        senha: "demo",
+      });
+
+      expect(response.status).toBe(422);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("TC07: Deve aceitar cadastro com nome de 2 caracteres e retornar status 201", async () => {
+      const email = `novo07-${Date.now()}@urbanize.test`;
+      const response = await request(app).post("/api/auth/register").send({
+        nome: "Ma",
+        email,
+        senha: "demo",
+      });
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.user.nome).toBe("Ma");
+    });
+
+    it("TC08: Deve recusar cadastro com senha vazia e retornar status 422", async () => {
+      const email = `novo08-${Date.now()}@urbanize.test`;
+      const response = await request(app).post("/api/auth/register").send({
+        nome: "Maria Silva",
+        email,
+        senha: "",
+      });
+
+      expect(response.status).toBe(422);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("TC09: Deve aceitar cadastro com senha de 1 caractere e retornar status 201", async () => {
+      const email = `novo09-${Date.now()}@urbanize.test`;
+      const response = await request(app).post("/api/auth/register").send({
+        nome: "Maria Silva",
+        email,
+        senha: "a",
+      });
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+    });
+
+    it("TC10: Deve recusar cadastro com e-mail em formato inválido e retornar status 422", async () => {
+      const response = await request(app).post("/api/auth/register").send({
+        nome: "Maria Silva",
+        email: "maria.teste.com",
+        senha: "demo",
+      });
+
+      expect(response.status).toBe(422);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe("VALIDATION_ERROR");
     });
   });
 
