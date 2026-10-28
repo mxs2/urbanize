@@ -22,7 +22,7 @@ const categoryToDepartment: Record<DemandCategory, string> = {
   outros: "Central de Atendimento",
 };
 
-const generateProtocol = () => `URB-${Math.floor(Math.random() * 90000 + 10000)}`;
+const generateProtocol = () => `PROT-${Math.floor(Math.random() * 90000 + 10000)}`;
 
 const ensureAllowed = (
   demand: Awaited<ReturnType<typeof demandRepository.findById>>,
