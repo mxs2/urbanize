@@ -5,9 +5,10 @@ const E2E_TITULO_PREFIXES = [
   "Poste apagado - teste e2e gestor",
   "Lâmpada queimada - teste e2e triagem",
   "Vazamento de esgoto - teste e2e triagem ui",
+  "Filtro status - teste e2e",
 ];
 
-const E2E_CADASTRO_EMAIL_PREFIX = "novo12-";
+const E2E_CADASTRO_EMAIL_PREFIXES = ["novo12-", "filtro62-"];
 
 async function main() {
   const { count } = await prisma.demand.deleteMany({
@@ -16,7 +17,7 @@ async function main() {
   console.log(`[e2e-cleanup] ${count} demanda(s) de execuções anteriores removida(s).`);
 
   const { count: usuarios } = await prisma.user.deleteMany({
-    where: { email: { startsWith: E2E_CADASTRO_EMAIL_PREFIX, endsWith: "@urbanize.test" } },
+    where: { OR: E2E_CADASTRO_EMAIL_PREFIXES.map((prefix) => ({ email: { startsWith: prefix, endsWith: "@urbanize.test" } })) },
   });
   console.log(`[e2e-cleanup] ${usuarios} usuário(s) de cadastro de execuções anteriores removido(s).`);
   await prisma.$disconnect();
