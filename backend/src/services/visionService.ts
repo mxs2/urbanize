@@ -125,21 +125,25 @@ export const visionService = {
     score: number;
     labels: string[];
   }> {
-    const client = getClient();
+    // Se Vision API não estiver configurado ou falhar, usa categoria classificada pelo TF.js no browser
+    const fallback = {
+      categoria: clientCategoria ?? "outros",
+      score: clientCategoria ? 0.75 : 0.5,
+      labels: [],
+    };
 
-    // Se Vision API não estiver configurado, usa categoria classificada pelo TF.js no browser
-    if (!client) {
-      return {
-        categoria: clientCategoria ?? "outros",
-        score: clientCategoria ? 0.75 : 0.5,
-        labels: [],
-      };
+    try {
+      const client = getClient();
+      if (!client) return fallback;
+
+      const [result] = await client.labelDetection(filePath);
+      const labels = (result.labelAnnotations ?? []).map((a) => a.description ?? "").filter(Boolean);
+
+      const classified = classifyLabels(labels);
+      return { ...classified, labels };
+    } catch (error) {
+      console.warn("[vision] Falha no Google Vision, usando a categoria enviada:", (error as Error).message);
+      return fallback;
     }
-
-    const [result] = await client.labelDetection(filePath);
-    const labels = (result.labelAnnotations ?? []).map((a) => a.description ?? "").filter(Boolean);
-
-    const classified = classifyLabels(labels);
-    return { ...classified, labels };
   },
 };

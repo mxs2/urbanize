@@ -442,8 +442,8 @@ prioridade = (Risco × Frequência) ÷ Custo
 | Ordem | ID do caso | HU | Nível | Risco | Custo | Frequência | Prioridade | Responsável | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | TC01 | HU-01 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-01) |
-| 2 | TC03 | HU-01 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | A fazer |
-| 3 | TC04 | HU-01 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | A fazer |
+| 2 | TC03 | HU-01 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (auth TC03) |
+| 3 | TC04 | HU-01 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (auth TC04) |
 | 4 | TC13 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-04, BDD login) |
 | 5 | TC14 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-05) |
 | 6 | TC15 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-06) |
@@ -452,12 +452,12 @@ prioridade = (Risco × Frequência) ÷ Custo
 | 9 | TC21 | HU-02 | Componente | 3 | 1 | 3 | 9,0 | Diego David | Existe (unit api) |
 | 10 | TC22 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-09) |
 | 11 | TC23 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-10) |
-| 12 | TC25 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Pamela | A fazer |
+| 12 | TC25 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Pamela | Existe (auth TC25) |
 | 13 | TC26 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Pamela | Parcial (CT-AUTH-11) |
 | 14 | TC28 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-01) |
 | 15 | TC29 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid | Parcial (CT-DEM-01) |
 | 16 | TC40 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-02) |
-| 17 | TC48 | HU-12 | Integração | 3 | 1 | 3 | 9,0 | Diego Xavier | A fazer |
+| 17 | TC48 | HU-12 | Integração | 3 | 1 | 3 | 9,0 | Diego Xavier | Existe (upload TC48) |
 | 18 | TC52 | HU-06 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-07) |
 | 19 | TC53 | HU-06 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-08) |
 | 20 | TC67 | HU-04 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-14) |
@@ -465,29 +465,29 @@ prioridade = (Risco × Frequência) ÷ Custo
 | 22 | TC71 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-18) |
 | 23 | TC72 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-17) |
 | 24 | TC73 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-21) |
-| 25 | TC02 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Parcial (CT-AUTH-01) |
-| 26 | TC05 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
-| 27 | TC06 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Parcial (CT-AUTH-03) |
-| 28 | TC07 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
-| 29 | TC08 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Parcial (CT-AUTH-03) |
-| 30 | TC09 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | A fazer |
-| 31 | TC10 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Parcial (CT-AUTH-03) |
+| 25 | TC02 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC02) |
+| 26 | TC05 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC05) |
+| 27 | TC06 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC06) |
+| 28 | TC07 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC07) |
+| 29 | TC08 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC08) |
+| 30 | TC09 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC09) |
+| 31 | TC10 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC10) |
 | 32 | TC11 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-AUTH-02) |
-| 33 | TC17 | HU-02 | Integração | 2 | 1 | 3 | 6,0 | Pamela | A fazer |
+| 33 | TC17 | HU-02 | Integração | 2 | 1 | 3 | 6,0 | Pamela | Existe (auth TC17) |
 | 34 | TC33 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-03) |
-| 35 | TC34 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | A fazer |
+| 35 | TC34 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC34) |
 | 36 | TC35 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-04) |
-| 37 | TC36 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | A fazer |
+| 37 | TC36 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC36) |
 | 38 | TC37 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Janderson | A fazer |
 | 39 | TC38 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-05) |
 | 40 | TC39 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Janderson | A fazer |
-| 41 | TC47 | HU-12 | Integração | 2 | 1 | 3 | 6,0 | Diego Xavier | A fazer |
+| 41 | TC47 | HU-12 | Integração | 2 | 1 | 3 | 6,0 | Diego Xavier | Existe (upload TC47) |
 | 42 | TC55 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-09) |
 | 43 | TC56 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-10) |
-| 44 | TC57 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | A fazer |
-| 45 | TC58 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | A fazer |
+| 44 | TC57 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC57) |
+| 45 | TC58 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC58) |
 | 46 | TC59 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-11) |
-| 47 | TC60 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | A fazer |
+| 47 | TC60 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC60) |
 | 48 | TC61 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Janderson | A fazer |
 | 49 | TC66 | HU-04 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-13) |
 | 50 | TC68 | HU-04 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-16) |
@@ -496,29 +496,29 @@ prioridade = (Risco × Frequência) ÷ Custo
 | 53 | TC84 | HU-10 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-MET-02) |
 | 54 | TC85 | HU-07 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-MET-01) |
 | 55 | TC86 | HU-07 | Integração | 2 | 1 | 3 | 6,0 | Janderson | A fazer |
-| 56 | TC24 | HU-02 | Integração | 3 | 2 | 3 | 4,5 | Pamela | A fazer |
-| 57 | TC49 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | A fazer |
-| 58 | TC50 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | A fazer |
+| 56 | TC24 | HU-02 | Integração | 3 | 2 | 3 | 4,5 | Pamela | Existe (auth TC24) |
+| 57 | TC49 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | Existe (upload TC49) |
+| 58 | TC50 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | Existe (upload TC50) |
 | 59 | TC54 | HU-06 | Integração | 3 | 2 | 3 | 4,5 | Janderson | Bloqueado (L09) |
 | 60 | TC76 | HU-05 | Integração | 3 | 2 | 3 | 4,5 | Janderson | Parcial (E2E gestor-gerencia-demanda); API bloqueado (L05) |
 | 61 | TC77 | HU-05 | Integração | 3 | 2 | 3 | 4,5 | Janderson | Bloqueado (L05) |
 | 62 | TC18 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E registrar-demanda) |
 | 63 | TC19 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
 | 64 | TC41 | HU-03 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E registrar-demanda) |
-| 65 | TC44 | HU-03 | Componente | 2 | 2 | 3 | 3,0 | Diego Xavier | A fazer |
-| 66 | TC46 | HU-12 | Integração | 2 | 2 | 3 | 3,0 | Diego Xavier | A fazer |
-| 67 | TC83 | HU-08 | Integração | 2 | 2 | 3 | 3,0 | Diego Xavier | A fazer |
+| 65 | TC44 | HU-03 | Componente | 2 | 2 | 3 | 3,0 | Diego Xavier | Bloqueado (a API não retorna título/descrição sugeridos) |
+| 66 | TC46 | HU-12 | Integração | 2 | 2 | 3 | 3,0 | Diego Xavier | Existe (upload TC46) |
+| 67 | TC83 | HU-08 | Integração | 2 | 2 | 3 | 3,0 | Diego Xavier | Existe (upload TC83) |
 | 68 | TC87 | HU-07 | Integração | 2 | 2 | 3 | 3,0 | Janderson | Bloqueado (L14) |
 | 69 | TC27 | — | Integração | 1 | 1 | 3 | 3,0 | Enzo Antuna | Existe (CT-GEN-03) |
-| 70 | TC30 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | A fazer |
-| 71 | TC31 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | A fazer |
-| 72 | TC32 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | A fazer |
+| 70 | TC30 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC30) |
+| 71 | TC31 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC31) |
+| 72 | TC32 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC32) |
 | 73 | TC78 | HU-04 | Sistema | 3 | 3 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
-| 74 | TC12 | HU-01 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | A fazer |
+| 74 | TC12 | HU-01 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | Existe (E2E cadastro-cidadao) |
 | 75 | TC62 | HU-06 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | A fazer |
 | 76 | TC79 | HU-05 | Sistema | 2 | 2 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
 | 77 | TC82 | HU-08 | Sistema | 2 | 2 | 2 | 2,0 | Diego Xavier | Parcial (E2E gestor-aceita-triagem) |
-| 78 | TC65 | HU-06 | Componente | 1 | 2 | 3 | 1,5 | Diego Xavier | A fazer |
+| 78 | TC65 | HU-06 | Componente | 1 | 2 | 3 | 1,5 | Diego Xavier | Existe (unit store) |
 | 79 | TC92 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | A fazer |
 | 80 | TC93 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | A fazer |
 | 81 | TC94 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | A fazer |
