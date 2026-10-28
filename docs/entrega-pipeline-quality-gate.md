@@ -9,7 +9,7 @@ Registra o que a equipe fez em cada item da atividade, onde está configurado e 
 | # | Item pedido | Status |
 | --- | --- | --- |
 | 1 | Revisão do workflow | ✅ |
-| 2.1 | Cobertura do backlog de automação | 🟡 66 de 94 casos automatizados; 16 pendentes no backlog |
+| 2.1 | Cobertura do backlog de automação | 🟡 66 de 82 casos automatizados; 16 pendentes no backlog |
 | 2.2 | Execução diária da regressão completa | ✅ |
 | 2.3 | Horário de execução | ✅ |
 | 3.1 | A cada push: unitários e API | ✅ |
@@ -49,13 +49,11 @@ teste roda (`push`, `PR`, `diário`).
 | Nível | ✅ | 🟡 | ⬜ | Total |
 | --- | --- | --- | --- | --- |
 | Integração de componentes | 56 | 3 | 7 | 66 |
-| Sistema | 7 | 3 | 14 | 24 |
+| Sistema | 7 | 1 | 4 | 12 |
 | Componente | 3 | 0 | 1 | 4 |
-| **Total** | **66** | **6** | **22** | **94** |
+| **Total** | **66** | **4** | **12** | **82** |
 
-Dos 28 casos ⬜ e 🟡, 12 ficam em execução manual por decisão do
-[plano de testes](tests/plano-de-testes-e-backlog.md#5-seleção-para-automação). Os 16 restantes formam o backlog de
-automação pendente:
+Os 16 casos ⬜ e 🟡 formam o backlog de automação pendente:
 
  Casos | Situação |
 --- | --- |
