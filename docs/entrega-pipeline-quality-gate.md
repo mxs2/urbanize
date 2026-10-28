@@ -182,6 +182,17 @@ desabilitado.
 
 ![PR #41: checks obrigatórios passando e merge aguardando aprovação](evidencias-quality-gate/pr-41-checks-ok-aguardando-review.png)
 
+### Evidência: push direto na `main` recusado
+
+Em 28/10/2026, um integrante sem permissão de admin tentou enviar um commit vazio direto para a `main`
+(`git push origin HEAD:main`). O GitHub recusou o push com o erro `GH013` e listou as três regras violadas:
+
+- o CodeQL ainda não tinha resultado para o commit (ruleset "Hay");
+- os 3 status checks obrigatórios (`Unitários`, `API` e `E2E`) não tinham rodado;
+- alterações na `main` precisam passar por pull request.
+
+![Push direto na main recusado por violação das regras do repositório](evidencias-quality-gate/push-direto-main-bloqueado.png)
+
 ### Ponto de atenção
 
 `enforcement_level: non_admins` indica que administradores do repositório não ficam presos à branch protection, então
