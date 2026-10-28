@@ -9,7 +9,7 @@ Registra o que a equipe fez em cada item da atividade, onde está configurado e 
 | # | Item pedido | Status |
 | --- | --- | --- |
 | 1 | Revisão do workflow | ✅ |
-| 2.1 | Cobertura do backlog de automação | 🟡 66 de 94 casos automatizados; 16 pendentes no backlog |
+| 2.1 | Cobertura do backlog de automação | 🟡 66 de 82 casos automatizados; 16 pendentes no backlog |
 | 2.2 | Execução diária da regressão completa | ✅ |
 | 2.3 | Horário de execução | ✅ |
 | 3.1 | A cada push: unitários e API | ✅ |
@@ -49,13 +49,11 @@ teste roda (`push`, `PR`, `diário`).
 | Nível | ✅ | 🟡 | ⬜ | Total |
 | --- | --- | --- | --- | --- |
 | Integração de componentes | 56 | 3 | 7 | 66 |
-| Sistema | 7 | 3 | 14 | 24 |
+| Sistema | 7 | 1 | 4 | 12 |
 | Componente | 3 | 0 | 1 | 4 |
-| **Total** | **66** | **6** | **22** | **94** |
+| **Total** | **66** | **4** | **12** | **82** |
 
-Dos 28 casos ⬜ e 🟡, 12 ficam em execução manual por decisão do
-[plano de testes](tests/plano-de-testes-e-backlog.md#5-seleção-para-automação). Os 16 restantes formam o backlog de
-automação pendente:
+Os 16 casos ⬜ e 🟡 formam o backlog de automação pendente:
 
  Casos | Situação |
 --- | --- |
@@ -122,8 +120,11 @@ Testes smoke (2):
 
 ## 4. Quality Gate ✅
 
-A regra é uma *branch protection rule* da `main`, configurada no GitHub em **Settings → Branches**, e não no
-repositório. Ela exige:
+O Quality Gate é configurado no GitHub, e não no repositório, em duas camadas.
+
+### Branch protection rule da `main` (Settings → Branches)
+
+É a camada que impede merge com teste falhando. Ela exige:
 
 - **Status checks obrigatórios:** `Unitários`, `API` e `E2E`. Os nomes são os `name:` dos jobs no workflow.
 - **Pull request com 1 aprovação** de alguém com permissão de escrita.
@@ -138,6 +139,22 @@ Configuração lida pela API do GitHub (`gh api repos/mxs2/urbanize/branches/mai
   "enforcement_level": "non_admins"
 }
 ```
+
+### Ruleset "Hay" (Settings → Rules → Rulesets)
+
+Vale para todas as branches (`~ALL`), está ativo e tem a lista de bypass vazia, ou seja, se aplica também a admins.
+Regras aplicadas:
+
+| Regra | Efeito |
+| --- | --- |
+| Restrict deletions (`deletion`) | Impede apagar a branch |
+| Block force pushes (`non_fast_forward`) | Impede reescrever o histórico com force push |
+| Require code scanning results (`code_scanning`) | Bloqueia o merge se o CodeQL encontrar alerta de segurança `high_or_higher` ou alerta com severidade `errors` |
+| Require status checks to pass (`required_status_checks`) | Exige a branch atualizada com a base antes do merge (`strict`); a lista de checks está vazia, porque os checks de teste são exigidos pela branch protection acima |
+
+O CodeQL roda pelo *default setup* do code scanning (workflows `CodeQL` e `GitHub Advanced Security` na aba Actions),
+sem arquivo no repositório. No [PR #42](https://github.com/mxs2/urbanize/pull/42), os checks `Analyze (actions)`,
+`Analyze (javascript-typescript)` e `CodeQL` passaram.
 
 ### Evidência: merge bloqueado com teste falhando
 
@@ -163,7 +180,20 @@ desabilitado.
 
 ![PR #41: checks obrigatórios passando e merge aguardando aprovação](evidencias-quality-gate/pr-41-checks-ok-aguardando-review.png)
 
+### Evidência: push direto na `main` recusado
+
+Em 28/10/2026, um integrante sem permissão de admin tentou enviar um commit vazio direto para a `main`
+(`git push origin HEAD:main`). O GitHub recusou o push com o erro `GH013` e listou as três regras violadas:
+
+- o CodeQL ainda não tinha resultado para o commit (ruleset "Hay");
+- os 3 status checks obrigatórios (`Unitários`, `API` e `E2E`) não tinham rodado;
+- alterações na `main` precisam passar por pull request.
+
+![Push direto na main recusado por violação das regras do repositório](evidencias-quality-gate/push-direto-main-bloqueado.png)
+
 ### Ponto de atenção
 
-`enforcement_level: non_admins` indica que administradores do repositório não ficam presos à regra. Para fechar essa
-brecha, um admin deve ativar **Do not allow bypassing the above settings** na regra da `main`.
+`enforcement_level: non_admins` indica que administradores do repositório não ficam presos à branch protection, então
+um admin consegue mergear com teste falhando. O ruleset "Hay" não tem essa brecha, mas não exige os testes. Para
+fechar, um admin deve ativar **Do not allow bypassing the above settings** na regra da `main` ou incluir `Unitários`,
+`API` e `E2E` nos status checks do ruleset.
