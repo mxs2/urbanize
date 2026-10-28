@@ -34,12 +34,9 @@ Melhorias feitas na revisão:
   em qualquer evento, e o push só disparava na `main`. Agora são três jobs com nome próprio, que viraram os checks
   exigidos pelo Quality Gate. O push dispara em qualquer branch, o `E2E` não roda em push, e no PR roda só os testes
   com a tag `@smoke`.
-- **Concorrência por evento (mesmo commit).** O grupo de `concurrency` passou a incluir o nome do evento, para um push
-  na `main` não cancelar a regressão agendada.
 - **Histórico de ajustes anteriores:** Node 24 (`0442f03`), passos que não rodam em cascata quando a instalação falha
   (`0ea06b3`) e agendamento diário (`9a03fed`).
 - **Diagnóstico de falha.** O relatório do Playwright é publicado como artefato, e os logs do backend e do app web aparecem no job quando o E2E falha.
-- **Fallback do Google Vision.** A automação do TC50 mostrou que a API devolvia 500 quando o Google Vision configurado falhava. O `visionService` passou a usar a categoria enviada pelo app nesse caso.
 
 ## 2. Agendamento da regressão completa
 
@@ -60,12 +57,12 @@ Dos 28 casos ⬜ e 🟡, 12 ficam em execução manual por decisão do
 [plano de testes](tests/plano-de-testes-e-backlog.md#5-seleção-para-automação). Os 16 restantes formam o backlog de
 automação pendente:
 
-| Responsável | Casos | Situação |
-| --- | --- | --- |
-| Janderson | TC37, TC39, TC54, TC61, TC76, TC77, TC86, TC87 | A fazer (API) |
-| Pamela | TC26, TC62, TC92, TC93, TC94 | A fazer (1 de API, 4 de E2E) |
-| Hyngrid | TC29 | Depende de decisão: o caso espera status inicial `registrada`, o app cria com `em_analise` |
-| Diego Xavier | TC44, TC82 | Dependem de mudança no app: a API não devolve título e descrição sugeridos; o card de triagem não exibe a categoria |
+ Casos | Situação |
+--- | --- |
+ TC37, TC39, TC54, TC61, TC76, TC77, TC86, TC87 | A fazer (API) |
+ TC26, TC62, TC92, TC93, TC94 | A fazer (1 de API, 4 de E2E) |
+ TC29 | Depende de decisão: o caso espera status inicial `registrada`, o app cria com `em_analise` |
+ TC44, TC82 | Dependem de mudança no app: a API não devolve título e descrição sugeridos; o card de triagem não exibe a categoria |
 
 ### 2.2 Execução diária ✅
 
