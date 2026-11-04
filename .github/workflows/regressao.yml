@@ -4,6 +4,8 @@ name: Regressão
 # - push (qualquer branch): Unitários + API
 # - pull_request para main: Unitários + API + E2E smoke (@smoke) — checks exigidos pelo Quality Gate
 # - diário (schedule) e manual: Unitários + API + E2E completo
+# Em todos os casos o job "Qualidade" junta os artefatos, calcula as métricas e gera os relatórios.
+# Falha na main, no agendamento ou em execução manual abre (ou atualiza) uma issue; sucesso fecha.
 on:
   push:
     branches: ['**']
@@ -17,6 +19,9 @@ concurrency:
   # O evento entra no grupo para um push na main não cancelar a regressão agendada.
   group: regressao-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   unitarios:
@@ -40,9 +45,25 @@ jobs:
 
       - name: 🧪 Testes Unitários
         working-directory: mobile
+        shell: bash
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ../test-results/unitarios
+          JEST_JUNIT_OUTPUT_NAME: junit.xml
         run: |
+          mkdir -p ../test-results/unitarios
           cp .env.example .env
-          npm test -- --ci
+          npm test -- --ci --reporters=default --reporters=jest-junit \
+            --coverage --coverageDirectory=../test-results/unitarios/coverage \
+            --coverageReporters=json-summary --coverageReporters=lcov --coverageReporters=text-summary \
+            2>&1 | tee ../test-results/unitarios/unitarios.log
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: resultados-unitarios
+          path: test-results/unitarios/
+          if-no-files-found: warn
+          retention-days: 30
 
   api:
     name: API
@@ -66,6 +87,7 @@ jobs:
       - name: 🗄️ Preparar banco (SQLite + seed)
         working-directory: backend
         run: |
+          mkdir -p ../test-results/api
           cp .env.example .env
           npx prisma generate
           npx prisma migrate deploy
@@ -73,12 +95,31 @@ jobs:
 
       - name: 🔌 Testes de API (Jest)
         working-directory: backend
-        run: npm test -- --ci
+        shell: bash
+        env:
+          JEST_JUNIT_OUTPUT_DIR: ../test-results/api
+          JEST_JUNIT_OUTPUT_NAME: junit-jest.xml
+        run: |
+          npm test -- --ci --reporters=default --reporters=jest-junit \
+            --coverage --collectCoverageFrom='src/**/*.ts' --coverageDirectory=../test-results/api/coverage \
+            --coverageReporters=json-summary --coverageReporters=lcov --coverageReporters=text-summary \
+            2>&1 | tee ../test-results/api/jest.log
 
       - name: 🥒 Testes de API (BDD)
         if: ${{ !cancelled() }}
         working-directory: backend
-        run: npm run test:bdd
+        shell: bash
+        run: |
+          npm run test:bdd -- --format junit:../test-results/api/junit-bdd.xml 2>&1 | tee ../test-results/api/bdd.log
+          cp ../tests/bdd/reports/cucumber-report.json ../test-results/api/ || true
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: resultados-api
+          path: test-results/api/
+          if-no-files-found: warn
+          retention-days: 30
 
   e2e:
     name: E2E
@@ -106,6 +147,7 @@ jobs:
       - name: 🗄️ Preparar banco (SQLite + seed)
         working-directory: backend
         run: |
+          mkdir -p ../test-results/e2e
           cp .env.example .env
           cp ../mobile/.env.example ../mobile/.env
           npx prisma generate
@@ -116,27 +158,128 @@ jobs:
         env:
           EXPO_PUBLIC_API_URL: http://localhost:4000/api
         run: |
-          (cd backend && nohup npm start > ../backend.log 2>&1 &)
-          (cd mobile && npx expo export -p web > ../web.log 2>&1)
-          (cd mobile && nohup npx --yes serve@14.2.4 dist -s -l 8081 >> ../web.log 2>&1 &)
+          (cd backend && nohup npm start > ../test-results/e2e/backend.log 2>&1 &)
+          (cd mobile && npx expo export -p web > ../test-results/e2e/web.log 2>&1)
+          (cd mobile && nohup npx --yes serve@14.2.4 dist -s -l 8081 >> ../test-results/e2e/web.log 2>&1 &)
           npx --yes wait-on@8.0.1 -t 120000 http://localhost:4000/api/health http://localhost:8081
 
       - name: 🌐 Testes E2E (${{ github.event_name == 'pull_request' && 'smoke' || 'completo' }})
         working-directory: e2e
+        shell: bash
         run: |
           npx playwright install --with-deps chromium
-          npm test -- ${{ github.event_name == 'pull_request' && '--grep @smoke' || '' }}
+          npm test -- ${{ github.event_name == 'pull_request' && '--grep @smoke' || '' }} 2>&1 | tee ../test-results/e2e/playwright.log
 
-      - name: Relatório do Playwright
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: 📎 Juntar artefatos (JUnit, relatório HTML, traces, logs)
+        if: ${{ !cancelled() }}
+        run: |
+          cp e2e/results/junit.xml test-results/e2e/ || true
+          cp -r e2e/playwright-report test-results/e2e/ || true
+          cp -r e2e/test-results test-results/e2e/evidencias || true
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
         with:
-          name: playwright-report
-          path: e2e/playwright-report/
-          if-no-files-found: ignore
+          name: resultados-e2e
+          path: test-results/e2e/
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Logs dos servidores (em caso de falha)
         if: failure()
         run: |
-          echo "::group::backend.log"; tail -n 100 backend.log || true; echo "::endgroup::"
-          echo "::group::web.log"; tail -n 100 web.log || true; echo "::endgroup::"
+          echo "::group::backend.log"; tail -n 100 test-results/e2e/backend.log || true; echo "::endgroup::"
+          echo "::group::web.log"; tail -n 100 test-results/e2e/web.log || true; echo "::endgroup::"
+
+  qualidade:
+    name: Qualidade (métricas, relatórios e issues)
+    needs: [unitarios, api, e2e]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: 📥 Baixar resultados das suítes
+        uses: actions/download-artifact@v4
+        with:
+          pattern: resultados-*
+          path: resultados
+
+      - name: Organizar pastas por suíte
+        run: for d in resultados/resultados-*; do [ -d "$d" ] && mv "$d" "resultados/${d#resultados/resultados-}"; done; ls -R resultados 2>/dev/null | head -50 || true
+
+      - name: 🕑 Restaurar histórico de métricas
+        uses: actions/cache/restore@v4
+        with:
+          path: relatorios/historico.json
+          key: historico-qualidade-${{ github.run_id }}
+          restore-keys: historico-qualidade-
+
+      - name: 📊 Calcular métricas e gerar relatórios
+        env:
+          RESULTADO_UNITARIOS: ${{ needs.unitarios.result }}
+          RESULTADO_API: ${{ needs.api.result }}
+          RESULTADO_E2E: ${{ needs.e2e.result }}
+        run: |
+          node scripts/qualidade/relatorios.mjs resultados relatorios
+          cat relatorios/resumo.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 💾 Salvar histórico de métricas
+        uses: actions/cache/save@v4
+        with:
+          path: relatorios/historico.json
+          key: historico-qualidade-${{ github.run_id }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-qualidade
+          path: relatorios/
+          retention-days: 90
+
+      # Issues só para execuções que representam o estado do produto (main, agendada ou manual);
+      # em PR e push de branch de feature o feedback já vem pelo check vermelho.
+      - name: 🐞 Abrir/atualizar issue de falha
+        if: >-
+          (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+          && github.event_name != 'pull_request'
+          && contains(needs.*.result, 'failure')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITULO: 'Regressão falhando na branch ${{ github.ref_name }}'
+        run: |
+          gh label create falha-pipeline --color B60205 --description "Aberta automaticamente quando a regressão falha" 2>/dev/null || true
+          numero=$(gh issue list --label falha-pipeline --state open --search "\"$TITULO\" in:title" --json number --jq '.[0].number')
+          if [ -n "$numero" ]; then
+            gh issue comment "$numero" --body-file relatorios/issue.md
+            echo "Issue #$numero atualizada" >> "$GITHUB_STEP_SUMMARY"
+          else
+            url=$(gh issue create --title "$TITULO" --label falha-pipeline --body-file relatorios/issue.md)
+            echo "Issue aberta: $url" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # Só fecha quando a regressão completa (com E2E) passou; um push verde não prova que o E2E voltou.
+      - name: ✅ Fechar issue quando a regressão volta a passar
+        if: >-
+          (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+          && github.event_name != 'pull_request'
+          && needs.unitarios.result == 'success' && needs.api.result == 'success' && needs.e2e.result == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITULO: 'Regressão falhando na branch ${{ github.ref_name }}'
+        run: |
+          for numero in $(gh issue list --label falha-pipeline --state open --search "\"$TITULO\" in:title" --json number --jq '.[].number'); do
+            gh issue close "$numero" --comment "Regressão voltou a passar na execução [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})."
+          done
