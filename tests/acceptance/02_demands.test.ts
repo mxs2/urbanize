@@ -22,7 +22,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
   });
 
   describe("POST /api/demands - Criação de Demandas", () => {
-    it("CT-DEM-01: Deve permitir que cidadão crie uma demanda válida com protocolo e histórico inicial", async () => {
+    it("TC28 / CT-DEM-01: Deve permitir que cidadão crie uma demanda válida com protocolo e histórico inicial", async () => {
       const payload = {
         titulo: "Lâmpada queimada na calçada",
         descricao: "A lâmpada do poste em frente ao número 120 queimou ontem à noite.",
@@ -65,7 +65,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       createdProtocolo = demand.protocolo;
     });
 
-    it("CT-DEM-02: Deve rejeitar criação de demanda sem autenticação e retornar status 401", async () => {
+    it("TC40 / CT-DEM-02: Deve rejeitar criação de demanda sem autenticação e retornar status 401", async () => {
       const response = await request(app).post("/api/demands").send({
         titulo: "Sem autenticação",
         descricao: "Tentando criar demanda anônima sem fornecer Bearer Token.",
@@ -78,7 +78,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(response.body.error.code).toBe("UNAUTHENTICATED");
     });
 
-    it("CT-DEM-03: Deve rejeitar criação com título muito curto (< 3 caracteres) e retornar status 422", async () => {
+    it("TC33 / CT-DEM-03: Deve rejeitar criação com título muito curto (< 3 caracteres) e retornar status 422", async () => {
       const response = await request(app)
         .post("/api/demands")
         .set("Authorization", `Bearer ${cidadaoToken}`)
@@ -96,7 +96,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(details.some((d: any) => d.path.includes("titulo"))).toBe(true);
     });
 
-    it("CT-DEM-04: Deve rejeitar criação com descrição muito curta (< 5 caracteres) e retornar status 422", async () => {
+    it("TC35 / CT-DEM-04: Deve rejeitar criação com descrição muito curta (< 5 caracteres) e retornar status 422", async () => {
       const response = await request(app)
         .post("/api/demands")
         .set("Authorization", `Bearer ${cidadaoToken}`)
@@ -114,7 +114,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(details.some((d: any) => d.path.includes("descricao"))).toBe(true);
     });
 
-    it("CT-DEM-05: Deve rejeitar criação com categoria inválida fora do enum e retornar status 422", async () => {
+    it("TC38 / CT-DEM-05: Deve rejeitar criação com categoria inválida fora do enum e retornar status 422", async () => {
       const response = await request(app)
         .post("/api/demands")
         .set("Authorization", `Bearer ${cidadaoToken}`)
@@ -147,7 +147,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
   });
 
   describe("GET /api/demands - Listagem e Filtros com Regras de Perfil", () => {
-    it("CT-DEM-07: Cidadão autenticado deve receber somente as demandas de sua própria autoria", async () => {
+    it("TC52 / CT-DEM-07: Cidadão autenticado deve receber somente as demandas de sua própria autoria", async () => {
       // Cria um cidadão isolado com suas próprias demandas
       const userA = await createUniqueUser("cidadao", "cidadao-a");
       const userB = await createUniqueUser("cidadao", "cidadao-b");
@@ -185,7 +185,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(idsUserA).toContain(demandAId);
     });
 
-    it("CT-DEM-08: Gestor público deve visualizar demandas de múltiplos cidadãos na fila geral", async () => {
+    it("TC53 / CT-DEM-08: Gestor público deve visualizar demandas de múltiplos cidadãos na fila geral", async () => {
       const response = await request(app)
         .get("/api/demands")
         .set("Authorization", `Bearer ${gestorToken}`);
@@ -196,7 +196,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(response.body.data.length).toBeGreaterThan(0);
     });
 
-    it("CT-DEM-09: Deve filtrar demandas por status corretamente", async () => {
+    it("TC55 / CT-DEM-09: Deve filtrar demandas por status corretamente", async () => {
       const response = await request(app)
         .get("/api/demands?status=em_analise")
         .set("Authorization", `Bearer ${gestorToken}`);
@@ -208,7 +208,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       });
     });
 
-    it("CT-DEM-10: Deve filtrar demandas por categoria corretamente", async () => {
+    it("TC56 / CT-DEM-10: Deve filtrar demandas por categoria corretamente", async () => {
       const response = await request(app)
         .get("/api/demands?categoria=iluminacao_publica")
         .set("Authorization", `Bearer ${gestorToken}`);
@@ -220,7 +220,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       });
     });
 
-    it("CT-DEM-11: Deve filtrar demandas por termo de busca no protocolo ou título", async () => {
+    it("TC59 / CT-DEM-11: Deve filtrar demandas por termo de busca no protocolo ou título", async () => {
       const response = await request(app)
         .get(`/api/demands?busca=${createdProtocolo}`)
         .set("Authorization", `Bearer ${gestorToken}`);
@@ -240,7 +240,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
   });
 
   describe("GET /api/demands/:id - Detalhes e Proteção de Acesso (IDOR)", () => {
-    it("CT-DEM-13: Cidadão deve conseguir consultar detalhes e timeline de sua própria demanda", async () => {
+    it("TC66 / CT-DEM-13: Cidadão deve conseguir consultar detalhes e timeline de sua própria demanda", async () => {
       const response = await request(app)
         .get(`/api/demands/${createdDemandId}`)
         .set("Authorization", `Bearer ${cidadaoToken}`);
@@ -251,7 +251,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(response.body.data.historico).toBeDefined();
     });
 
-    it("CT-DEM-14: Cidadão deve ser impedido de visualizar demanda de outro usuário (Status 403 / IDOR)", async () => {
+    it("TC67 / CT-DEM-14: Cidadão deve ser impedido de visualizar demanda de outro usuário (Status 403 / IDOR)", async () => {
       // Cria outro cidadão que não é o dono da demanda
       const outroCidadao = await createUniqueUser("cidadao", "invasor");
 
@@ -275,7 +275,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(response.body.data.id).toBe(createdDemandId);
     });
 
-    it("CT-DEM-16: Deve retornar status 404 ao consultar ID de demanda inexistente", async () => {
+    it("TC68 / CT-DEM-16: Deve retornar status 404 ao consultar ID de demanda inexistente", async () => {
       const response = await request(app)
         .get("/api/demands/id-totalmente-inexistente-12345")
         .set("Authorization", `Bearer ${gestorToken}`);
@@ -287,7 +287,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
   });
 
   describe("PATCH /api/demands/:id/status - Alteração de Status e Auditoria (RBAC)", () => {
-    it("CT-DEM-17 [Regra Crítica]: Cidadão deve ser proibido de alterar o status de qualquer demanda (Status 403)", async () => {
+    it("TC72 / CT-DEM-17 [Regra Crítica]: Cidadão deve ser proibido de alterar o status de qualquer demanda (Status 403)", async () => {
       const response = await request(app)
         .patch(`/api/demands/${createdDemandId}/status`)
         .set("Authorization", `Bearer ${cidadaoToken}`)
@@ -302,7 +302,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(response.body.error.message).toBe("Somente gestores podem alterar status.");
     });
 
-    it("CT-DEM-18: Gestor deve conseguir alterar o status da demanda e registrar no histórico", async () => {
+    it("TC70, TC71 / CT-DEM-18: Gestor deve conseguir alterar o status da demanda e registrar no histórico", async () => {
       const observacao = "Equipe de manutenção foi despachada para o local.";
 
       const response = await request(app)
@@ -327,7 +327,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(ultimoEvento.autor).toBe("Gestor Emlurb");
     });
 
-    it("CT-DEM-19: Deve rejeitar alteração para status inválido fora do enum com status 422", async () => {
+    it("TC74 / CT-DEM-19: Deve rejeitar alteração para status inválido fora do enum com status 422", async () => {
       const response = await request(app)
         .patch(`/api/demands/${createdDemandId}/status`)
         .set("Authorization", `Bearer ${gestorToken}`)
@@ -340,7 +340,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(response.body.error.code).toBe("VALIDATION_ERROR");
     });
 
-    it("CT-DEM-20: Deve retornar status 404 ao tentar atualizar status de demanda inexistente", async () => {
+    it("TC75 / CT-DEM-20: Deve retornar status 404 ao tentar atualizar status de demanda inexistente", async () => {
       const response = await request(app)
         .patch("/api/demands/id-inexistente-99999/status")
         .set("Authorization", `Bearer ${gestorToken}`)
@@ -353,7 +353,7 @@ describe("SUT API Tests - Módulo de Demandas (/api/demands)", () => {
       expect(response.body.error.code).toBe("DEMAND_NOT_FOUND");
     });
 
-    it("CT-DEM-21: Deve rejeitar alteração de status sem token e retornar status 401", async () => {
+    it("TC73 / CT-DEM-21: Deve rejeitar alteração de status sem token e retornar status 401", async () => {
       const response = await request(app)
         .patch(`/api/demands/${createdDemandId}/status`)
         .send({ status: "resolvida" });

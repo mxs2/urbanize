@@ -12,7 +12,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
   });
 
   describe("POST /api/auth/register - Cadastro de Usuários", () => {
-    it("CT-AUTH-01: Deve registrar um novo cidadão com sucesso e retornar status 201 com token JWT", async () => {
+    it("TC01 / CT-AUTH-01: Deve registrar um novo cidadão com sucesso e retornar status 201 com token JWT", async () => {
       const email = `cidadao-${Date.now()}@urbanize.test`;
       const response = await request(app)
         .post("/api/auth/register")
@@ -47,7 +47,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(setCookie[0]).toMatch(/HttpOnly/i);
     });
 
-    it("CT-AUTH-02: Deve rejeitar cadastro com email duplicado e retornar status 409", async () => {
+    it("TC11 / CT-AUTH-02: Deve rejeitar cadastro com email duplicado e retornar status 409", async () => {
       const email = `duplicado-${Date.now()}@urbanize.test`;
 
       // Primeiro cadastro com sucesso
@@ -206,7 +206,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
   });
 
   describe("POST /api/auth/login - Autenticação de Usuários", () => {
-    it("CT-AUTH-04: Deve autenticar cidadão existente com credenciais válidas e retornar status 200", async () => {
+    it("TC13 / CT-AUTH-04: Deve autenticar cidadão existente com credenciais válidas e retornar status 200", async () => {
       const response = await request(app)
         .post("/api/auth/login")
         .send({ email: "cidadao@urbanize.com", senha: "demo" });
@@ -218,7 +218,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.data.user.role).toBe("cidadao");
     });
 
-    it("CT-AUTH-05: Deve autenticar gestor existente com credenciais válidas e retornar status 200", async () => {
+    it("TC14 / CT-AUTH-05: Deve autenticar gestor existente com credenciais válidas e retornar status 200", async () => {
       const response = await request(app)
         .post("/api/auth/login")
         .send({ email: "gestor@urbanize.com", senha: "demo" });
@@ -230,7 +230,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.data.user.role).toBe("gestor");
     });
 
-    it("CT-AUTH-06: Deve rejeitar autenticação com senha incorreta e retornar status 401", async () => {
+    it("TC15 / CT-AUTH-06: Deve rejeitar autenticação com senha incorreta e retornar status 401", async () => {
       const response = await request(app)
         .post("/api/auth/login")
         .send({ email: "cidadao@urbanize.com", senha: "senha_totalmente_errada" });
@@ -241,7 +241,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.error.message).toBe("Credenciais inválidas.");
     });
 
-    it("CT-AUTH-07: Deve rejeitar autenticação com email inexistente e retornar status 401", async () => {
+    it("TC16 / CT-AUTH-07: Deve rejeitar autenticação com email inexistente e retornar status 401", async () => {
       const response = await request(app)
         .post("/api/auth/login")
         .send({ email: "naoexiste@urbanize.com", senha: "qualquerSenha" });
@@ -278,7 +278,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.data.user.role).toBe("cidadao");
     });
 
-    it("CT-AUTH-09: Deve rejeitar requisição sem cabeçalho Authorization nem cookie e retornar status 401", async () => {
+    it("TC22 / CT-AUTH-09: Deve rejeitar requisição sem cabeçalho Authorization nem cookie e retornar status 401", async () => {
       const response = await request(app).get("/api/auth/me");
 
       expect(response.status).toBe(401);
@@ -287,7 +287,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.error.message).toBe("Sessão não autenticada.");
     });
 
-    it("CT-AUTH-10: Deve rejeitar requisição com token JWT forjado ou inválido e retornar status 401", async () => {
+    it("TC23 / CT-AUTH-10: Deve rejeitar requisição com token JWT forjado ou inválido e retornar status 401", async () => {
       const response = await request(app)
         .get("/api/auth/me")
         .set("Authorization", "Bearer token_completamente_invalido_e_forjado");

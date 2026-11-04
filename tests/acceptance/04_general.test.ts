@@ -29,7 +29,7 @@ describe("SUT API Tests - Infraestrutura, Healthcheck e Roteamento Geral", () =>
   });
 
   describe("Roteamento Não Encontrado (404 Not Found)", () => {
-    it("CT-GEN-03: Deve responder com status 404 padronizado ao requisitar rota inexistente", async () => {
+    it("TC27 / CT-GEN-03: Deve responder com status 404 padronizado ao requisitar rota inexistente", async () => {
       const response = await request(app).get("/api/endpoint-completamente-inexistente-xyz");
 
       expect(response.status).toBe(404);

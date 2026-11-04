@@ -16,7 +16,7 @@ const API_URL = process.env.API_URL ?? "http://127.0.0.1:4000/api";
  *   5. Na "Fila recente", a demanda aparece como "Encaminhada"; no detalhe, o histórico
  *      registra o encaminhamento para o órgão sugerido (demandas/[id].tsx).
  */
-test("gestor aceita a sugestão da Triagem Inteligente e a demanda é encaminhada", async ({
+test("TC81: gestor aceita a sugestão da Triagem Inteligente e a demanda é encaminhada", async ({
   page,
   request,
 }) => {

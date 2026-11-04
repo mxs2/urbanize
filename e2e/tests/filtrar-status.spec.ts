@@ -9,7 +9,7 @@ const API_URL = process.env.API_URL ?? "http://127.0.0.1:4000/api";
  * depois da triagem automática) e outra que o gestor muda para "Encaminhada".
  * Pela interface, o filtro "Em análise" deve deixar só a primeira na lista.
  */
-test("cidadão filtra a listagem por status Em análise", async ({ page, request }) => {
+test("TC62: cidadão filtra a listagem por status Em análise", async ({ page, request }) => {
   const sufixo = Date.now();
   const email = `filtro62-${sufixo}@urbanize.test`;
   const tituloAnalise = `Filtro status - teste e2e em analise ${sufixo}`;
