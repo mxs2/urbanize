@@ -1,8 +1,9 @@
 # Checklist de Implementação dos Casos de Teste — Urbanize
 
-Acompanha a automação dos casos de [casos-de-teste.md](casos-de-teste.md). Os testes mais antigos (CT-\*, BDD, unitários e
-E2E) não citam os IDs TCxx; o vínculo deles foi feito pelo que cada teste verifica. Os testes novos levam o ID TCxx
-no nome.
+Acompanha a automação dos casos de [casos-de-teste.md](casos-de-teste.md). Todo teste que implementa um caso ✅ traz o ID
+no nome (ex.: `TC30: ...`, `TC01 / CT-AUTH-01: ...`, `TC18, TC41: cidadão registra...`). A pipeline usa esses IDs para
+calcular a métrica de casos automatizados ([metricas-de-qualidade.md](metricas-de-qualidade.md)). Casos 🟡 não entram
+no nome do teste, para não contarem como automatizados.
 
 **Legenda:** ✅ implementado · 🟡 parcial (o teste existe, mas não cobre tudo o que o caso pede; ver
 [notas](#notas-dos-parciais)) · ⬜ pendente
@@ -36,21 +37,21 @@ manteve em execução manual; eles ficam fora do backlog de automação.
 
 ## Resumo
 
-**Total:** 94 casos — ✅ 66 · 🟡 6 · ⬜ 22
+**Total:** 94 casos — ✅ 70 · 🟡 6 · ⬜ 18
 
 | Nível | ✅ | 🟡 | ⬜ | Total |
 | --- | --- | --- | --- | --- |
 | Integração de componentes | 56 | 3 | 7 | 66 |
-| Sistema | 7 | 3 | 14 | 24 |
+| Sistema | 11 | 3 | 10 | 24 |
 | Componente | 3 | 0 | 1 | 4 |
 
-Dos ⬜ e 🟡, 12 casos são manuais; os outros 16 formam o backlog de automação pendente, distribuído assim:
+Dos ⬜ e 🟡, 12 casos são manuais; os outros 12 formam o backlog de automação pendente, distribuído assim:
 
 | Responsável | Casos | Tema |
 | --- | --- | --- |
 | Hyngrid | TC29 | Status inicial da demanda (API; depende de decisão de produto) |
 | Janderson | TC37, TC39, TC54, TC61, TC76, TC77, TC86, TC87 | Enums, listagem por órgão, ciclo de status e métricas sem Redis (API) |
-| Pamela | TC26, TC62, TC92, TC93, TC94 | Logout (API); filtro e responsividade (E2E) |
+| Pamela | TC26 | Logout (API) |
 | Diego Xavier | TC44, TC82 | Formulário e painel de triagem (dependem de mudança no app) |
 
 ## Checklist
@@ -118,7 +119,7 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 16 formam o backlog de automaç
 | ✅ | [TC59](casos-de-teste.md#tc59) | HU-06 | Filtrar demandas por texto em busca. | Integração | CT-DEM-11 | push · PR · diário | — |
 | ✅ | [TC60](casos-de-teste.md#tc60) | HU-06 | Combinar filtros status e categoria. | Integração | demandas TC60 | push · PR · diário | — |
 | ⬜ | [TC61](casos-de-teste.md#tc61) | HU-06 | Recusar filtro com status fora do enum. | Integração | — | — | Janderson |
-| ⬜ | [TC62](casos-de-teste.md#tc62) | HU-06 | Aplicar filtro de status na tela de listagem. | Sistema | — | — | Pamela |
+| ✅ | [TC62](casos-de-teste.md#tc62) | HU-06 | Aplicar filtro de status na tela de listagem. | Sistema | E2E filtrar-status | diário | — |
 | ⬜ | [TC63](casos-de-teste.md#tc63) | HU-06 | Exibir estado vazio na listagem de cidadão sem demandas. | Sistema | — | manual | — |
 | ⬜ | [TC64](casos-de-teste.md#tc64) | HU-06 | Exibir estado de erro na listagem quando a API está indisponível. | Sistema | — | manual | — |
 | ✅ | [TC65](casos-de-teste.md#tc65) | HU-06 | Expor estado de carregamento enquanto a listagem está pendente. | Componente | unit store | push · PR · diário | — |
@@ -148,9 +149,9 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 16 formam o backlog de automaç
 | ⬜ | [TC89](casos-de-teste.md#tc89) | HU-02 | Navegar da home para a tela de login. | Sistema | — | manual | — |
 | ⬜ | [TC90](casos-de-teste.md#tc90) | HU-01 | Navegar da home para a tela de cadastro. | Sistema | — | manual | — |
 | ⬜ | [TC91](casos-de-teste.md#tc91) | HU-06 | Navegar da home para a tela de demandas. | Sistema | — | manual | — |
-| ⬜ | [TC92](casos-de-teste.md#tc92) | HU-03 | Registrar demanda em viewport mobile sem rolagem horizontal. | Sistema | — | — | Pamela |
-| ⬜ | [TC93](casos-de-teste.md#tc93) | HU-03 | Registrar demanda em viewport tablet sem rolagem horizontal. | Sistema | — | — | Pamela |
-| ⬜ | [TC94](casos-de-teste.md#tc94) | HU-03 | Registrar demanda em viewport desktop sem rolagem horizontal. | Sistema | — | — | Pamela |
+| ✅ | [TC92](casos-de-teste.md#tc92) | HU-03 | Registrar demanda em viewport mobile sem rolagem horizontal. | Sistema | E2E registrar-demanda-responsivo | diário | — |
+| ✅ | [TC93](casos-de-teste.md#tc93) | HU-03 | Registrar demanda em viewport tablet sem rolagem horizontal. | Sistema | E2E registrar-demanda-responsivo | diário | — |
+| ✅ | [TC94](casos-de-teste.md#tc94) | HU-03 | Registrar demanda em viewport desktop sem rolagem horizontal. | Sistema | E2E registrar-demanda-responsivo | diário | — |
 
 ## Notas dos parciais
 
@@ -164,5 +165,5 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 16 formam o backlog de automaç
 
 ## Como atualizar
 
-Ao automatizar um caso, troque o status, preencha a coluna "Teste" com o ID do teste (CT-xxx) ou o spec E2E, e
-ajuste o resumo.
+Ao automatizar um caso, coloque o ID no nome do teste (`TCxx: ...`), troque o status, preencha a coluna "Teste" com o
+ID do teste ou o spec E2E e ajuste o resumo.

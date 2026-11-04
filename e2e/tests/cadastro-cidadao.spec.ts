@@ -6,7 +6,7 @@ const API_URL = process.env.API_URL ?? "http://127.0.0.1:4000/api";
  * TC12 - Cidadão cria a conta pela tela de cadastro (cadastro.tsx) e o usuário
  * fica persistido: o login pela API com as mesmas credenciais retorna o perfil cidadão.
  */
-test("cidadão cria conta pela tela de cadastro", async ({ page, request }) => {
+test("TC12: cidadão cria conta pela tela de cadastro", async ({ page, request }) => {
   const email = `novo12-${Date.now()}@urbanize.test`;
 
   await page.goto("/cadastro");

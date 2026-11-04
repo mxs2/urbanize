@@ -62,7 +62,7 @@ describe("API Service", () => {
     await expect(api.register("Usuário Existente", "cidadao@urbanize.com", "demo")).rejects.toThrow();
   });
 
-  it("deve enviar o Authorization assim que o token entra em memória, sem depender do storage", async () => {
+  it("TC21: deve enviar o Authorization assim que o token entra em memória, sem depender do storage", async () => {
     const interceptor = mockHttp.interceptors.request.use.mock.calls[0][0] as RequestInterceptor;
 
     setAuthToken("token-recem-logado");

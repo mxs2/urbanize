@@ -13,7 +13,7 @@ describe("Session", () => {
     await AsyncStorage.clear();
   });
 
-  it("deve preferir o token em memória ao valor persistido (evita a corrida do persist)", async () => {
+  it("TC20: deve preferir o token em memória ao valor persistido (evita a corrida do persist)", async () => {
     await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ state: { token: "token-antigo" } }));
     setAuthToken("token-novo");
 

@@ -515,13 +515,13 @@ prioridade = (Risco × Frequência) ÷ Custo
 | 72 | TC32 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC32) |
 | 73 | TC78 | HU-04 | Sistema | 3 | 3 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
 | 74 | TC12 | HU-01 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | Existe (E2E cadastro-cidadao) |
-| 75 | TC62 | HU-06 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | A fazer |
+| 75 | TC62 | HU-06 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | Existe (E2E filtrar-status) |
 | 76 | TC79 | HU-05 | Sistema | 2 | 2 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
 | 77 | TC82 | HU-08 | Sistema | 2 | 2 | 2 | 2,0 | Diego Xavier | Parcial (E2E gestor-aceita-triagem) |
 | 78 | TC65 | HU-06 | Componente | 1 | 2 | 3 | 1,5 | Diego Xavier | Existe (unit store) |
-| 79 | TC92 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | A fazer |
-| 80 | TC93 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | A fazer |
-| 81 | TC94 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | A fazer |
+| 79 | TC92 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | Existe (E2E registrar-demanda-responsivo) |
+| 80 | TC93 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | Existe (E2E registrar-demanda-responsivo) |
+| 81 | TC94 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | Existe (E2E registrar-demanda-responsivo) |
 
 **Verificação**
 
