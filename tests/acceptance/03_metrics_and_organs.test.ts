@@ -20,7 +20,7 @@ describe("SUT API Tests - Métricas e Catálogo de Órgãos", () => {
   });
 
   describe("GET /api/metrics/summary - Consolidação de Indicadores", () => {
-    it("CT-MET-01: Gestor deve obter resumo de métricas globais agregadas com status 200", async () => {
+    it("TC85 / CT-MET-01: Gestor deve obter resumo de métricas globais agregadas com status 200", async () => {
       const response = await request(app)
         .get("/api/metrics/summary")
         .set("Authorization", `Bearer ${gestorToken}`);
@@ -36,7 +36,7 @@ describe("SUT API Tests - Métricas e Catálogo de Órgãos", () => {
       expect(typeof metrics.tempoMedioAtendimentoDias).toBe("number");
     });
 
-    it("CT-MET-02: Cidadão deve obter métricas calculadas apenas sobre suas próprias demandas", async () => {
+    it("TC84 / CT-MET-02: Cidadão deve obter métricas calculadas apenas sobre suas próprias demandas", async () => {
       const response = await request(app)
         .get("/api/metrics/summary")
         .set("Authorization", `Bearer ${cidadaoToken}`);

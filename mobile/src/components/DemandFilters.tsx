@@ -40,6 +40,7 @@ export function DemandFilters() {
         onChangeText={(busca) => setFilters({ ...filters, busca })}
       />
       <Select
+        testID="filtro-status"
         label="Status"
         value={filters.status ?? ""}
         options={statusOptions}

@@ -9,11 +9,12 @@ interface Option {
 interface SelectProps {
   label: string;
   value: string;
+  testID?: string;
   options: Option[];
   onChange: (value: string) => void;
 }
 
-export function Select({ label, value, options, onChange }: SelectProps) {
+export function Select({ label, value, options, onChange, testID }: SelectProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
@@ -23,6 +24,7 @@ export function Select({ label, value, options, onChange }: SelectProps) {
           return (
             <Pressable
               key={option.value}
+              testID={testID ? `${testID}-${option.value || "todos"}` : undefined}
               onPress={() => onChange(option.value)}
               style={[styles.chip, active && styles.chipActive]}
             >
