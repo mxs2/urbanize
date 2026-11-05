@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { z } from "zod";
-import { UserRole } from "../generated/prisma/client";
 import { env, isProduction } from "../config/env";
 import { authService } from "../services/authService";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -14,7 +13,8 @@ const loginSchema = z.object({
 const registerSchema = loginSchema.extend({
   nome: z.string().min(2),
   telefone: z.string().optional(),
-  role: z.enum(UserRole).optional(),
+  // O cadastro público só cria cidadãos. Gestores vêm do seed.
+  role: z.literal("cidadao").optional(),
 });
 
 const setAuthCookie = (res: Response, token: string) => {
@@ -36,7 +36,7 @@ const clearAuthCookie = (res: Response) => {
 
 export const authController = {
   register: asyncHandler(async (req: Request, res: Response) => {
-    const payload = registerSchema.parse(req.body);
+    const { role: _role, ...payload } = registerSchema.parse(req.body);
     const result = await authService.register(payload);
     setAuthCookie(res, result.token);
     res.status(201).json({ success: true, data: result });

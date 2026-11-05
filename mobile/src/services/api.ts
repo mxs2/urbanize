@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { getAuthToken } from "./session";
 import { Demand, DemandCategory, FilterState } from "@/types/demand";
 import { MetricsSummary } from "@/types/metrics";
-import { User, DemandRole } from "@/types/user";
+import { User } from "@/types/user";
 import { Organ } from "@/types/organ";
 
 interface ApiResponse<T> {
@@ -107,8 +107,7 @@ export const api = {
     nome: string,
     email: string,
     senha: string,
-    telefone?: string,
-    role: DemandRole = "cidadao"
+    telefone?: string
   ): Promise<{ user: User; token: string }> {
     try {
       return unwrap(
@@ -117,7 +116,6 @@ export const api = {
           email,
           senha,
           telefone,
-          role,
         })
       );
     } catch (error) {
