@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt, { SignOptions } from "jsonwebtoken";
-import { User, UserRole } from "../generated/prisma/client";
+import { User } from "../generated/prisma/client";
 import { env } from "../config/env";
 import { userRepository } from "../repositories/userRepository";
 import { AppError } from "../utils/appError";
@@ -21,7 +21,7 @@ const signToken = (user: User) =>
   } as SignOptions);
 
 export const authService = {
-  async register(input: { nome: string; email: string; senha: string; telefone?: string; role?: UserRole }) {
+  async register(input: { nome: string; email: string; senha: string; telefone?: string }) {
     const exists = await userRepository.findByEmail(input.email);
     if (exists) throw new AppError("Email já cadastrado.", 409, "EMAIL_ALREADY_EXISTS");
 
