@@ -113,7 +113,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.data.user.role).toBe("cidadao");
     });
 
-    it("TC04: Deve cadastrar usuário com perfil gestor", async () => {
+    it("TC04: Deve recusar cadastro público com perfil gestor e retornar status 422", async () => {
       const email = `novo04-${Date.now()}@urbanize.test`;
       const response = await request(app).post("/api/auth/register").send({
         nome: "Gestor Teste",
@@ -122,9 +122,12 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
         role: "gestor",
       });
 
-      expect(response.status).toBe(201);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.user.role).toBe("gestor");
+      expect(response.status).toBe(422);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe("VALIDATION_ERROR");
+
+      const login = await request(app).post("/api/auth/login").send({ email, senha: "demo" });
+      expect(login.status).toBe(401);
     });
 
     it("TC05: Deve recusar cadastro com role fora do enum e retornar status 422", async () => {

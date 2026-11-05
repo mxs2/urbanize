@@ -33,7 +33,7 @@ rastreabilidade.
 | [TC01](#tc01) | HU-01 | Cadastrar usuário com dados válidos. | Integração de componentes |
 | [TC02](#tc02) | HU-01 | Verificar que o cadastro cria o cookie de sessão HTTP-only. | Integração de componentes |
 | [TC03](#tc03) | HU-01 | Atribuir o perfil cidadao quando role é omitido. | Integração de componentes |
-| [TC04](#tc04) | HU-01 | Cadastrar usuário com perfil gestor. | Integração de componentes |
+| [TC04](#tc04) | HU-01 | Recusar cadastro público com perfil gestor. | Integração de componentes |
 | [TC05](#tc05) | HU-01 | Recusar cadastro com role fora do enum. | Integração de componentes |
 | [TC06](#tc06) | HU-01 | Recusar cadastro com nome de 1 caractere. | Integração de componentes |
 | [TC07](#tc07) | HU-01 | Aceitar cadastro com nome de 2 caracteres. | Integração de componentes |
@@ -176,11 +176,11 @@ rastreabilidade.
 | ID | TC04 |
 | HU | HU-01 Cadastro de conta |
 | CA | CA-03 "O cadastro deve aceitar dados válidos, perfil e criar usuário no backend." |
-| Título | Cadastrar usuário com perfil gestor. |
+| Título | Recusar cadastro público com perfil gestor. |
 | Pré-condições | M0. E-mail novo04@teste.com inexistente. Ver L10. |
 | Passos | 1. Enviar POST {API}/auth/register com dados válidos e "role":"gestor". |
-| Resultado esperado | HTTP 201 com data.user.role = gestor. |
-| Pós-condições | Usuário persistido com perfil gestor. |
+| Resultado esperado | HTTP 422 com error.code = VALIDATION_ERROR. O cadastro público só cria cidadãos (RS05, #49). |
+| Pós-condições | Nenhum usuário novo04@teste.com criado. Gestores são criados pelo seed. |
 | Nível | Integração de componentes |
 
 ### TC05

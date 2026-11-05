@@ -169,7 +169,7 @@ Saída íntegra da rodada 2 em [`ia/saida-rodada-2.md`](ia/saida-rodada-2.md), r
 | R01 nome com mínimo de 2 | Valor limite | 1 caractere (inválido), 2 (válido) | TC06, TC07 |
 | R02 senha com mínimo de 1 | Valor limite | 0 (inválido), 1 (válido) | TC08, TC09 |
 | R03 email válido e único | Partição de equivalência | Válido e novo, formato inválido, já cadastrado | TC01, TC10, TC11 |
-| R04 role | Partição de equivalência | Omitido→cidadao, gestor, fora do enum | TC03, TC04, TC05 |
+| R04 role | Partição de equivalência | Omitido→cidadao, gestor→422 (RS05), fora do enum→422 | TC03, TC04, TC05 |
 | R05 Cookie de sessão | Partição de equivalência | Cadastro cria cookie, logout remove, cookie autentica | TC02, TC25, TC26 |
 | R06 Login | Tabela de decisão | E-mail existe × senha correta → sucesso por perfil / INVALID_CREDENTIALS. Corpo incompleto | TC13–TC17 |
 | R07 Autenticação de rotas protegidas | Partição de equivalência | Sem credencial, token adulterado, token expirado, cookie válido | TC22–TC25, TC40, TC48, TC73 |
