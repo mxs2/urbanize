@@ -1,4 +1,4 @@
-import { User, DemandRole } from "./user";
+import { User } from "./user";
 
 export interface AuthPayload {
   email: string;
@@ -8,7 +8,6 @@ export interface AuthPayload {
 export interface RegisterPayload extends AuthPayload {
   nome: string;
   telefone?: string;
-  role?: DemandRole;
 }
 
 export interface AuthStateSnapshot {

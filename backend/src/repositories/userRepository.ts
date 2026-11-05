@@ -1,4 +1,3 @@
-import { UserRole } from "../generated/prisma/client";
 import { prisma } from "../config/prisma";
 
 export const userRepository = {
@@ -8,14 +7,14 @@ export const userRepository = {
   findById(id: string) {
     return prisma.user.findUnique({ where: { id } });
   },
-  create(data: { nome: string; email: string; senhaHash: string; telefone?: string; role?: UserRole }) {
+  create(data: { nome: string; email: string; senhaHash: string; telefone?: string }) {
     return prisma.user.create({
       data: {
         nome: data.nome,
         email: data.email.toLowerCase(),
         senhaHash: data.senhaHash,
         telefone: data.telefone,
-        role: data.role ?? "cidadao",
+        role: "cidadao",
       },
     });
   },

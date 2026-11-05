@@ -2,10 +2,8 @@ import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text } from "react-native";
 import { Link, router } from "expo-router";
 import { useAuth } from "@/hooks/useAuth";
-import { DemandRole } from "@/types/user";
 import { colors, fontSizes, spacing } from "@/theme";
 import { Button } from "@/components/Button";
-import { Select } from "@/components/Select";
 import { TextField } from "@/components/TextField";
 
 export default function Cadastro() {
@@ -14,12 +12,11 @@ export default function Cadastro() {
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [senha, setSenha] = useState("");
-  const [role, setRole] = useState<DemandRole>("cidadao");
 
   const handleSubmit = async () => {
     try {
-      await register(nome, email, senha, telefone || undefined, role);
-      router.replace(role === "gestor" ? "/gestor" : "/dashboard");
+      await register(nome, email, senha, telefone || undefined);
+      router.replace("/dashboard");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Verifique os dados e tente novamente.";
       Alert.alert("Erro ao criar conta", message);
@@ -40,15 +37,6 @@ export default function Cadastro() {
       />
       <TextField label="Telefone" keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
       <TextField testID="input-senha" label="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
-      <Select
-        label="Perfil"
-        value={role}
-        options={[
-          { label: "Cidadão", value: "cidadao" },
-          { label: "Gestor público", value: "gestor" },
-        ]}
-        onChange={(value) => setRole(value as DemandRole)}
-      />
       <Button testID="btn-criar-conta" label="Criar conta" onPress={handleSubmit} loading={loading} />
       <Link href="/login" style={styles.link}>
         Já tem conta? Entrar

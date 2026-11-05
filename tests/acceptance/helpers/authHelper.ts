@@ -43,7 +43,7 @@ export const getGestorSession = async (): Promise<AuthSession> => {
 };
 
 export const createUniqueUser = async (
-  role: "cidadao" | "gestor" = "cidadao",
+  role: "cidadao" = "cidadao",
   prefix: string = "user"
 ): Promise<AuthSession> => {
   const unique = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;

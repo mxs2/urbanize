@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authService } from "@/services/authService";
 import { AUTH_STORAGE_KEY, clearAuthToken, setAuthToken } from "@/services/session";
-import { User, DemandRole } from "@/types/user";
+import { User } from "@/types/user";
 
 interface AuthState {
   user: User | null;
@@ -15,8 +15,7 @@ interface AuthState {
     nome: string,
     email: string,
     senha: string,
-    telefone?: string,
-    role?: DemandRole
+    telefone?: string
   ) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -43,12 +42,12 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
-      register: async (nome, email, senha, telefone, role = "cidadao") => {
+      register: async (nome, email, senha, telefone) => {
         if (get().loading) return;
 
         set({ loading: true });
         try {
-          const { user, token } = await authService.register({ nome, email, telefone, senha, role });
+          const { user, token } = await authService.register({ nome, email, telefone, senha });
           setAuthToken(token);
           set({ user, token, loading: false });
         } catch (error) {
