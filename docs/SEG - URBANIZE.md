@@ -30,7 +30,7 @@ Fizemos esta análise a partir do código-fonte atual. Cada requisito informa o 
 | ID | Ameaça | Como acontece | Probabilidade | Impacto | Risco | Evidência | Entrega |
 | :---- | :---- | :---- | :---- | :---- | :---- | :---- | :---- |
 | R1 | Usuário comum ganha acesso de gestor | `POST /api/auth/register` aceita o campo `role` enviado pelo cliente | Alta | Alto | **Crítico** — corrigido em [#49](https://github.com/mxs2/urbanize/issues/49) | `backend/src/controllers/authController.ts:13-18`, `backend/src/services/authService.ts:24-31` | 1 |
-| R2 | Roubo de sessão | O token JWT fica em `AsyncStorage`, sem criptografia, no celular | Média | Alto | **Alto** | `mobile/src/store/authStore.ts:67`, `mobile/src/services/session.ts:19` | 1 |
+| R2 | Roubo de sessão | O token JWT fica em `AsyncStorage`, sem criptografia, no celular | Média | Alto | **Alto** | `mobile/src/store/authStore.ts:66`, `mobile/src/services/session.ts:19` | 1 |
 | R3 | Criação de tokens falsos | Se `JWT_SECRET` não for definido, o código usa o valor fixo `"urbanize-dev-secret-change-me"` | Baixa (com `.env`) / Alta (sem `.env`) | Alto | **Alto** — corrigido em [#50](https://github.com/mxs2/urbanize/issues/50) | `backend/src/config/env.ts` | 1 |
 | R4 | Fotos de demandas expostas | A pasta `/uploads` é pública, sem `requireAuth` | Média | Médio-Alto | **Alto** | `backend/src/app.ts:22` | 2 |
 | R5 | Leitura de senhas e dados na rede | Nenhum ambiente usa TLS (HTTPS) | Média | Alto | **Alto** | `docker/docker-compose.yml` (healthcheck e `EXPO_PUBLIC_API_URL` em HTTP) | 4 |
@@ -42,6 +42,57 @@ Fizemos esta análise a partir do código-fonte atual. Cada requisito informa o 
 | R11 | Perda total dos dados | Banco (`dev.db`) e fotos (`uploads/`) ficam em um único disco, sem cópia de segurança | Média | Alto | **Alto** | `backend/.env.example` (`DATABASE_URL="file:./dev.db"`), `backend/src/middlewares/uploadMiddleware.ts:12` | 5 |
 | R12 | API fora do ar por excesso de requisições | Sem limite de requisições e sem cabeçalhos de segurança HTTP | Média | Médio | **Médio** | `backend/src/app.ts` não usa `helmet` nem limite de taxa | 4 |
 | R13 | Falha ou ataque em pacote de terceiros | Imagens Docker e pacotes npm sem verificação automática de vulnerabilidades | Média | Médio | **Médio** | `docker/docker-compose.yml` (`redis:7-alpine`), `backend/package.json` | 6 |
+
+### Onde verificar no código
+
+Os riscos estão agrupados pela parte do código onde ficam. Os links apontam para a branch `main`.
+
+#### Backend — cadastro, login e sessão
+
+| Risco | Arquivo | O que verificar |
+| :---- | :---- | :---- |
+| R1 (corrigido) | [`backend/src/controllers/authController.ts:13-18`](https://github.com/mxs2/urbanize/blob/main/backend/src/controllers/authController.ts#L13-L18) | O `registerSchema` aceita apenas `role` igual a `cidadao`. |
+| R1 (corrigido) | [`backend/src/services/authService.ts:24-31`](https://github.com/mxs2/urbanize/blob/main/backend/src/services/authService.ts#L24-L31) | O cadastro não recebe `role`. |
+| R1 (corrigido) | [`backend/src/repositories/userRepository.ts:10-20`](https://github.com/mxs2/urbanize/blob/main/backend/src/repositories/userRepository.ts#L10-L20) | O repositório sempre grava `role: "cidadao"`. |
+| R3 (corrigido) | [`backend/src/config/env.ts:33-47`](https://github.com/mxs2/urbanize/blob/main/backend/src/config/env.ts#L33-L47) | `requireEnv("JWT_SECRET")` para a inicialização se a variável não existir. |
+| R6 | [`backend/src/routes/authRoutes.ts:7-8`](https://github.com/mxs2/urbanize/blob/main/backend/src/routes/authRoutes.ts#L7-L8) | As rotas `/register` e `/login` não têm limite de tentativas. |
+| R7 | [`backend/src/controllers/authController.ts:10-10`](https://github.com/mxs2/urbanize/blob/main/backend/src/controllers/authController.ts#L10-L10) | `senha: z.string().min(1)` aceita senha de 1 caractere. |
+| R9 | [`backend/src/services/authService.ts`](https://github.com/mxs2/urbanize/blob/main/backend/src/services/authService.ts) | Login e cadastro não geram registro de auditoria. |
+
+#### Backend — demandas e fotos
+
+| Risco | Arquivo | O que verificar |
+| :---- | :---- | :---- |
+| R4 | [`backend/src/app.ts:22-22`](https://github.com/mxs2/urbanize/blob/main/backend/src/app.ts#L22-L22) | A pasta `/uploads` é servida sem `requireAuth`. |
+| R8 | [`backend/src/services/demandService.ts:39-49`](https://github.com/mxs2/urbanize/blob/main/backend/src/services/demandService.ts#L39-L49) | O gestor lista demandas de todos os órgãos, sem filtro por `organId`. |
+| R8 | [`backend/src/services/demandService.ts:125-132`](https://github.com/mxs2/urbanize/blob/main/backend/src/services/demandService.ts#L125-L132) | O gestor altera o status de demandas de qualquer órgão. |
+| R11 | [`backend/src/middlewares/uploadMiddleware.ts:6-12`](https://github.com/mxs2/urbanize/blob/main/backend/src/middlewares/uploadMiddleware.ts#L6-L12) | As fotos ficam em um único disco local. |
+| R12 | [`backend/src/app.ts:12-19`](https://github.com/mxs2/urbanize/blob/main/backend/src/app.ts#L12-L19) | A API não usa `helmet` nem limite de requisições. |
+
+#### Backend — serviços externos
+
+| Risco | Arquivo | O que verificar |
+| :---- | :---- | :---- |
+| R10 | [`backend/src/config/env.ts:52-52`](https://github.com/mxs2/urbanize/blob/main/backend/src/config/env.ts#L52-L52) | `GOOGLE_VISION_CREDENTIALS` ativa o envio de fotos ao Google Vision. |
+| R10 | [`backend/src/services/visionService.ts:107-112`](https://github.com/mxs2/urbanize/blob/main/backend/src/services/visionService.ts#L107-L112) | O cliente do Google Vision recebe a foto da demanda. |
+
+#### Mobile
+
+| Risco | Arquivo | O que verificar |
+| :---- | :---- | :---- |
+| R1 (corrigido) | [`mobile/app/cadastro.tsx`](https://github.com/mxs2/urbanize/blob/main/mobile/app/cadastro.tsx) | A tela de cadastro não mostra mais a opção "Gestor público". |
+| R2 | [`mobile/src/store/authStore.ts:66-66`](https://github.com/mxs2/urbanize/blob/main/mobile/src/store/authStore.ts#L66-L66) | O `authStore` grava o token em `AsyncStorage`, sem criptografia. |
+| R2 | [`mobile/src/services/session.ts:19-19`](https://github.com/mxs2/urbanize/blob/main/mobile/src/services/session.ts#L19-L19) | O token é lido de `AsyncStorage`. |
+
+#### Infraestrutura e dependências
+
+| Risco | Arquivo | O que verificar |
+| :---- | :---- | :---- |
+| R5 | [`docker/docker-compose.yml:39-39`](https://github.com/mxs2/urbanize/blob/main/docker/docker-compose.yml#L39-L39) | O healthcheck usa HTTP. |
+| R5 | [`docker/docker-compose.yml:55-55`](https://github.com/mxs2/urbanize/blob/main/docker/docker-compose.yml#L55-L55) | `EXPO_PUBLIC_API_URL` usa HTTP. |
+| R11 | [`backend/.env.example:1-1`](https://github.com/mxs2/urbanize/blob/main/backend/.env.example#L1-L1) | O banco é o arquivo local `dev.db`, sem backup. |
+| R13 | [`docker/docker-compose.yml:5-5`](https://github.com/mxs2/urbanize/blob/main/docker/docker-compose.yml#L5-L5) | A imagem `redis:7-alpine` não tem versão fixa. |
+| R6, R12, R13 | [`backend/package.json`](https://github.com/mxs2/urbanize/blob/main/backend/package.json) | Não há `express-rate-limit` nem `helmet`. Não há verificação automática de vulnerabilidades. |
 
 ## Unidade 1
 
