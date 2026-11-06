@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { useDemandStore } from "@/store/demandStore";
 import { resolveImageUrl } from "@/services/api";
@@ -28,7 +28,7 @@ const GESTOR_TRANSITIONS: DemandStatus[] = [
 export default function DemandDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { ready, user } = useRoleGuard(["cidadao", "gestor"]);
-  const { selected, loading, fetchDemandById, updateDemandStatus } = useDemandStore();
+  const { selected, loading, fetchDemandById, updateDemandStatus, deleteDemand } = useDemandStore();
   const [observacao, setObservacao] = useState("");
 
   useEffect(() => {
@@ -54,6 +54,26 @@ export default function DemandDetail() {
     }
   };
 
+  // Espelha a regra do backend: cidadão só exclui enquanto a demanda não foi tratada.
+  const canDelete = isGestor || ["registrada", "em_analise"].includes(selected.status);
+
+  const confirmDelete = () =>
+    Alert.alert("Excluir demanda", "Esta ação não pode ser desfeita. Deseja continuar?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Excluir",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteDemand(selected.id);
+            router.replace("/demandas");
+          } catch (error) {
+            Alert.alert("Erro", error instanceof Error ? error.message : "Não foi possível excluir.");
+          }
+        },
+      },
+    ]);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.protocolo}>{selected.protocolo}</Text>
@@ -72,6 +92,15 @@ export default function DemandDetail() {
 
       <SectionTitle title="Histórico" />
       <DemandTimeline historico={selected.historico} />
+
+      {canDelete ? (
+        <Button
+          testID="btn-excluir-demanda"
+          label="Excluir demanda"
+          variant="outline"
+          onPress={confirmDelete}
+        />
+      ) : null}
 
       {isGestor ? (
         <View style={styles.gestorPanel}>

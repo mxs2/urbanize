@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { demandService } from "@/services/demandService";
+import type { DemandUpdatePayload } from "@/services/api";
 import { Demand, FilterState } from "@/types/demand";
 
 const mergeBairros = (current: string[], demands: Demand[]) =>
@@ -18,6 +19,8 @@ interface DemandState {
   fetchDemandById: (id: string) => Promise<void>;
   createDemand: (payload: Omit<Demand, "id" | "protocolo" | "criadaEm" | "atualizadaEm">) => Promise<Demand>;
   updateDemandStatus: (id: string, status: Demand["status"], observacaoGestor?: string) => Promise<void>;
+  updateDemand: (id: string, payload: DemandUpdatePayload) => Promise<void>;
+  deleteDemand: (id: string) => Promise<void>;
   setFilters: (filters: FilterState) => void;
   clearFilters: () => void;
 }
@@ -60,6 +63,34 @@ export const useDemandStore = create<DemandState>((set, get) => ({
       selected: updated ?? get().selected,
       loading: false,
     });
+  },
+  async updateDemand(id, payload) {
+    set({ loading: true, error: undefined });
+    try {
+      const updated = await demandService.update(id, payload);
+      set({
+        demands: get().demands.map((d) => (d.id === id ? updated : d)),
+        selected: updated,
+        loading: false,
+      });
+    } catch (error) {
+      set({ loading: false });
+      throw error;
+    }
+  },
+  async deleteDemand(id) {
+    set({ loading: true, error: undefined });
+    try {
+      await demandService.remove(id);
+      set({
+        demands: get().demands.filter((d) => d.id !== id),
+        selected: get().selected?.id === id ? undefined : get().selected,
+        loading: false,
+      });
+    } catch (error) {
+      set({ loading: false });
+      throw error;
+    }
   },
   setFilters(filters) {
     set({ filters });

@@ -38,7 +38,29 @@ const updateStatusSchema = z.object({
   observacaoGestor: z.string().optional(),
 });
 
-const getUser = (req: Request) => {
+const updateDemandSchema = z
+  .object({
+    titulo: z.string().min(3),
+    descricao: z.string().min(5),
+    categoria: z.enum(DemandCategory),
+    prioridade: z.enum(DemandPriority),
+    telefoneSolicitante: z.string(),
+    endereco: z
+      .object({
+        endereco: z.string().min(3),
+        bairro: z.string(),
+        cidade: z.string(),
+        referencia: z.string(),
+        latitude: z.number(),
+        longitude: z.number(),
+      })
+      .partial(),
+    imagemUrl: z.string().min(1),
+  })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, { message: "Informe ao menos um campo para atualizar." });
+
+const getUser =(req: Request) => {
   if (!req.user) throw new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED");
   return req.user;
 };
@@ -57,6 +79,15 @@ export const demandController = {
     const payload = createDemandSchema.parse(req.body);
     const data = await demandService.create(payload, getUser(req));
     res.status(201).json({ success: true, data });
+  }),
+  update: asyncHandler(async (req: Request, res: Response) => {
+    const payload = updateDemandSchema.parse(req.body);
+    const data = await demandService.update(String(req.params.id), payload, getUser(req));
+    res.json({ success: true, data });
+  }),
+  remove: asyncHandler(async (req: Request, res: Response) => {
+    await demandService.remove(String(req.params.id), getUser(req));
+    res.json({ success: true, data: null });
   }),
   updateStatus: asyncHandler(async (req: Request, res: Response) => {
     const payload = updateStatusSchema.parse(req.body);
