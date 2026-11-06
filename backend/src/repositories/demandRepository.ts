@@ -67,6 +67,12 @@ export const demandRepository = {
       include: includeHistory,
     });
   },
+  update(id: string, data: Prisma.DemandUpdateInput) {
+    return prisma.demand.update({ where: { id }, data, include: includeHistory });
+  },
+  delete(id: string) {
+    return prisma.demand.delete({ where: { id } });
+  },
   countByStatus(where?: Prisma.DemandWhereInput) {
     return prisma.demand.groupBy({ by: ["status"], where, _count: { _all: true } });
   },

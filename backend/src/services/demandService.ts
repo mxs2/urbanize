@@ -122,6 +122,65 @@ export const demandService = {
     await cache.del("metrics:summary:all");
     return toDemandResponse(demand);
   },
+  async update(
+    id: string,
+    input: {
+      titulo?: string;
+      descricao?: string;
+      categoria?: DemandCategory;
+      prioridade?: DemandPriority;
+      telefoneSolicitante?: string;
+      endereco?: {
+        endereco?: string;
+        bairro?: string;
+        cidade?: string;
+        referencia?: string;
+        latitude?: number;
+        longitude?: number;
+      };
+      imagemUrl?: string;
+    },
+    user: { id: string; nome: string; role: UserRole }
+  ) {
+    const demand = ensureAllowed(await demandRepository.findById(id), user);
+    // O cidadão só edita enquanto a demanda ainda não foi tratada pela prefeitura.
+    if (user.role !== "gestor" && !["registrada", "em_analise"].includes(demand.status)) {
+      throw new AppError(
+        "A demanda já está em tratamento e não pode mais ser editada.",
+        409,
+        "DEMAND_LOCKED"
+      );
+    }
+
+    const { endereco, ...rest } = input;
+    const updated = await demandRepository.update(id, {
+      ...rest,
+      ...(endereco ?? {}),
+      historico: {
+        create: {
+          status: demand.status,
+          descricao: "Demanda editada",
+          autor: user.nome,
+        },
+      },
+    });
+
+    await cache.del("metrics:summary:all");
+    return toDemandResponse(updated);
+  },
+  async remove(id: string, user: { id: string; role: UserRole }) {
+    const demand = ensureAllowed(await demandRepository.findById(id), user);
+    if (user.role !== "gestor" && !["registrada", "em_analise"].includes(demand.status)) {
+      throw new AppError(
+        "A demanda já está em tratamento e não pode mais ser excluída.",
+        409,
+        "DEMAND_LOCKED"
+      );
+    }
+
+    await demandRepository.delete(id);
+    await cache.del("metrics:summary:all");
+  },
   async updateStatus(
     id: string,
     input: { status: DemandStatus; observacaoGestor?: string },
