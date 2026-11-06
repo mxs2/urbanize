@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { getAuthToken } from "./session";
+import { getAuthToken, notifyUnauthorized } from "./session";
 import { Demand, DemandCategory, FilterState } from "@/types/demand";
 import { MetricsSummary } from "@/types/metrics";
 import { User, DemandRole } from "@/types/user";
@@ -9,6 +9,10 @@ interface ApiResponse<T> {
   success: boolean;
   data: T;
 }
+
+export type DemandUpdatePayload = Partial<
+  Pick<Demand, "titulo" | "descricao" | "categoria" | "prioridade" | "imagemUrl">
+> & { endereco?: Partial<Demand["endereco"]> };
 
 interface ApiErrorResponse {
   success: false;
@@ -36,7 +40,22 @@ http.interceptors.request.use(async (config) => {
   return config;
 });
 
-const unwrap = <T>(response: { data: ApiResponse<T> }) => response.data.data;
+// Rotas em que 401 significa "credenciais erradas", não "sessão expirada".
+const PUBLIC_AUTH_PATHS = ["/auth/login", "/auth/register", "/auth/logout"];
+
+http.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const url: string = error?.config?.url ?? "";
+    const isPublic = PUBLIC_AUTH_PATHS.some((path) => url.includes(path));
+    if (axios.isAxiosError(error) && error.response?.status === 401 && !isPublic) {
+      notifyUnauthorized();
+    }
+    throw error;
+  }
+);
+
+const unwrap =<T>(response: { data: ApiResponse<T> }) => response.data.data;
 
 const normalizeError = (error: unknown): never => {
   if (axios.isAxiosError(error)) {
@@ -70,6 +89,22 @@ export const api = {
   ): Promise<Demand> {
     try {
       return unwrap(await http.post<ApiResponse<Demand>>("/demands", payload));
+    } catch (error) {
+      return normalizeError(error);
+    }
+  },
+
+  async updateDemand(id: string, payload: DemandUpdatePayload): Promise<Demand> {
+    try {
+      return unwrap(await http.patch<ApiResponse<Demand>>(`/demands/${id}`, payload));
+    } catch (error) {
+      return normalizeError(error);
+    }
+  },
+
+  async deleteDemand(id: string): Promise<void> {
+    try {
+      await http.delete<ApiResponse<null>>(`/demands/${id}`);
     } catch (error) {
       return normalizeError(error);
     }

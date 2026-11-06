@@ -8,23 +8,24 @@ jest.mock("axios", () => {
     get: jest.fn(),
     post: jest.fn(),
     patch: jest.fn(),
-    interceptors: { request: { use: jest.fn() } },
+    delete: jest.fn(),
+    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
   };
   return {
     __esModule: true,
     default: {
       create: jest.fn(() => mockHttp),
-      isAxiosError: jest.fn(() => false),
+      isAxiosError: jest.fn((e: { response?: unknown }) => !!e?.response),
     },
   };
 });
 
 import { api } from "@/services/api";
-import { resetSessionForTests, setAuthToken } from "@/services/session";
+import { resetSessionForTests, setAuthToken, setUnauthorizedHandler } from "@/services/session";
 
 const mockHttp = axios.create() as unknown as {
   post: jest.Mock;
-  interceptors: { request: { use: jest.Mock } };
+  interceptors: { request: { use: jest.Mock }; response: { use: jest.Mock } };
 };
 
 type RequestInterceptor = (config: {
@@ -77,5 +78,27 @@ describe("API Service", () => {
     const config = await interceptor({ headers: {}, url: "/demands" });
 
     expect(config.headers.Authorization).toBeUndefined();
+  });
+
+  describe("interceptor de resposta (401)", () => {
+    const onRejected = () =>
+      mockHttp.interceptors.response.use.mock.calls[0][1] as (e: unknown) => Promise<never>;
+    const err401 = (url: string) => ({ config: { url }, response: { status: 401 } });
+
+    it("aciona o handler de sessão expirada em rota autenticada", async () => {
+      const handler = jest.fn();
+      setUnauthorizedHandler(handler);
+
+      await expect(onRejected()(err401("/demands"))).rejects.toBeDefined();
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it("não aciona o handler quando o 401 vem do login (credenciais inválidas)", async () => {
+      const handler = jest.fn();
+      setUnauthorizedHandler(handler);
+
+      await expect(onRejected()(err401("/auth/login"))).rejects.toBeDefined();
+      expect(handler).not.toHaveBeenCalled();
+    });
   });
 });

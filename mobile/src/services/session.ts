@@ -39,8 +39,21 @@ export const getAuthToken = async (): Promise<string | null> => {
   return coldStartRead;
 };
 
+/**
+ * Callback acionado quando o backend responde 401 numa rota autenticada (token expirado/inválido).
+ * Registrado pelo authStore — evita dependência circular entre api.ts e o store.
+ */
+let unauthorizedHandler: (() => void) | null = null;
+
+export const setUnauthorizedHandler = (handler: (() => void) | null) => {
+  unauthorizedHandler = handler;
+};
+
+export const notifyUnauthorized = () => unauthorizedHandler?.();
+
 /** Apenas para testes: volta ao estado inicial do módulo. */
 export const resetSessionForTests = () => {
   token = null;
   coldStartRead = null;
+  unauthorizedHandler = null;
 };
