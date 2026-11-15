@@ -1,0 +1,246 @@
+name: Manutenção da TAS
+
+# Operacionaliza a política de manutenção da automação de testes (docs/tas.md, seção 4):
+# - pull_request / push na main: verificação estática (.only, skip/quarentena sem issue) e remoção de teste sem aprovação
+# - issues: lê o formulário "Manutenção de teste" e aplica labels de origem, prioridade, squad e prazo
+# - dias úteis: cobra prazos vencidos e issues paradas em triagem
+# - dia 1 de cada mês (ou manual): abre a issue da revisão periódica com o diagnóstico da última regressão
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [main]
+  issues:
+    types: [opened, edited]
+  schedule:
+    - cron: '0 11 * * 1-5' # 8h em Brasília: prazos
+    - cron: '0 12 1 * *' # dia 1, 9h em Brasília: revisão periódica
+  workflow_dispatch:
+    inputs:
+      tarefa:
+        description: O que executar
+        type: choice
+        options: [prazos, revisao]
+        default: revisao
+
+permissions:
+  contents: read
+
+jobs:
+  verificacao:
+    name: Verificação da TAS
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: 🔍 .only esquecido e teste desligado sem issue
+        run: |
+          node scripts/manutencao/verificar.mjs "" relatorios > /dev/null && status=0 || status=$?
+          cat relatorios/manutencao.md >> "$GITHUB_STEP_SUMMARY"
+          exit $status
+
+      # Remoção de teste exige issue "Remoção de teste" aprovada (docs/tas.md, 3.5).
+      - name: 🗑️ Remoção de teste precisa de aprovação
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          CORPO: ${{ github.event.pull_request.body }}
+        shell: bash
+        run: |
+          padrao='^[-+][[:space:]]*((it|test)(\.(skip|fixme))?\(|Scenario( Outline)?:)'
+          diff=$(git diff "$BASE"...HEAD -- tests/unit tests/acceptance tests/bdd/features e2e/tests)
+          removidos=$(grep -E "$padrao" <<<"$diff" | grep -c '^-' || true)
+          adicionados=$(grep -E "$padrao" <<<"$diff" | grep -c '^+' || true)
+          echo "Declarações de teste: -$removidos / +$adicionados"
+          [ "$removidos" -le "$adicionados" ] && exit 0
+          numero=$(grep -oE 'Remove teste: #[0-9]+' <<<"$CORPO" | grep -oE '[0-9]+' | head -1 || true)
+          if [ -z "$numero" ]; then
+            echo "::error::O PR remove $((removidos - adicionados)) teste(s). Cite a issue aprovada com 'Remove teste: #NN' na descrição (docs/tas.md, 3.5)."
+            exit 1
+          fi
+          if ! gh issue view "$numero" --json labels --jq '.labels[].name' | grep -qx remocao-aprovada; then
+            echo "::error::A issue #$numero ainda não tem a label remocao-aprovada."
+            exit 1
+          fi
+          echo "Remoção autorizada pela issue #$numero."
+
+  classificar:
+    name: Classificar demanda de manutenção
+    if: github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'manutencao')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const corpo = issue.body ?? '';
+            const campo = (nome) => corpo.match(new RegExp(`### ${nome}\\s*\\n\\s*\\n([^\\n]+)`))?.[1]?.trim();
+            const atuais = issue.labels.map((l) => l.name);
+            const alvo = new Set(atuais);
+
+            // Origem -> label de origem + squad responsável (docs/tas.md, 3.1 e 3.2).
+            const ORIGEM = {
+              SUT: ['origem:sut', 'bug', 'squad:mob'],
+              TAS: ['origem:tas', 'squad:test'],
+              Ambiente: ['origem:ambiente', 'squad:test'],
+              Variação: ['origem:variacao-esperada', 'squad:test'],
+            };
+            const origem = ORIGEM[campo('Origem da falha')?.split(/\s/)[0]];
+            for (const l of atuais) if (l.startsWith('origem:')) alvo.delete(l);
+            if (origem) { origem.forEach((l) => alvo.add(l)); alvo.delete('triagem'); }
+            else alvo.add('triagem');
+
+            const p = campo('Prioridade')?.match(/^P([1-4])/)?.[1];
+            for (const l of atuais) if (l.startsWith('prioridade:')) alvo.delete(l);
+            if (p) alvo.add(`prioridade:P${p}`);
+
+            const tipo = campo('Tipo de demanda') ?? '';
+            if (tipo.startsWith('Teste instável')) alvo.add('flaky');
+            if (tipo.startsWith('Quarentena')) alvo.add('quarentena');
+
+            const remover = atuais.filter((l) => !alvo.has(l));
+            const adicionar = [...alvo].filter((l) => !atuais.includes(l));
+            const ref = { ...context.repo, issue_number: issue.number };
+            if (adicionar.length) await github.rest.issues.addLabels({ ...ref, labels: adicionar });
+            for (const name of remover) await github.rest.issues.removeLabel({ ...ref, name });
+
+            // Prazo vazio -> calculado pela prioridade (dias corridos a partir da abertura).
+            const DIAS = { 1: 1, 2: 3, 3: 7, 4: 30 };
+            const prazo = campo('Prazo');
+            if (p && (!prazo || prazo === '_No response_')) {
+              const data = new Date(issue.created_at);
+              data.setUTCDate(data.getUTCDate() + DIAS[p]);
+              const iso = data.toISOString().slice(0, 10);
+              const novo = /### Prazo\s*\n\s*\n_No response_/.test(corpo)
+                ? corpo.replace(/(### Prazo\s*\n\s*\n)_No response_/, `$1${iso}`)
+                : `${corpo}\n\n### Prazo\n\n${iso}\n`;
+              await github.rest.issues.update({ ...ref, body: novo });
+              await github.rest.issues.createComment({ ...ref, body: `Prazo definido pela prioridade P${p}: **${iso}** (docs/tas.md, 3.2).` });
+            } else if (prazo && prazo !== '_No response_' && !/^\d{4}-\d{2}-\d{2}$/.test(prazo)) {
+              await github.rest.issues.createComment({ ...ref, body: `Prazo \`${prazo}\` fora do formato AAAA-MM-DD; o acompanhamento automático não vai conseguir cobrá-lo.` });
+            }
+            await core.summary.addRaw(`#${issue.number}: +[${adicionar}] -[${remover}]`).write();
+
+  prazos:
+    name: Cobrar prazos
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '0 11 * * 1-5')
+      || (github.event_name == 'workflow_dispatch' && inputs.tarefa == 'prazos')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const hoje = new Date().toISOString().slice(0, 10);
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: 'open', labels: 'manutencao', per_page: 100,
+            });
+            const linhas = [];
+            for (const issue of issues.filter((i) => !i.pull_request)) {
+              const ref = { ...context.repo, issue_number: issue.number };
+              const labels = issue.labels.map((l) => l.name);
+              const prazo = (issue.body ?? '').match(/### Prazo\s*\n\s*\n(\d{4}-\d{2}-\d{2})/)?.[1];
+              const quem = issue.assignees.length
+                ? issue.assignees.map((a) => `@${a.login}`).join(' ')
+                : 'Sem responsável atribuído — squad de Testes, atribuir na próxima daily.';
+              linhas.push(`| #${issue.number} | ${prazo ?? '—'} | ${labels.filter((l) => /^(prioridade|origem):|triagem/.test(l)).join(', ')} |`);
+              if (prazo && prazo < hoje && !labels.includes('prazo-vencido')) {
+                await github.rest.issues.addLabels({ ...ref, labels: ['prazo-vencido'] });
+                await github.rest.issues.createComment({ ...ref, body:
+                  `⏰ Prazo de **${prazo}** vencido. ${quem}\n\nPela política (docs/tas.md, 3.2): corrigir, renegociar o prazo ` +
+                  `com justificativa nesta issue ou escalar na próxima reunião da equipe.` });
+              }
+              const diasAberta = (Date.now() - new Date(issue.created_at)) / 864e5;
+              if (labels.includes('triagem') && diasAberta > 1 && !labels.includes('prazo-vencido'))
+                await github.rest.issues.createComment({ ...ref, body:
+                  `🔎 Em triagem há ${Math.floor(diasAberta)} dia(s); a política pede classificação da origem em até 1 dia útil. ${quem}` });
+            }
+            await core.summary.addRaw(`| Issue | Prazo | Classificação |\n| --- | --- | --- |\n${linhas.join('\n')}\n`).write();
+
+  revisao:
+    name: Revisão periódica
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '0 12 1 * *')
+      || (github.event_name == 'workflow_dispatch' && inputs.tarefa == 'revisao')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: 📥 Resultados da última regressão completa da main
+        run: |
+          id=$(gh run list --workflow regressao.yml --branch main --event schedule --status completed --limit 1 --json databaseId --jq '.[0].databaseId')
+          echo "RODADA=$id" >> "$GITHUB_ENV"
+          gh run download "$id" --pattern 'resultados-*' --dir resultados || true
+          for d in resultados/resultados-*; do [ -d "$d" ] && mv "$d" "resultados/${d#resultados/resultados-}"; done
+          gh run download "$id" --name relatorios-qualidade --dir anterior || true
+
+      - name: 🔍 Diagnóstico
+        run: node scripts/manutencao/verificar.mjs resultados relatorios || true
+
+      - name: 📝 Abrir issue da revisão
+        run: |
+          mes=$(date +%Y-%m)
+          titulo="Revisão periódica da TAS — $mes"
+          if [ -n "$(gh issue list --label revisao-periodica --state all --search "\"$titulo\" in:title" --json number --jq '.[0].number')" ]; then
+            echo "Revisão de $mes já aberta."; exit 0
+          fi
+          abertas() { gh issue list --label "$1" --state open --json number --jq 'length'; }
+          duracao=$(jq -r '[.[-10:][] | .duracao] | map(tostring + " s") | join(" → ")' anterior/historico.json 2>/dev/null || echo "sem histórico")
+          {
+            echo "Revisão mensal prevista em docs/tas.md, 3.4. Base: regressão completa da main, execução [#$RODADA]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$RODADA)."
+            echo
+            echo "### Situação das demandas de manutenção"
+            echo
+            echo "| Abertas | Em triagem | Instáveis | Em quarentena | Prazo vencido |"
+            echo "| --- | --- | --- | --- | --- |"
+            echo "| $(abertas manutencao) | $(abertas triagem) | $(abertas flaky) | $(abertas quarentena) | $(abertas prazo-vencido) |"
+            echo
+            echo "### Tempo de execução (últimas 10 regressões)"
+            echo
+            echo "$duracao"
+            echo
+            cat relatorios/manutencao.md
+            echo
+            echo "### Checklist da revisão"
+            echo
+            echo "- [ ] **Instabilidade:** cada teste instável ou em quarentena tem issue com responsável; quarentena com mais de 14 dias foi corrigida ou virou pedido de remoção."
+            echo "- [ ] **Tempo de execução:** testes acima do limite (unitário 2 s, API 5 s, E2E 60 s) têm issue P4 ou justificativa."
+            echo "- [ ] **Duplicação:** nomes duplicados e helpers/page objects repetidos revisados; duplicação real vira issue P4."
+            echo "- [ ] **Rastreabilidade:** testes sem TCxx foram renomeados ou ganharam caso em docs/tests/casos-de-teste.md."
+            echo "- [ ] **Remoções do mês:** cada teste removido tem issue de remoção aprovada."
+            echo "- [ ] Decisões registradas nesta issue e issue fechada."
+            echo
+            echo "### Prazo"
+            echo
+            date -d '+7 days' +%F
+          } > corpo.md
+          gh issue create --title "$titulo" --label manutencao,revisao-periodica,prioridade:P4,squad:test --body-file corpo.md
