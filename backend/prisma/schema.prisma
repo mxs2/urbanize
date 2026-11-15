@@ -78,7 +78,8 @@ model User {
   organId String?
   organ   Organ?  @relation(fields: [organId], references: [id])
 
-  demands Demand[]
+  demands       Demand[]
+  notificacoes  Notification[]
 }
 
 model Demand {
@@ -111,7 +112,8 @@ model Demand {
   user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
   organId   String?
   organ     Organ?          @relation(fields: [organId], references: [id], onDelete: SetNull)
-  historico DemandHistory[]
+  historico    DemandHistory[]
+  notificacoes Notification[]
 
   @@index([status])
   @@index([categoria])
@@ -130,6 +132,21 @@ model DemandHistory {
   demand   Demand @relation(fields: [demandId], references: [id], onDelete: Cascade)
 
   @@index([demandId])
+}
+
+// Aviso ao cidadão quando o gestor muda o status de uma demanda dele.
+model Notification {
+  id        String   @id @default(cuid())
+  mensagem  String
+  lida      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  demandId String
+  demand   Demand @relation(fields: [demandId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model MetricsSnapshot {

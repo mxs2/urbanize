@@ -6,9 +6,10 @@ const E2E_TITULO_PREFIXES = [
   "Lâmpada queimada - teste e2e triagem",
   "Vazamento de esgoto - teste e2e triagem ui",
   "Filtro status - teste e2e",
+  "Aviso status - teste e2e",
 ];
 
-const E2E_CADASTRO_EMAIL_PREFIXES = ["novo12-", "filtro62-"];
+const E2E_CADASTRO_EMAIL_PREFIXES = ["novo12-", "filtro62-", "aviso78-"];
 
 async function main() {
   const { count } = await prisma.demand.deleteMany({

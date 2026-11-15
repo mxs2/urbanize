@@ -10,6 +10,14 @@ interface ApiResponse<T> {
   data: T;
 }
 
+export interface Notificacao {
+  id: string;
+  demandId: string;
+  mensagem: string;
+  lida: boolean;
+  criadaEm: string;
+}
+
 interface ApiErrorResponse {
   success: false;
   error?: {
@@ -137,6 +145,22 @@ export const api = {
   async logout(): Promise<void> {
     try {
       await http.post<ApiResponse<null>>("/auth/logout");
+    } catch (error) {
+      return normalizeError(error);
+    }
+  },
+
+  async getNotifications(): Promise<Notificacao[]> {
+    try {
+      return unwrap(await http.get<ApiResponse<Notificacao[]>>("/notifications"));
+    } catch (error) {
+      return normalizeError(error);
+    }
+  },
+
+  async markNotificationsRead(): Promise<void> {
+    try {
+      await http.patch<ApiResponse<{ atualizadas: number }>>("/notifications/read-all");
     } catch (error) {
       return normalizeError(error);
     }
