@@ -57,6 +57,22 @@ em outra sessão:
 3. Clique em "Aceitar": a demanda sai da fila.
 4. Após recarregar a página, a demanda continua fora da fila (status persistido no backend).
 
+**`tests/cenarios-negativos.spec.ts`** — Cenários negativos pela interface:
+
+1. Cidadão abre `/gestor` pela URL: o app recusa e devolve ao próprio painel, sem "Painel do
+   gestor" nem link para ele na tab bar; com o mesmo token, a API recusa alterar status (403).
+2. Cidadão envia "Nova demanda" com o endereço vazio: a tela mostra "Preencha os campos
+   obrigatórios.", continua no formulário e nenhuma requisição de criação é enviada.
+
+**`tests/notificacao-status.spec.ts`** — Cidadão recebe aviso quando o gestor muda o status:
+
+1. Pré-condição: um cidadão novo registra uma demanda pela API.
+2. Cidadão entra no app; a aba "Avisos" não mostra contador.
+3. Em outra sessão, o gestor abre a demanda e muda o status para "Encaminhada" com observação.
+4. Ao navegar, o cidadão vê o contador "1" na aba "Avisos"; a tela mostra a mensagem com
+   protocolo, novo status e observação, e o contador some depois de aberta.
+5. Tocar no aviso abre o detalhe da demanda já como "Encaminhada".
+
 ## Pré-requisitos
 
 - Node.js 24+ (mesma versão usada em `backend/` e `mobile/`).

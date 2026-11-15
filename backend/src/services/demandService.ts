@@ -22,6 +22,15 @@ const categoryToDepartment: Record<DemandCategory, string> = {
   outros: "Central de Atendimento",
 };
 
+const statusLabel: Record<DemandStatus, string> = {
+  registrada: "Registrada",
+  em_analise: "Em análise",
+  encaminhada: "Encaminhada",
+  em_atendimento: "Em atendimento",
+  resolvida: "Resolvida",
+  cancelada: "Cancelada",
+};
+
 const generateProtocol = () => `URB-${Math.floor(Math.random() * 90000 + 10000)}`;
 
 const ensureAllowed = (
@@ -129,13 +138,17 @@ export const demandService = {
   ) {
     if (user.role !== "gestor")
       throw new AppError("Somente gestores podem alterar status.", 403, "FORBIDDEN");
-    ensureAllowed(await demandRepository.findById(id), user);
+    const demand = ensureAllowed(await demandRepository.findById(id), user);
 
+    const mensagem = `Sua demanda ${demand.protocolo} mudou para "${statusLabel[input.status]}".${
+      input.observacaoGestor ? ` ${input.observacaoGestor}` : ""
+    }`;
     const updated = await demandRepository.updateStatus(id, {
       status: input.status,
       observacaoGestor: input.observacaoGestor,
       descricao: input.observacaoGestor ?? "Atualização de status",
       autor: user.nome,
+      notificacao: demand.userId ? { userId: demand.userId, mensagem } : undefined,
     });
 
     await cache.del("metrics:summary:all");

@@ -9,6 +9,7 @@ import { Organ, buildEmailLink, buildWhatsappLink } from "@/types/organ";
 import { categoryLabel } from "@/utils/categoryLabel";
 import { colors, fontSizes, radii, spacing } from "@/theme";
 import { Button } from "@/components/Button";
+import { ErrorState } from "@/components/ErrorState";
 import { ImageUpload, ImageUploadResult } from "@/components/ImageUpload";
 import { CapturedAddress, Coordinates, LocationCapture } from "@/components/LocationCapture";
 import { Select } from "@/components/Select";
@@ -31,6 +32,8 @@ export default function NovaDemanda() {
   const [coordenadas, setCoordenadas] = useState<Coordinates | undefined>();
   const [aceite, setAceite] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Alert.alert is a no-op on react-native-web, so validation errors are also rendered inline.
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     if (ready)
@@ -70,13 +73,14 @@ export default function NovaDemanda() {
 
   const handleSubmit = async () => {
     if (!aceite) {
-      Alert.alert("Confirme o aceite", "É necessário concordar em compartilhar estes dados.");
+      setErro("É necessário concordar em compartilhar estes dados.");
       return;
     }
     if (!titulo.trim() || !descricao.trim() || !endereco.trim()) {
-      Alert.alert("Campos obrigatórios", "Preencha os campos obrigatórios.");
+      setErro("Preencha os campos obrigatórios.");
       return;
     }
+    setErro(null);
     if (!user) return;
 
     setSubmitting(true);
@@ -184,6 +188,12 @@ export default function NovaDemanda() {
           Concordo em compartilhar estes dados com o órgão responsável pela demanda.
         </Text>
       </Pressable>
+
+      {erro ? (
+        <View testID="erro-formulario">
+          <ErrorState message={erro} />
+        </View>
+      ) : null}
 
       <View style={styles.footerActions}>
         <Button testID="btn-registrar" label="Registrar demanda" onPress={handleSubmit} loading={submitting} />
