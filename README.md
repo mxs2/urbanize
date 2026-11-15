@@ -1,5 +1,7 @@
 # Urbanize
 
+[![Regressão](https://github.com/mxs2/urbanize/actions/workflows/regressao.yml/badge.svg?branch=main&event=schedule)](https://github.com/mxs2/urbanize/actions/workflows/regressao.yml) [![Manutenção da TAS](https://github.com/mxs2/urbanize/actions/workflows/manutencao.yml/badge.svg)](https://github.com/mxs2/urbanize/actions/workflows/manutencao.yml) · Política de manutenção dos testes: [docs/tas.md](docs/tas.md)
+
 > Plataforma de gestão de demandas urbanas com backend real, banco persistente e diferenciação de perfis (Cidadão e Gestor)
 
 **Stack:** Expo (React Native) • TypeScript • expo-router • Zustand • Node.js • Express • Prisma ORM • JWT • Redis opcional • Cron Jobs
