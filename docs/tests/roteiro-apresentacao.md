@@ -9,7 +9,7 @@ cobrança desde 05/11. A política de manutenção trata isso como falha de ambi
 ([issue mxs2/urbanize#54](https://github.com/mxs2/urbanize/issues/54)). Pela política, a contingência é rodar a mesma
 pipeline em outra conta. O fork tem o mesmo código e a mesma pipeline.
 
-**Execução de referência:** [regressão completa de 18/11](https://github.com/elbedie/urbanize-tas/actions/runs/44414812486),
+**Execução de referência:** [última regressão completa da main](https://github.com/elbedie/urbanize-tas/actions/workflows/regressao.yml?query=event%3Aworkflow_dispatch+branch%3Amain) (a primeira da lista),
 com Unitários, API, E2E e Qualidade verdes. As evidências citadas abaixo vêm dela: artefatos, relatórios e issues automáticas.
 
 Atalhos: [Actions](https://github.com/elbedie/urbanize-tas/actions) ·
@@ -36,7 +36,7 @@ nível de teste definido.**
 | Critério | O que foi feito | Evidência |
 | --- | --- | --- |
 | Plano com escopo, níveis, riscos e pirâmide | Escopo (seção 1). Níveis com justificativa de cada nível incluído e excluído (seção 2). Pirâmide: 11 unitários, 72 de API e 8 E2E (seção 2). Riscos (seção 3) | [plano-de-testes-e-backlog.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/plano-de-testes-e-backlog.md) · [plano-de-testes.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/plano-de-testes.md) |
-| Casos rastreáveis aos critérios de aceite | Histórias com critérios de aceite, 86 casos (IDs de TC01 a TC94) citando a HU de origem e matriz de rastreabilidade (seção 4.5 do plano) | [historias-de-usuario.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/historias-de-usuario.md) · [casos-de-teste.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/casos-de-teste.md) |
+| Casos rastreáveis aos critérios de aceite | Histórias com critérios de aceite, 82 casos (IDs de TC01 a TC94) citando a HU de origem e matriz de rastreabilidade (seção 4.5 do plano) | [historias-de-usuario.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/historias-de-usuario.md) · [casos-de-teste.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/casos-de-teste.md) |
 | Cobre os fluxos prioritários | Registrar demanda (HU-03), acompanhar status e histórico (HU-04 e HU-05): são as histórias *Must have* e concentram a maior parte dos casos | mesmos arquivos |
 
 A pirâmide é mais larga na API porque as regras do sistema estão no backend: validação, acesso por perfil, status e
@@ -88,7 +88,7 @@ e é aplicada pelo workflow
 - cobrança de prazos;
 - revisão mensal.
 
-Na execução de referência, a pipeline encontrou um teste instável real e abriu a
+Na [regressão completa de 18/11](https://github.com/elbedie/urbanize-tas/actions/runs/44414812486), a pipeline encontrou um teste instável real e abriu a
 [issue #4](https://github.com/elbedie/urbanize-tas/issues/4) sozinha. O teste é o TC92, que registra demanda em
 viewport mobile, e ele falhou na primeira tentativa e passou na reexecução. A revisão periódica, disparada em seguida,
 abriu a [issue #5](https://github.com/elbedie/urbanize-tas/issues/5) com o diagnóstico da suíte: instáveis, tempo de
@@ -110,7 +110,7 @@ Configuração: [playwright.config.ts](https://github.com/elbedie/urbanize-tas/b
 | Registrar | TC18, TC41: o cidadão registra uma demanda e a vê na listagem | [registrar-demanda.spec.ts](https://github.com/elbedie/urbanize-tas/blob/main/e2e/tests/registrar-demanda.spec.ts) |
 | Acompanhar | TC19, TC78, TC79: o gestor conduz a demanda da triagem até Resolvida | [gestor-gerencia-demanda.spec.ts](https://github.com/elbedie/urbanize-tas/blob/main/e2e/tests/gestor-gerencia-demanda.spec.ts) |
 | Notificar | TC78: o gestor muda o status e o cidadão vê o aviso | [notificacao-status.spec.ts](https://github.com/elbedie/urbanize-tas/blob/main/e2e/tests/notificacao-status.spec.ts) |
-| App integrado, sem mock | Backend e app web sobem dentro do job E2E. Os logs dos dois vão no artefato `resultados-e2e`, com o relatório HTML do Playwright | job E2E da [regressão completa](https://github.com/elbedie/urbanize-tas/actions/runs/44414812486) |
+| App integrado, sem mock | Backend e app web sobem dentro do job E2E. Os logs dos dois vão no artefato `resultados-e2e`, com o relatório HTML do Playwright | job E2E da [regressão completa](https://github.com/elbedie/urbanize-tas/actions/workflows/regressao.yml?query=event%3Aworkflow_dispatch+branch%3Amain) |
 | Cenários negativos | O cidadão tenta entrar na área do gestor: é redirecionado, e a API responde 403. Demanda com endereço vazio: o erro aparece na tela e nenhum POST é enviado | [cenarios-negativos.spec.ts](https://github.com/elbedie/urbanize-tas/blob/main/e2e/tests/cenarios-negativos.spec.ts) |
 
 ## 6. Métricas e resultados — U2 (30)
@@ -120,10 +120,10 @@ funcionalidade.**
 
 | Critério | O que foi feito | Evidência |
 | --- | --- | --- |
-| Relatório de métricas | `relatorio-tecnico.html`: aprovação por suíte, falhas com mensagem, cobertura de código, testes mais lentos, tendência e rastreabilidade por HU | artefato `relatorios-qualidade` da [regressão completa](https://github.com/elbedie/urbanize-tas/actions/runs/44414812486) |
+| Relatório de métricas | `relatorio-tecnico.html`: aprovação por suíte, falhas com mensagem, cobertura de código, testes mais lentos, tendência e rastreabilidade por HU | artefato `relatorios-qualidade` da [regressão completa](https://github.com/elbedie/urbanize-tas/actions/workflows/regressao.yml?query=event%3Aworkflow_dispatch+branch%3Amain) |
 | Interpretação e riscos | `relatorio-negocio.html` traz três coisas: a decisão (Aprovado, Atenção ou Reprovado), o risco de cada funcionalidade (cruza resultado com prioridade da HU) e recomendações. Hoje aponta automação parcial em HU-03, HU-07 e HU-09 | mesmo artefato |
 | Escolha das métricas | 9 métricas, cada uma com meta e motivo. As descartadas também têm justificativa | [metricas-de-qualidade.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/metricas-de-qualidade.md) |
 
 Indicadores da última execução: 100% de aprovação, 0 falhas, 90,3% de cobertura de linhas da API (meta 70%),
-81,4% dos casos automatizados (70 de 86, meta 50%) e nenhuma funcionalidade em risco alto ou
+85,4% dos casos automatizados (70 de 82, meta 50%) e nenhuma funcionalidade em risco alto ou
 crítico.
