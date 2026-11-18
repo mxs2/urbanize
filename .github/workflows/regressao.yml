@@ -168,14 +168,29 @@ jobs:
         shell: bash
         run: |
           npx playwright install --with-deps chromium
-          npm test -- ${{ github.event_name == 'pull_request' && '--grep @smoke' || '' }} 2>&1 | tee ../test-results/e2e/playwright.log
+          # Testes em quarentena (@quarentena #NN) ficam fora do gate; rodam no passo seguinte (docs/tas.md, 3.3).
+          npm test -- ${{ github.event_name == 'pull_request' && '--grep @smoke' || '' }} --grep-invert @quarentena 2>&1 | tee ../test-results/e2e/playwright.log
 
       - name: 📎 Juntar artefatos (JUnit, relatório HTML, traces, logs)
         if: ${{ !cancelled() }}
         run: |
-          cp e2e/results/junit.xml test-results/e2e/ || true
+          cp e2e/results/junit.xml e2e/results/resultados.json test-results/e2e/ || true
           cp -r e2e/playwright-report test-results/e2e/ || true
           cp -r e2e/test-results test-results/e2e/evidencias || true
+
+      # Quarentena: não bloqueia, mas continua rodando para o resultado ficar visível e não esconder defeito real.
+      - name: 🧪 Testes em quarentena (não bloqueiam)
+        if: ${{ !cancelled() && github.event_name != 'pull_request' }}
+        continue-on-error: true
+        working-directory: e2e
+        shell: bash
+        env:
+          PLAYWRIGHT_JUNIT_OUTPUT_FILE: results/junit-quarentena.xml
+          PLAYWRIGHT_JSON_OUTPUT_FILE: results/resultados-quarentena.json
+          PLAYWRIGHT_HTML_REPORT: playwright-report-quarentena
+        run: |
+          npm test -- --grep @quarentena --pass-with-no-tests --output test-results-quarentena 2>&1 | tee ../test-results/e2e/quarentena.log
+          cp results/junit-quarentena.xml ../test-results/e2e/ || true
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
@@ -235,6 +250,11 @@ jobs:
           node scripts/qualidade/relatorios.mjs resultados relatorios
           cat relatorios/resumo.md >> "$GITHUB_STEP_SUMMARY"
 
+      - name: 🔧 Verificar política de manutenção (instáveis, quarentena, lentos, rastreabilidade)
+        run: |
+          node scripts/manutencao/verificar.mjs resultados relatorios || true
+          cat relatorios/manutencao.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: 💾 Salvar histórico de métricas
         uses: actions/cache/save@v4
         with:
@@ -249,6 +269,64 @@ jobs:
 
       # Issues só para execuções que representam o estado do produto (main, agendada ou manual);
       # em PR e push de branch de feature o feedback já vem pelo check vermelho.
+      # Teste instável vira demanda de manutenção P3 (docs/tas.md, 3.3); uma issue por teste, sem duplicar.
+      - name: 🌀 Abrir issue para teste instável
+        if: >-
+          (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+          && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EXECUCAO: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          jq -c '.instaveis[]?' relatorios/manutencao.json | while read -r teste; do
+            nome=$(jq -r .nome <<<"$teste")
+            titulo="Teste instável: $nome"
+            numero=$(gh issue list --label flaky --state open --search "\"$nome\" in:title" --json number --jq '.[0].number')
+            if [ -n "$numero" ]; then
+              gh issue comment "$numero" --body "Instável de novo na execução $EXECUCAO."
+              continue
+            fi
+            cat > corpo.md <<FIM
+          Aberta automaticamente: o teste falhou e passou na reexecução do Playwright (\`retries: 1\` no CI).
+
+          ### Tipo de demanda
+
+          Teste instável (flaky)
+
+          ### Teste(s) afetado(s)
+
+          $nome (\`e2e/tests/$(jq -r .arquivo <<<"$teste")\`)
+
+          ### Execução
+
+          $EXECUCAO
+
+          ### Evidência
+
+          \`\`\`
+          $(jq -r .erro <<<"$teste")
+          \`\`\`
+
+          ### Origem da falha
+
+          Ainda não sei (triagem)
+
+          ### Prioridade
+
+          P3 — teste instável ou em quarentena (7 dias)
+
+          ### Prazo
+
+          $(date -d '+7 days' +%F)
+
+          ### Encaminhamento
+
+          Seguir docs/tas.md, 3.3: investigar se a instabilidade vem do sistema (condição de corrida = defeito do SUT) ou da automação; colocar em quarentena só com esta issue referenciada.
+          FIM
+            gh issue create --title "$titulo" --label manutencao,flaky,triagem,squad:test --body-file corpo.md
+          done
+
       - name: 🐞 Abrir/atualizar issue de falha
         if: >-
           (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
@@ -265,7 +343,10 @@ jobs:
             gh issue comment "$numero" --body-file relatorios/issue.md
             echo "Issue #$numero atualizada" >> "$GITHUB_STEP_SUMMARY"
           else
-            url=$(gh issue create --title "$TITULO" --label falha-pipeline --body-file relatorios/issue.md)
+            # Campos da política (docs/tas.md, 3.1 e 3.2): regressão vermelha na main é P1, triagem em 1 dia.
+            printf '\n\n### Origem da falha\n\nAinda não sei (triagem)\n\n### Prioridade\n\nP1 — bloqueia a main ou funcionalidade Must have (1 dia)\n\n### Prazo\n\n%s\n' \
+              "$(date -d '+1 day' +%F)" >> relatorios/issue.md
+            url=$(gh issue create --title "$TITULO" --label falha-pipeline,manutencao,triagem --body-file relatorios/issue.md)
             echo "Issue aberta: $url" >> "$GITHUB_STEP_SUMMARY"
           fi
 

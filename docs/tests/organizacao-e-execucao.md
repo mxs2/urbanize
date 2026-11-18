@@ -1,8 +1,18 @@
 # Como os testes estão organizados e como rodar cada um
 
 Três níveis de automação no projeto. Cada um mora num lugar diferente, com sua própria
-ferramenta e seu próprio comando — não tem um "rodar tudo" único porque as camadas testam
-coisas diferentes (função isolada × API em memória × app real no navegador).
+ferramenta e seu próprio comando, porque as camadas testam coisas diferentes (função isolada × API em memória ×
+app real no navegador).
+
+**Comando único (unitários + API + BDD), em qualquer máquina com Node 24 e Git Bash/WSL/Linux/macOS:**
+
+```bash
+bash scripts/testes.sh
+```
+
+Instala as dependências, prepara o SQLite com seed, roda os três níveis igual ao CI e grava logs e JUnit em
+`test-results/`. Sai com código 1 se algum nível falhar. O E2E fica de fora porque precisa de API e app web no ar
+(seção 4).
 
 ## Visão geral
 

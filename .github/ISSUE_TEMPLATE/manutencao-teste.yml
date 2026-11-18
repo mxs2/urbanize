@@ -1,0 +1,75 @@
+name: Manutenção de teste
+description: Falha na regressão, teste instável, quarentena ou melhoria da automação (política em docs/tas.md).
+title: "[MANUTENÇÃO] "
+labels: [manutencao, triagem, squad:test]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use para tudo que exige manutenção da automação de testes (TAS). Os campos **Origem**, **Prioridade** e **Prazo**
+        são lidos pelo workflow `Manutenção da TAS`, que aplica as labels e cobra o prazo. Regras em `docs/tas.md`, seção 3.
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo de demanda
+      options:
+        - Falha na regressão
+        - Teste instável (flaky)
+        - Quarentena
+        - Melhoria (lentidão, duplicação, rastreabilidade)
+    validations:
+      required: true
+  - type: textarea
+    id: testes
+    attributes:
+      label: Teste(s) afetado(s)
+      description: Nome do teste e arquivo. Ex.: "TC18, TC41: cidadão registra uma nova demanda" (e2e/tests/registrar-demanda.spec.ts)
+    validations:
+      required: true
+  - type: input
+    id: execucao
+    attributes:
+      label: Execução
+      description: Link da execução do Actions onde o problema apareceu (se houver).
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidência
+      description: Mensagem de erro, trecho de log, print ou trace.
+      render: text
+  - type: dropdown
+    id: origem
+    attributes:
+      label: Origem da falha
+      description: Classificação da triagem (docs/tas.md, 3.1). Deixe "Ainda não sei" se a investigação não terminou.
+      options:
+        - Ainda não sei (triagem)
+        - SUT — defeito no sistema
+        - TAS — problema na automação
+        - Ambiente — infraestrutura, dados ou serviço externo
+        - Variação esperada — mudança intencional de comportamento
+    validations:
+      required: true
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Prioridade
+      description: Define o prazo de correção (docs/tas.md, 3.2).
+      options:
+        - P1 — bloqueia a main ou funcionalidade Must have (1 dia)
+        - P2 — bloqueia PRs ou funcionalidade Should have (3 dias)
+        - P3 — teste instável ou em quarentena (7 dias)
+        - P4 — melhoria: lentidão, duplicação, rastreabilidade (30 dias)
+    validations:
+      required: true
+  - type: input
+    id: prazo
+    attributes:
+      label: Prazo
+      description: AAAA-MM-DD. Se ficar vazio, o workflow calcula pela prioridade.
+      placeholder: "2026-11-20"
+  - type: textarea
+    id: encaminhamento
+    attributes:
+      label: Encaminhamento
+      description: O que foi decidido e quem faz (atribua a issue ao responsável).

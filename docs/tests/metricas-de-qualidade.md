@@ -31,11 +31,13 @@ execução do workflow (push, PR, agendamento diário e execução manual), sem 
 
 As metas ficam no topo do script (`META`) e podem ser ajustadas pela equipe.
 
+Testes instáveis não viraram métrica com meta, mas passaram a ser **detectados**: o Playwright reexecuta uma vez no
+CI só para diagnóstico e cada teste que passa na segunda tentativa abre issue `flaky` (política em [../tas.md](../tas.md), 3.3).
+
 ## Métricas descartadas
 
 | Métrica | Por que ficou de fora |
 | --- | --- |
-| Taxa de testes instáveis (flaky) | O projeto roda com `retries: 0` e não reexecuta testes; sem reexecução não há como distinguir falha intermitente de falha real. Reavaliar se ativarem retries no Playwright. |
 | Mutation score (Stryker) | Custo alto de execução (multiplica o tempo da suíte) e de configuração para o tamanho atual do projeto; agrega pouco enquanto a cobertura de casos (M4) ainda está baixa. |
 | Densidade de defeitos / defeitos escapados para produção | Exige registro manual e consistente de bugs por origem e um ambiente de produção com usuários reais, que o projeto não tem. Não dá para coletar automaticamente. |
 | MTTR (tempo médio de correção) | Depende de histórico longo de issues abertas/fechadas; com a abertura automática de issues agora existe a base, mas ainda não há volume para o número ser significativo. Candidata para uma próxima etapa. |
