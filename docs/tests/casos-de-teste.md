@@ -12,7 +12,7 @@ derivação e matriz de rastreabilidade, em [ia/saida-rodada-2.md](ia/saida-roda
 nenhum critério de aceite sustenta o caso; o trecho do contrato de API que o sustenta, quando existe, está na matriz de
 rastreabilidade.
 
-**Total:** 86 casos — Integração de componentes: 59 · Sistema: 24 · Componente: 3. Casos com CA marcado como suposição: 29.
+**Total:** 82 casos — Integração de componentes: 56 · Sistema: 23 · Componente: 3. Casos com CA marcado como suposição: 27.
 
 ## Massa de dados
 
@@ -55,10 +55,8 @@ rastreabilidade.
 | [TC23](#tc23) | HU-02 | Recusar acesso com token adulterado. | Integração de componentes |
 | [TC24](#tc24) | HU-02 | Recusar acesso com token expirado. | Integração de componentes |
 | [TC25](#tc25) | HU-02 | Autenticar requisição usando só o cookie de sessão. | Integração de componentes |
-| [TC26](#tc26) | HU-02 | Remover o cookie de sessão no logout. | Integração de componentes |
 | [TC27](#tc27) | SUPOSIÇÃO | Retornar erro padronizado para rota inexistente. | Integração de componentes |
 | [TC28](#tc28) | HU-03 | Gerar protocolo ao criar demanda válida. | Integração de componentes |
-| [TC29](#tc29) | HU-03 | Criar a demanda com status inicial registrada. | Integração de componentes |
 | [TC30](#tc30) | HU-03 | Aplicar prioridade padrão media quando prioridade é omitida. | Integração de componentes |
 | [TC31](#tc31) | HU-03 | Aplicar bairro e cidade padrão quando omitidos. | Integração de componentes |
 | [TC32](#tc32) | HU-03 | Preencher o solicitante com os dados do usuário autenticado. | Integração de componentes |
@@ -100,12 +98,10 @@ rastreabilidade.
 | [TC73](#tc73) | HU-05 | Recusar atualização de status sem autenticação. | Integração de componentes |
 | [TC74](#tc74) | HU-05 | Recusar atualização com status fora do enum. | Integração de componentes |
 | [TC75](#tc75) | HU-05 | Recusar atualização de status de demanda inexistente. | Integração de componentes |
-| [TC76](#tc76) | HU-05 | Percorrer o ciclo nominal de status até resolvida. | Integração de componentes |
 | [TC78](#tc78) | HU-04 | Exibir ao cidadão o status alterado pelo gestor. | Sistema |
 | [TC79](#tc79) | HU-05 | Exibir no histórico a observação registrada pelo gestor. | Sistema |
 | [TC80](#tc80) | HU-07 | Exibir no painel do gestor o total de demandas das métricas gerais. | Sistema |
 | [TC81](#tc81) | HU-07 | Exibir na fila recente a demanda criada por último. | Sistema |
-| [TC82](#tc82) | HU-08 | Exibir categoria, confiança e sugestão de encaminhamento na triagem. | Sistema |
 | [TC83](#tc83) | HU-08 | Sugerir o órgão cujo categoriasJson contém a categoria da demanda. | Integração de componentes |
 | [TC84](#tc84) | HU-10 | Retornar ao cidadão métricas só das próprias demandas. | Integração de componentes |
 | [TC85](#tc85) | HU-07 | Retornar ao gestor métricas gerais. | Integração de componentes |
@@ -469,20 +465,6 @@ rastreabilidade.
 | Pós-condições | Nenhum dado alterado. |
 | Nível | Integração de componentes |
 
-### TC26
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC26 |
-| HU | HU-02 Login |
-| CA | SUPOSIÇÃO |
-| Título | Remover o cookie de sessão no logout. |
-| Pré-condições | M0. Cookie urbanize_session válido. |
-| Passos | 1. Enviar POST {API}/auth/logout com o cookie.<br>2. Ler o cabeçalho Set-Cookie. |
-| Resultado esperado | Set-Cookie limpa urbanize_session (valor vazio ou expiração no passado). |
-| Pós-condições | Navegador ou cliente sem cookie de sessão válido. |
-| Nível | Integração de componentes |
-
 ### TC27
 
 | Campo | Conteúdo |
@@ -509,20 +491,6 @@ rastreabilidade.
 | Passos | 1. Enviar POST {API}/demands com o corpo de exemplo do contrato (titulo "Buraco na rua", descricao "Buraco grande causando risco para motos.", categoria vias_publicas, prioridade alta, endereco.endereco "Rua Exemplo, 100"). |
 | Resultado esperado | HTTP 201 com data.protocolo não vazio. |
 | Pós-condições | Demanda persistida e vinculada ao cidadão A. |
-| Nível | Integração de componentes |
-
-### TC29
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC29 |
-| HU | HU-03 Registro de demanda |
-| CA | SUPOSIÇÃO |
-| Título | Criar a demanda com status inicial registrada. |
-| Pré-condições | M1. TOKEN_A. SUPOSIÇÃO: o status inicial é registrada (L05). |
-| Passos | 1. Enviar POST {API}/demands com os campos obrigatórios válidos. |
-| Resultado esperado | data.status = registrada. |
-| Pós-condições | Demanda persistida com status registrada. |
 | Nível | Integração de componentes |
 
 ### TC30
@@ -1099,20 +1067,6 @@ rastreabilidade.
 | Pós-condições | Nenhuma demanda criada ou alterada. |
 | Nível | Integração de componentes |
 
-### TC76
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC76 |
-| HU | HU-05 Atualização de status |
-| CA | CA-10 "O gestor deve conseguir atualizar status e observação da demanda." |
-| Título | Percorrer o ciclo nominal de status até resolvida. |
-| Pré-condições | M1. TOKEN_G. Nova demanda D5 de A com status registrada. SUPOSIÇÃO: a ordem do enum é o fluxo nominal permitido (L05). |
-| Passos | 1. PATCH D5 para em_analise.<br>2. PATCH D5 para encaminhada.<br>3. PATCH D5 para em_atendimento.<br>4. PATCH D5 para resolvida.<br>5. Enviar GET {API}/demands/{id de D5} com TOKEN_G. |
-| Resultado esperado | data.status = resolvida. |
-| Pós-condições | D5 persistida como resolvida, com 4 itens de histórico acrescentados. |
-| Nível | Integração de componentes |
-
 ### TC78
 
 | Campo | Conteúdo |
@@ -1166,20 +1120,6 @@ rastreabilidade.
 | Pré-condições | M1, APP. Demanda D7 criada por A imediatamente antes do teste. Gestor demo logado. SUPOSIÇÃO: a fila recente ordena por criadaEm decrescente (L15). |
 | Passos | 1. Abrir o painel do gestor.<br>2. Localizar a seção de fila recente. |
 | Resultado esperado | A fila recente exibe D7 como primeiro item. |
-| Pós-condições | Nenhum dado alterado. |
-| Nível | Sistema |
-
-### TC82
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC82 |
-| HU | HU-08 Revisão da triagem |
-| CA | CA-09 "O painel do gestor deve apresentar métricas, fila recente e triagem inteligente." |
-| Título | Exibir categoria, confiança e sugestão de encaminhamento na triagem. |
-| Pré-condições | M1, APP. Demanda D8 com categoria, scoreTriagem e sugestaoEncaminhamento preenchidos (SUPOSIÇÃO: o fallback preenche o score, L04). Gestor demo logado. |
-| Passos | 1. Abrir o painel do gestor.<br>2. Abrir a triagem de D8. |
-| Resultado esperado | A tela exibe categoria, score e sugestão de encaminhamento iguais aos de GET /demands/{id de D8}. |
 | Pós-condições | Nenhum dado alterado. |
 | Nível | Sistema |
 

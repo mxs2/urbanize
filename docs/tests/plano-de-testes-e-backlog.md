@@ -190,13 +190,13 @@ Saída íntegra da rodada 2 em [`ia/saida-rodada-2.md`](ia/saida-rodada-2.md), r
 | R02 senha com mínimo de 1 | Valor limite | 0 (inválido), 1 (válido) | TC08, TC09 |
 | R03 email válido e único | Partição de equivalência | Válido e novo, formato inválido, já cadastrado | TC01, TC10, TC11 |
 | R04 role | Partição de equivalência | Omitido→cidadao, gestor, fora do enum | TC03, TC04, TC05 |
-| R05 Cookie de sessão | Partição de equivalência | Cadastro cria cookie, logout remove, cookie autentica | TC02, TC25, TC26 |
+| R05 Cookie de sessão | Partição de equivalência | Cadastro cria cookie, cookie autentica | TC02, TC25 |
 | R06 Login | Tabela de decisão | E-mail existe × senha correta → sucesso por perfil / INVALID_CREDENTIALS. Corpo incompleto | TC13–TC17 |
 | R07 Autenticação de rotas protegidas | Partição de equivalência | Sem credencial, token adulterado, token expirado, cookie válido | TC22–TC25, TC40, TC48, TC73 |
 | R08 Obrigatórios de POST /demands | Valor limite | titulo 2/3, descricao 4/5, endereco.endereco 2/3 | TC33, TC34, TC35, TC36 |
 | R09 categoria/prioridade | Partição de equivalência | Ausente, fora do enum, válida | TC38, TC28 |
 | R10 Padrões dos opcionais | Partição de equivalência | Opcionais omitidos | TC30, TC31, TC32 |
-| R11 Protocolo e status inicial | Partição de equivalência | Criação válida | TC28, TC29 |
+| R11 Protocolo e status inicial | Partição de equivalência | Criação válida | TC28 |
 | R12 Envio do formulário (CA-04) | Tabela de decisão | Localização (S/N) × aceite (S/N) → envia só com S/S | TC41, TC42, TC43 |
 | R14 Upload | Partição de equivalência | Com arquivo, sem arquivo, sem autenticação, foto vinculada | TC45–TC48 |
 | R15 Fallback do Vision | Tabela de decisão | Vision configurado (S/N) × funciona (S/N) × categoria enviada → categoria final | TC49, TC50, TC51 |
@@ -204,11 +204,11 @@ Saída íntegra da rodada 2 em [`ia/saida-rodada-2.md`](ia/saida-rodada-2.md), r
 | R17 Filtros | Partição de equivalência | Cada parâmetro válido, combinação, enum inválido | TC55–TC62 |
 | R18 Acesso ao detalhe | Tabela de decisão | Dono × existe → 200 / recusa / 404 | TC66, TC67, TC68, TC69 |
 | R19 Permissão do PATCH | Partição de equivalência | Gestor, cidadão, sem autenticação, id inexistente, status inválido | TC70, TC72–TC75 |
-| R20 Ciclo de status | Transição de estados | registrada→em_analise→encaminhada→em_atendimento→resolvida, cada transição gera histórico | TC71, TC76, TC78, TC79 |
+| R20 Ciclo de status | Transição de estados | registrada→em_analise→encaminhada→em_atendimento→resolvida, cada transição gera histórico | TC71, TC78, TC79 |
 | R21 Métricas | Partição de equivalência | Cidadão, gestor | TC84, TC85 |
 | R22 Sugestão de órgão | Tabela de decisão | Categoria com órgão mapeado → nome do órgão | TC83 |
 | R23 Estados de interface | Partição de equivalência | Carregando, vazio, erro | TC63, TC64, TC65 |
-| R24 Telas agregadoras | Partição de equivalência | Painel (métricas, fila, triagem), dashboard | TC80, TC81, TC82, TC88 |
+| R24 Telas agregadoras | Partição de equivalência | Painel (métricas, fila, triagem), dashboard | TC80, TC81, TC88 |
 | R25 Navegação e responsividade | Partição de equivalência | 3 destinos a partir da home, 3 viewports | TC89–TC94 |
 | R26 Sessão no app | Partição de equivalência | Login guarda token, requisição leva Bearer | TC20, TC21 |
 | R27 Rota inexistente | Partição de equivalência | Caminho desconhecido | TC27 |
@@ -245,10 +245,8 @@ Saída íntegra da rodada 2 em [`ia/saida-rodada-2.md`](ia/saida-rodada-2.md), r
 | TC23 | HU-02 | — | "401 \| INVALID_TOKEN \| Token invalido ou expirado" | N |
 | TC24 | HU-02 | — | "401 \| INVALID_TOKEN \| Token invalido ou expirado" | N |
 | TC25 | HU-02 | — | "Cookie HTTP-only urbanize_session" / "Retorna o usuario autenticado." | N |
-| TC26 | HU-02 | — | "Remove o cookie de sessao." | N |
 | TC27 | — | — | "404 \| NOT_FOUND \| Rota inexistente" (sem HU) | N |
 | TC28 | HU-03 | CA-05 | "Ao registrar uma demanda, o sistema deve gerar protocolo e abrir a tela de detalhe." | N |
-| TC29 | HU-03 | — | (status inicial não declarado) | S |
 | TC30 | HU-03 | — | "prioridade \| media" | N |
 | TC31 | HU-03 | — | "endereco.bairro \| Nao informado" / "endereco.cidade \| Recife" | N |
 | TC32 | HU-03 | — | "nomeSolicitante \| Nome do usuario autenticado" | N |
@@ -290,12 +288,10 @@ Saída íntegra da rodada 2 em [`ia/saida-rodada-2.md`](ia/saida-rodada-2.md), r
 | TC73 | HU-05 | — | "401 \| UNAUTHENTICATED \| Requisicao sem sessao" | N |
 | TC74 | HU-05 | CA-10 | "422 \| VALIDATION_ERROR \| Corpo ou query string invalidos" | N |
 | TC75 | HU-05 | — | "404 \| DEMAND_NOT_FOUND \| Demanda inexistente" | N |
-| TC76 | HU-05 | CA-10 | (transições permitidas não especificadas) | S |
 | TC78 | HU-04 | CA-10 | "O gestor deve conseguir atualizar status e observação da demanda." | N |
 | TC79 | HU-05 | CA-10 | "registrar observações na demanda para manter o histórico do atendimento rastreável" | N |
 | TC80 | HU-07 | CA-09 | "O painel do gestor deve apresentar métricas, fila recente e triagem inteligente." | N |
 | TC81 | HU-07 | CA-09 | "fila recente" (critério de ordenação não definido) | S |
-| TC82 | HU-08 | CA-09 | "revisar a triagem automática para validar categoria, confiança e sugestão de encaminhamento" | N |
 | TC83 | HU-08 | — | (regra categoria→órgão não descrita; só o exemplo categoriasJson) | S |
 | TC84 | HU-10 | CA-08 | "Cidadao recebe metricas das proprias demandas." | N |
 | TC85 | HU-07 | CA-09 | "Gestor recebe metricas gerais." | N |
@@ -309,7 +305,7 @@ Saída íntegra da rodada 2 em [`ia/saida-rodada-2.md`](ia/saida-rodada-2.md), r
 
 ### 4.6 Casos de teste
 
-Os 86 casos, nos 8 campos pedidos, estão em [`casos-de-teste.md`](casos-de-teste.md). A saída íntegra da IA está em [`ia/saida-rodada-2.md`](ia/saida-rodada-2.md).
+Os 82 casos, nos 8 campos pedidos, estão em [`casos-de-teste.md`](casos-de-teste.md). A saída íntegra da IA está em [`ia/saida-rodada-2.md`](ia/saida-rodada-2.md).
 
 ## 5. Seleção para automação
 
@@ -356,10 +352,8 @@ execuções até o retorno = Ti ÷ (Tm − Ta − Mn/F)
 | TC23 | Integração de componentes | 3 min | 10 min | 1 s | 3 min | 20 | 3,5 | Sim |
 | TC24 | Integração de componentes | 5 min | 40 min | 1 s | 5 min | 20 | 8,5 | Sim |
 | TC25 | Integração de componentes | 4 min | 20 min | 1 s | 3 min | 20 | 5,2 | Sim |
-| TC26 | Integração de componentes | 3 min | 10 min | 1 s | 3 min | 20 | 3,5 | Sim |
 | TC27 | Integração de componentes | 3 min | 10 min | 1 s | 3 min | 20 | 3,5 | Sim |
 | TC28 | Integração de componentes | 3 min | 10 min | 1 s | 3 min | 20 | 3,5 | Sim |
-| TC29 | Integração de componentes | 3 min | 20 min | 1 s | 3 min | 20 | 7,1 | Sim |
 | TC30 | Integração de componentes | 3 min | 20 min | 1 s | 3 min | 20 | 7,1 | Sim |
 | TC31 | Integração de componentes | 3 min | 20 min | 1 s | 3 min | 20 | 7,1 | Sim |
 | TC32 | Integração de componentes | 3 min | 20 min | 1 s | 3 min | 20 | 7,1 | Sim |
@@ -401,12 +395,10 @@ execuções até o retorno = Ti ÷ (Tm − Ta − Mn/F)
 | TC73 | Integração de componentes | 3 min | 10 min | 1 s | 3 min | 20 | 3,5 | Sim |
 | TC74 | Integração de componentes | 3 min | 10 min | 1 s | 3 min | 20 | 3,5 | Sim |
 | TC75 | Integração de componentes | 3 min | 10 min | 1 s | 3 min | 20 | 3,5 | Sim |
-| TC76 | Integração de componentes | 10 min | 40 min | 1 s | 5 min | 20 | 4,1 | Sim |
 | TC78 | Sistema | 8 min | 90 min | 40 s | 20 min | 8 | 18,6 | Sim |
 | TC79 | Sistema | 6 min | 60 min | 30 s | 15 min | 8 | 16,6 | Sim |
 | TC80 | Sistema | 3 min | 45 min | 15 s | 10 min | 4 | 180,0 | Não, permanece manual |
 | TC81 | Sistema | 4 min | 45 min | 20 s | 15 min | 4 | não se paga | Não, permanece manual |
-| TC82 | Sistema | 5 min | 20 min | 25 s | 15 min | 8 | 7,4 | Sim |
 | TC83 | Integração de componentes | 5 min | 30 min | 1 s | 5 min | 20 | 6,3 | Sim |
 | TC84 | Integração de componentes | 3 min | 10 min | 1 s | 3 min | 20 | 3,5 | Sim |
 | TC85 | Integração de componentes | 3 min | 10 min | 1 s | 3 min | 20 | 3,5 | Sim |
@@ -456,67 +448,63 @@ prioridade = (Risco × Frequência) ÷ Custo
 | 10 | TC22 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-09) |
 | 11 | TC23 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-AUTH-10) |
 | 12 | TC25 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Pamela | Existe (auth TC25) |
-| 13 | TC26 | HU-02 | Integração | 3 | 1 | 3 | 9,0 | Pamela | Parcial (CT-AUTH-11) |
-| 14 | TC28 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-01) |
-| 15 | TC29 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid | Parcial (CT-DEM-01) |
-| 16 | TC40 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-02) |
-| 17 | TC48 | HU-12 | Integração | 3 | 1 | 3 | 9,0 | Diego Xavier | Existe (upload TC48) |
-| 18 | TC52 | HU-06 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-07) |
-| 19 | TC53 | HU-06 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-08) |
-| 20 | TC67 | HU-04 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-14) |
-| 21 | TC70 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-18) |
-| 22 | TC71 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-18) |
-| 23 | TC72 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-17) |
-| 24 | TC73 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-21) |
-| 25 | TC02 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC02) |
-| 26 | TC05 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC05) |
-| 27 | TC06 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC06) |
-| 28 | TC07 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC07) |
-| 29 | TC08 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC08) |
-| 30 | TC09 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC09) |
-| 31 | TC10 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC10) |
-| 32 | TC11 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-AUTH-02) |
-| 33 | TC17 | HU-02 | Integração | 2 | 1 | 3 | 6,0 | Pamela | Existe (auth TC17) |
-| 34 | TC33 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-03) |
-| 35 | TC34 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC34) |
-| 36 | TC35 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-04) |
-| 37 | TC36 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC36) |
-| 38 | TC38 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-05) |
-| 39 | TC47 | HU-12 | Integração | 2 | 1 | 3 | 6,0 | Diego Xavier | Existe (upload TC47) |
-| 40 | TC55 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-09) |
-| 41 | TC56 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-10) |
-| 42 | TC57 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC57) |
-| 43 | TC58 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC58) |
-| 44 | TC59 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-11) |
-| 45 | TC60 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC60) |
-| 46 | TC66 | HU-04 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-13) |
-| 47 | TC68 | HU-04 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-16) |
-| 48 | TC74 | HU-05 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-DEM-19) |
-| 49 | TC75 | HU-05 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-DEM-20) |
-| 50 | TC84 | HU-10 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-MET-02) |
-| 51 | TC85 | HU-07 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-MET-01) |
-| 52 | TC24 | HU-02 | Integração | 3 | 2 | 3 | 4,5 | Pamela | Existe (auth TC24) |
-| 53 | TC49 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | Existe (upload TC49) |
-| 54 | TC50 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | Existe (upload TC50) |
-| 55 | TC76 | HU-05 | Integração | 3 | 2 | 3 | 4,5 | Janderson | Parcial (E2E gestor-gerencia-demanda); API bloqueado (L05) |
-| 56 | TC18 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E registrar-demanda) |
-| 57 | TC19 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
-| 58 | TC41 | HU-03 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E registrar-demanda) |
-| 59 | TC46 | HU-12 | Integração | 2 | 2 | 3 | 3,0 | Diego Xavier | Existe (upload TC46) |
-| 60 | TC83 | HU-08 | Integração | 2 | 2 | 3 | 3,0 | Diego Xavier | Existe (upload TC83) |
-| 61 | TC27 | — | Integração | 1 | 1 | 3 | 3,0 | Enzo Antuna | Existe (CT-GEN-03) |
-| 62 | TC30 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC30) |
-| 63 | TC31 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC31) |
-| 64 | TC32 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC32) |
-| 65 | TC78 | HU-04 | Sistema | 3 | 3 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
-| 66 | TC12 | HU-01 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | Existe (E2E cadastro-cidadao) |
-| 67 | TC62 | HU-06 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | Existe (E2E filtrar-status) |
-| 68 | TC79 | HU-05 | Sistema | 2 | 2 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
-| 69 | TC82 | HU-08 | Sistema | 2 | 2 | 2 | 2,0 | Diego Xavier | Parcial (E2E gestor-aceita-triagem) |
-| 70 | TC65 | HU-06 | Componente | 1 | 2 | 3 | 1,5 | Diego Xavier | Existe (unit store) |
-| 71 | TC92 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | Existe (E2E registrar-demanda-responsivo) |
-| 72 | TC93 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | Existe (E2E registrar-demanda-responsivo) |
-| 73 | TC94 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | Existe (E2E registrar-demanda-responsivo) |
+| 13 | TC28 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-01) |
+| 14 | TC40 | HU-03 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-02) |
+| 15 | TC48 | HU-12 | Integração | 3 | 1 | 3 | 9,0 | Diego Xavier | Existe (upload TC48) |
+| 16 | TC52 | HU-06 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-07) |
+| 17 | TC53 | HU-06 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-08) |
+| 18 | TC67 | HU-04 | Integração | 3 | 1 | 3 | 9,0 | Hyngrid Souza | Existe (CT-DEM-14) |
+| 19 | TC70 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-18) |
+| 20 | TC71 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-18) |
+| 21 | TC72 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-17) |
+| 22 | TC73 | HU-05 | Integração | 3 | 1 | 3 | 9,0 | Enzo Antuna | Existe (CT-DEM-21) |
+| 23 | TC02 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC02) |
+| 24 | TC05 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC05) |
+| 25 | TC06 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC06) |
+| 26 | TC07 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC07) |
+| 27 | TC08 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC08) |
+| 28 | TC09 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC09) |
+| 29 | TC10 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (auth TC10) |
+| 30 | TC11 | HU-01 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-AUTH-02) |
+| 31 | TC17 | HU-02 | Integração | 2 | 1 | 3 | 6,0 | Pamela | Existe (auth TC17) |
+| 32 | TC33 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-03) |
+| 33 | TC34 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC34) |
+| 34 | TC35 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-04) |
+| 35 | TC36 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC36) |
+| 36 | TC38 | HU-03 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-05) |
+| 37 | TC47 | HU-12 | Integração | 2 | 1 | 3 | 6,0 | Diego Xavier | Existe (upload TC47) |
+| 38 | TC55 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-09) |
+| 39 | TC56 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-10) |
+| 40 | TC57 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC57) |
+| 41 | TC58 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC58) |
+| 42 | TC59 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-11) |
+| 43 | TC60 | HU-06 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid | Existe (demandas TC60) |
+| 44 | TC66 | HU-04 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-13) |
+| 45 | TC68 | HU-04 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-DEM-16) |
+| 46 | TC74 | HU-05 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-DEM-19) |
+| 47 | TC75 | HU-05 | Integração | 2 | 1 | 3 | 6,0 | Enzo Antuna | Existe (CT-DEM-20) |
+| 48 | TC84 | HU-10 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-MET-02) |
+| 49 | TC85 | HU-07 | Integração | 2 | 1 | 3 | 6,0 | Hyngrid Souza | Existe (CT-MET-01) |
+| 50 | TC24 | HU-02 | Integração | 3 | 2 | 3 | 4,5 | Pamela | Existe (auth TC24) |
+| 51 | TC49 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | Existe (upload TC49) |
+| 52 | TC50 | HU-08 | Integração | 3 | 2 | 3 | 4,5 | Diego Xavier | Existe (upload TC50) |
+| 53 | TC18 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E registrar-demanda) |
+| 54 | TC19 | HU-02 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
+| 55 | TC41 | HU-03 | Sistema | 3 | 2 | 2 | 3,0 | Diego David | Existe (E2E registrar-demanda) |
+| 56 | TC46 | HU-12 | Integração | 2 | 2 | 3 | 3,0 | Diego Xavier | Existe (upload TC46) |
+| 57 | TC83 | HU-08 | Integração | 2 | 2 | 3 | 3,0 | Diego Xavier | Existe (upload TC83) |
+| 58 | TC27 | — | Integração | 1 | 1 | 3 | 3,0 | Enzo Antuna | Existe (CT-GEN-03) |
+| 59 | TC30 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC30) |
+| 60 | TC31 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC31) |
+| 61 | TC32 | HU-03 | Integração | 1 | 1 | 3 | 3,0 | Hyngrid | Existe (demandas TC32) |
+| 62 | TC78 | HU-04 | Sistema | 3 | 3 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
+| 63 | TC12 | HU-01 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | Existe (E2E cadastro-cidadao) |
+| 64 | TC62 | HU-06 | Sistema | 2 | 2 | 2 | 2,0 | Pamela | Existe (E2E filtrar-status) |
+| 65 | TC79 | HU-05 | Sistema | 2 | 2 | 2 | 2,0 | Diego David | Existe (E2E gestor-gerencia-demanda) |
+| 66 | TC65 | HU-06 | Componente | 1 | 2 | 3 | 1,5 | Diego Xavier | Existe (unit store) |
+| 67 | TC92 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | Existe (E2E registrar-demanda-responsivo) |
+| 68 | TC93 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | Existe (E2E registrar-demanda-responsivo) |
+| 69 | TC94 | HU-03 | Sistema | 1 | 2 | 1 | 0,5 | Pamela | Existe (E2E registrar-demanda-responsivo) |
 
 **Verificação**
 

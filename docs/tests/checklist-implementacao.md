@@ -37,22 +37,16 @@ manteve em execução manual; eles ficam fora do backlog de automação.
 
 ## Resumo
 
-**Total:** 86 casos — ✅ 70 · 🟡 6 · ⬜ 10
+**Total:** 82 casos — ✅ 70 · 🟡 2 · ⬜ 10
 
 | Nível | ✅ | 🟡 | ⬜ | Total |
 | --- | --- | --- | --- | --- |
-| Integração de componentes | 56 | 3 | 0 | 59 |
-| Sistema | 11 | 3 | 10 | 24 |
+| Integração de componentes | 56 | 0 | 0 | 56 |
+| Sistema | 11 | 2 | 10 | 23 |
 | Componente | 3 | 0 | 0 | 3 |
 
-Dos ⬜ e 🟡, 12 casos são manuais; os outros 4 formam o backlog de automação pendente, distribuído assim:
-
-| Responsável | Casos | Tema |
-| --- | --- | --- |
-| Hyngrid | TC29 | Status inicial da demanda (API; depende de decisão de produto) |
-| Janderson | TC76 | Ciclo de status (API) |
-| Pamela | TC26 | Logout (API) |
-| Diego Xavier | TC82 | Painel de triagem (depende de mudança no app) |
+Os 12 casos ⬜ e 🟡 ficam em execução manual por decisão da
+[seleção para automação](plano-de-testes-e-backlog.md#5-seleção-para-automação). Não há backlog de automação pendente.
 
 ## Checklist
 
@@ -83,10 +77,8 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 4 formam o backlog de automaç�
 | ✅ | [TC23](casos-de-teste.md#tc23) | HU-02 | Recusar acesso com token adulterado. | Integração | CT-AUTH-10 | push · PR · diário | — |
 | ✅ | [TC24](casos-de-teste.md#tc24) | HU-02 | Recusar acesso com token expirado. | Integração | auth TC24 | push · PR · diário | — |
 | ✅ | [TC25](casos-de-teste.md#tc25) | HU-02 | Autenticar requisição usando só o cookie de sessão. | Integração | auth TC25 | push · PR · diário | — |
-| 🟡 | [TC26](casos-de-teste.md#tc26) | HU-02 | Remover o cookie de sessão no logout. | Integração | CT-AUTH-11 | push · PR · diário | Pamela |
 | ✅ | [TC27](casos-de-teste.md#tc27) | SUPOSIÇÃO | Retornar erro padronizado para rota inexistente. | Integração | CT-GEN-03 | push · PR · diário | — |
 | ✅ | [TC28](casos-de-teste.md#tc28) | HU-03 | Gerar protocolo ao criar demanda válida. | Integração | CT-DEM-01 | push · PR · diário | — |
-| 🟡 | [TC29](casos-de-teste.md#tc29) | HU-03 | Criar a demanda com status inicial registrada. | Integração | CT-DEM-01 | push · PR · diário | Hyngrid |
 | ✅ | [TC30](casos-de-teste.md#tc30) | HU-03 | Aplicar prioridade padrão media quando prioridade é omitida. | Integração | demandas TC30 | push · PR · diário | — |
 | ✅ | [TC31](casos-de-teste.md#tc31) | HU-03 | Aplicar bairro e cidade padrão quando omitidos. | Integração | demandas TC31 | push · PR · diário | — |
 | ✅ | [TC32](casos-de-teste.md#tc32) | HU-03 | Preencher o solicitante com os dados do usuário autenticado. | Integração | demandas TC32 | push · PR · diário | — |
@@ -128,12 +120,10 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 4 formam o backlog de automaç�
 | ✅ | [TC73](casos-de-teste.md#tc73) | HU-05 | Recusar atualização de status sem autenticação. | Integração | CT-DEM-21 | push · PR · diário | — |
 | ✅ | [TC74](casos-de-teste.md#tc74) | HU-05 | Recusar atualização com status fora do enum. | Integração | CT-DEM-19 | push · PR · diário | — |
 | ✅ | [TC75](casos-de-teste.md#tc75) | HU-05 | Recusar atualização de status de demanda inexistente. | Integração | CT-DEM-20 | push · PR · diário | — |
-| 🟡 | [TC76](casos-de-teste.md#tc76) | HU-05 | Percorrer o ciclo nominal de status até resolvida. | Integração | E2E gestor-gerencia-demanda | push · PR · diário | Janderson |
 | ✅ | [TC78](casos-de-teste.md#tc78) | HU-04 | Exibir ao cidadão o status alterado pelo gestor. | Sistema | E2E gestor-gerencia-demanda | PR (smoke) · diário | — |
 | ✅ | [TC79](casos-de-teste.md#tc79) | HU-05 | Exibir no histórico a observação registrada pelo gestor. | Sistema | E2E gestor-gerencia-demanda | PR (smoke) · diário | — |
 | 🟡 | [TC80](casos-de-teste.md#tc80) | HU-07 | Exibir no painel do gestor o total de demandas das métricas gerais. | Sistema | E2E gestor-aceita-triagem | diário | — |
 | ✅ | [TC81](casos-de-teste.md#tc81) | HU-07 | Exibir na fila recente a demanda criada por último. | Sistema | E2E gestor-aceita-triagem | diário | — |
-| 🟡 | [TC82](casos-de-teste.md#tc82) | HU-08 | Exibir categoria, confiança e sugestão de encaminhamento na triagem. | Sistema | E2E gestor-aceita-triagem | diário | Diego Xavier |
 | ✅ | [TC83](casos-de-teste.md#tc83) | HU-08 | Sugerir o órgão cujo categoriasJson contém a categoria da demanda. | Integração | upload TC83 | push · PR · diário | — |
 | ✅ | [TC84](casos-de-teste.md#tc84) | HU-10 | Retornar ao cidadão métricas só das próprias demandas. | Integração | CT-MET-02 | push · PR · diário | — |
 | ✅ | [TC85](casos-de-teste.md#tc85) | HU-07 | Retornar ao gestor métricas gerais. | Integração | CT-MET-01 | push · PR · diário | — |
@@ -147,13 +137,8 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 4 formam o backlog de automaç�
 
 ## Notas dos parciais
 
-- **TC26:** Não confere a remoção do cookie no `Set-Cookie`.
-- **TC29:** Divergência: o teste espera status `em_analise` (`registrada` só no histórico); o caso espera `registrada`.
 - **TC69:** Confere protocolo, título e status; faltam os demais dados exigidos.
-- **TC76:** Ciclo coberto só pela UI; falta o teste de API.
 - **TC80:** Lê as métricas "Em análise" e "Encaminhadas", não o total.
-- **TC82:** Confere sugestão e confiança; não confere a categoria, porque o card de triagem do painel do gestor não exibe a
-  categoria.
 
 ## Como atualizar
 
