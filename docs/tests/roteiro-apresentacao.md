@@ -9,6 +9,9 @@ cobrança desde 05/11. A política de manutenção trata isso como falha de ambi
 ([issue mxs2/urbanize#54](https://github.com/mxs2/urbanize/issues/54)). Pela política, a contingência é rodar a mesma
 pipeline em outra conta. O fork tem o mesmo código e a mesma pipeline.
 
+**Execução de referência:** [regressão completa de 18/11](https://github.com/elbedie/urbanize-tas/actions/runs/44414812486),
+com Unitários, API, E2E e Qualidade verdes. As evidências citadas abaixo vêm dela: artefatos, relatórios e issues automáticas.
+
 Atalhos: [Actions](https://github.com/elbedie/urbanize-tas/actions) ·
 [Regressão](https://github.com/elbedie/urbanize-tas/actions/workflows/regressao.yml) ·
 [Pull requests](https://github.com/elbedie/urbanize-tas/pulls?q=is%3Apr) ·
@@ -85,6 +88,12 @@ e é aplicada pelo workflow
 - cobrança de prazos;
 - revisão mensal.
 
+Na execução de referência, a pipeline encontrou um teste instável real e abriu a
+[issue #4](https://github.com/elbedie/urbanize-tas/issues/4) sozinha. O teste é o TC92, que registra demanda em
+viewport mobile, e ele falhou na primeira tentativa e passou na reexecução. A revisão periódica, disparada em seguida,
+abriu a [issue #5](https://github.com/elbedie/urbanize-tas/issues/5) com o diagnóstico da suíte: instáveis, tempo de
+execução e testes sem `TCxx`.
+
 Detalhes em [entrega-politica-manutencao.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/entrega-politica-manutencao.md).
 
 ## 5. Suíte E2E sobre o app integrado — U2 (30)
@@ -101,7 +110,7 @@ Configuração: [playwright.config.ts](https://github.com/elbedie/urbanize-tas/b
 | Registrar | TC18, TC41: o cidadão registra uma demanda e a vê na listagem | [registrar-demanda.spec.ts](https://github.com/elbedie/urbanize-tas/blob/main/e2e/tests/registrar-demanda.spec.ts) |
 | Acompanhar | TC19, TC78, TC79: o gestor conduz a demanda da triagem até Resolvida | [gestor-gerencia-demanda.spec.ts](https://github.com/elbedie/urbanize-tas/blob/main/e2e/tests/gestor-gerencia-demanda.spec.ts) |
 | Notificar | TC78: o gestor muda o status e o cidadão vê o aviso | [notificacao-status.spec.ts](https://github.com/elbedie/urbanize-tas/blob/main/e2e/tests/notificacao-status.spec.ts) |
-| App integrado, sem mock | Backend e app web sobem dentro do job E2E. Os logs dos dois vão no artefato `resultados-e2e`, com o relatório HTML do Playwright | job E2E da [regressão completa](https://github.com/elbedie/urbanize-tas/actions/workflows/regressao.yml) |
+| App integrado, sem mock | Backend e app web sobem dentro do job E2E. Os logs dos dois vão no artefato `resultados-e2e`, com o relatório HTML do Playwright | job E2E da [regressão completa](https://github.com/elbedie/urbanize-tas/actions/runs/44414812486) |
 | Cenários negativos | O cidadão tenta entrar na área do gestor: é redirecionado, e a API responde 403. Demanda com endereço vazio: o erro aparece na tela e nenhum POST é enviado | [cenarios-negativos.spec.ts](https://github.com/elbedie/urbanize-tas/blob/main/e2e/tests/cenarios-negativos.spec.ts) |
 
 ## 6. Métricas e resultados — U2 (30)
@@ -111,7 +120,7 @@ funcionalidade.**
 
 | Critério | O que foi feito | Evidência |
 | --- | --- | --- |
-| Relatório de métricas | `relatorio-tecnico.html`: aprovação por suíte, falhas com mensagem, cobertura de código, testes mais lentos, tendência e rastreabilidade por HU | artefato `relatorios-qualidade` da [regressão completa](https://github.com/elbedie/urbanize-tas/actions/workflows/regressao.yml) |
+| Relatório de métricas | `relatorio-tecnico.html`: aprovação por suíte, falhas com mensagem, cobertura de código, testes mais lentos, tendência e rastreabilidade por HU | artefato `relatorios-qualidade` da [regressão completa](https://github.com/elbedie/urbanize-tas/actions/runs/44414812486) |
 | Interpretação e riscos | `relatorio-negocio.html` traz três coisas: a decisão (Aprovado, Atenção ou Reprovado), o risco de cada funcionalidade (cruza resultado com prioridade da HU) e recomendações. Hoje aponta automação parcial em HU-03, HU-07 e HU-09 | mesmo artefato |
 | Escolha das métricas | 9 métricas, cada uma com meta e motivo. As descartadas também têm justificativa | [metricas-de-qualidade.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/metricas-de-qualidade.md) |
 
