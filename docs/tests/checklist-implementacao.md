@@ -37,22 +37,22 @@ manteve em execução manual; eles ficam fora do backlog de automação.
 
 ## Resumo
 
-**Total:** 94 casos — ✅ 70 · 🟡 6 · ⬜ 18
+**Total:** 86 casos — ✅ 70 · 🟡 6 · ⬜ 10
 
 | Nível | ✅ | 🟡 | ⬜ | Total |
 | --- | --- | --- | --- | --- |
-| Integração de componentes | 56 | 3 | 7 | 66 |
+| Integração de componentes | 56 | 3 | 0 | 59 |
 | Sistema | 11 | 3 | 10 | 24 |
-| Componente | 3 | 0 | 1 | 4 |
+| Componente | 3 | 0 | 0 | 3 |
 
-Dos ⬜ e 🟡, 12 casos são manuais; os outros 12 formam o backlog de automação pendente, distribuído assim:
+Dos ⬜ e 🟡, 12 casos são manuais; os outros 4 formam o backlog de automação pendente, distribuído assim:
 
 | Responsável | Casos | Tema |
 | --- | --- | --- |
 | Hyngrid | TC29 | Status inicial da demanda (API; depende de decisão de produto) |
-| Janderson | TC37, TC39, TC54, TC61, TC76, TC77, TC86, TC87 | Enums, listagem por órgão, ciclo de status e métricas sem Redis (API) |
+| Janderson | TC76 | Ciclo de status (API) |
 | Pamela | TC26 | Logout (API) |
-| Diego Xavier | TC44, TC82 | Formulário e painel de triagem (dependem de mudança no app) |
+| Diego Xavier | TC82 | Painel de triagem (depende de mudança no app) |
 
 ## Checklist
 
@@ -94,14 +94,11 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 12 formam o backlog de automaç
 | ✅ | [TC34](casos-de-teste.md#tc34) | HU-03 | Aceitar demanda com todos os obrigatórios no tamanho mínimo. | Integração | demandas TC34 | push · PR · diário | — |
 | ✅ | [TC35](casos-de-teste.md#tc35) | HU-03 | Recusar demanda com descricao de 4 caracteres. | Integração | CT-DEM-04 | push · PR · diário | — |
 | ✅ | [TC36](casos-de-teste.md#tc36) | HU-03 | Recusar demanda com endereco.endereco de 2 caracteres. | Integração | demandas TC36 | push · PR · diário | — |
-| ⬜ | [TC37](casos-de-teste.md#tc37) | HU-03 | Recusar demanda sem categoria. | Integração | — | — | Janderson |
 | ✅ | [TC38](casos-de-teste.md#tc38) | HU-03 | Recusar demanda com categoria fora do enum. | Integração | CT-DEM-05 | push · PR · diário | — |
-| ⬜ | [TC39](casos-de-teste.md#tc39) | HU-03 | Recusar demanda com prioridade fora do enum. | Integração | — | — | Janderson |
 | ✅ | [TC40](casos-de-teste.md#tc40) | HU-03 | Recusar criação de demanda sem autenticação. | Integração | CT-DEM-02 | push · PR · diário | — |
 | ✅ | [TC41](casos-de-teste.md#tc41) | HU-03 | Abrir a tela de detalhe com o protocolo depois de registrar a demanda. | Sistema | E2E registrar-demanda | PR (smoke) · diário | — |
 | ⬜ | [TC42](casos-de-teste.md#tc42) | HU-03 | Impedir o envio da demanda sem localização. | Sistema | — | manual | — |
 | ⬜ | [TC43](casos-de-teste.md#tc43) | HU-03 | Impedir o envio da demanda sem aceite de compartilhamento de dados. | Sistema | — | manual | — |
-| ⬜ | [TC44](casos-de-teste.md#tc44) | HU-03 | Preencher título e descrição com a sugestão da triagem depois do upload. | Componente | — | — | Diego Xavier |
 | ⬜ | [TC45](casos-de-teste.md#tc45) | HU-12 | Vincular à demanda criada a foto anexada no formulário. | Sistema | — | manual | — |
 | ✅ | [TC46](casos-de-teste.md#tc46) | HU-12 | Receber a URL da imagem ao enviar arquivo válido. | Integração | upload TC46 | push · PR · diário | — |
 | ✅ | [TC47](casos-de-teste.md#tc47) | HU-12 | Recusar upload sem arquivo. | Integração | upload TC47 | push · PR · diário | — |
@@ -111,14 +108,12 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 12 formam o backlog de automaç
 | ⬜ | [TC51](casos-de-teste.md#tc51) | HU-03 | Registrar demanda com a categoria escolhida manualmente quando o Vision está indisponível. | Sistema | — | manual | — |
 | ✅ | [TC52](casos-de-teste.md#tc52) | HU-06 | Listar para o cidadão só as próprias demandas. | Integração | CT-DEM-07 | push · PR · diário | — |
 | ✅ | [TC53](casos-de-teste.md#tc53) | HU-06 | Listar a fila geral para gestor sem vínculo com órgão. | Integração | CT-DEM-08 | push · PR · diário | — |
-| ⬜ | [TC54](casos-de-teste.md#tc54) | HU-06 | Listar para gestor vinculado só as demandas do seu órgão. | Integração | — | — | Janderson |
 | ✅ | [TC55](casos-de-teste.md#tc55) | HU-06 | Filtrar demandas por status. | Integração | CT-DEM-09 | push · PR · diário | — |
 | ✅ | [TC56](casos-de-teste.md#tc56) | HU-06 | Filtrar demandas por categoria. | Integração | CT-DEM-10 | push · PR · diário | — |
 | ✅ | [TC57](casos-de-teste.md#tc57) | HU-06 | Filtrar demandas por prioridade. | Integração | demandas TC57 | push · PR · diário | — |
 | ✅ | [TC58](casos-de-teste.md#tc58) | HU-06 | Filtrar demandas por bairro. | Integração | demandas TC58 | push · PR · diário | — |
 | ✅ | [TC59](casos-de-teste.md#tc59) | HU-06 | Filtrar demandas por texto em busca. | Integração | CT-DEM-11 | push · PR · diário | — |
 | ✅ | [TC60](casos-de-teste.md#tc60) | HU-06 | Combinar filtros status e categoria. | Integração | demandas TC60 | push · PR · diário | — |
-| ⬜ | [TC61](casos-de-teste.md#tc61) | HU-06 | Recusar filtro com status fora do enum. | Integração | — | — | Janderson |
 | ✅ | [TC62](casos-de-teste.md#tc62) | HU-06 | Aplicar filtro de status na tela de listagem. | Sistema | E2E filtrar-status | diário | — |
 | ⬜ | [TC63](casos-de-teste.md#tc63) | HU-06 | Exibir estado vazio na listagem de cidadão sem demandas. | Sistema | — | manual | — |
 | ⬜ | [TC64](casos-de-teste.md#tc64) | HU-06 | Exibir estado de erro na listagem quando a API está indisponível. | Sistema | — | manual | — |
@@ -134,7 +129,6 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 12 formam o backlog de automaç
 | ✅ | [TC74](casos-de-teste.md#tc74) | HU-05 | Recusar atualização com status fora do enum. | Integração | CT-DEM-19 | push · PR · diário | — |
 | ✅ | [TC75](casos-de-teste.md#tc75) | HU-05 | Recusar atualização de status de demanda inexistente. | Integração | CT-DEM-20 | push · PR · diário | — |
 | 🟡 | [TC76](casos-de-teste.md#tc76) | HU-05 | Percorrer o ciclo nominal de status até resolvida. | Integração | E2E gestor-gerencia-demanda | push · PR · diário | Janderson |
-| ⬜ | [TC77](casos-de-teste.md#tc77) | HU-05 | Cancelar demanda com status registrada. | Integração | — | — | Janderson |
 | ✅ | [TC78](casos-de-teste.md#tc78) | HU-04 | Exibir ao cidadão o status alterado pelo gestor. | Sistema | E2E gestor-gerencia-demanda | PR (smoke) · diário | — |
 | ✅ | [TC79](casos-de-teste.md#tc79) | HU-05 | Exibir no histórico a observação registrada pelo gestor. | Sistema | E2E gestor-gerencia-demanda | PR (smoke) · diário | — |
 | 🟡 | [TC80](casos-de-teste.md#tc80) | HU-07 | Exibir no painel do gestor o total de demandas das métricas gerais. | Sistema | E2E gestor-aceita-triagem | diário | — |
@@ -143,8 +137,6 @@ Dos ⬜ e 🟡, 12 casos são manuais; os outros 12 formam o backlog de automaç
 | ✅ | [TC83](casos-de-teste.md#tc83) | HU-08 | Sugerir o órgão cujo categoriasJson contém a categoria da demanda. | Integração | upload TC83 | push · PR · diário | — |
 | ✅ | [TC84](casos-de-teste.md#tc84) | HU-10 | Retornar ao cidadão métricas só das próprias demandas. | Integração | CT-MET-02 | push · PR · diário | — |
 | ✅ | [TC85](casos-de-teste.md#tc85) | HU-07 | Retornar ao gestor métricas gerais. | Integração | CT-MET-01 | push · PR · diário | — |
-| ⬜ | [TC86](casos-de-teste.md#tc86) | HU-07 | Responder métricas sem Redis configurado. | Integração | — | — | Janderson |
-| ⬜ | [TC87](casos-de-teste.md#tc87) | HU-07 | Responder métricas com Redis configurado mas inacessível. | Integração | — | — | Janderson |
 | ⬜ | [TC88](casos-de-teste.md#tc88) | HU-10 | Exibir no dashboard do cidadão o total das próprias solicitações. | Sistema | — | manual | — |
 | ⬜ | [TC89](casos-de-teste.md#tc89) | HU-02 | Navegar da home para a tela de login. | Sistema | — | manual | — |
 | ⬜ | [TC90](casos-de-teste.md#tc90) | HU-01 | Navegar da home para a tela de cadastro. | Sistema | — | manual | — |

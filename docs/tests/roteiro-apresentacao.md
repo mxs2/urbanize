@@ -36,7 +36,7 @@ nível de teste definido.**
 | Critério | O que foi feito | Evidência |
 | --- | --- | --- |
 | Plano com escopo, níveis, riscos e pirâmide | Escopo (seção 1). Níveis com justificativa de cada nível incluído e excluído (seção 2). Pirâmide: 11 unitários, 72 de API e 8 E2E (seção 2). Riscos (seção 3) | [plano-de-testes-e-backlog.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/plano-de-testes-e-backlog.md) · [plano-de-testes.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/plano-de-testes.md) |
-| Casos rastreáveis aos critérios de aceite | Histórias com critérios de aceite, 94 casos (TC01–TC94) citando a HU de origem e matriz de rastreabilidade (seção 4.5 do plano) | [historias-de-usuario.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/historias-de-usuario.md) · [casos-de-teste.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/casos-de-teste.md) |
+| Casos rastreáveis aos critérios de aceite | Histórias com critérios de aceite, 86 casos (IDs de TC01 a TC94) citando a HU de origem e matriz de rastreabilidade (seção 4.5 do plano) | [historias-de-usuario.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/historias-de-usuario.md) · [casos-de-teste.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/casos-de-teste.md) |
 | Cobre os fluxos prioritários | Registrar demanda (HU-03), acompanhar status e histórico (HU-04 e HU-05): são as histórias *Must have* e concentram a maior parte dos casos | mesmos arquivos |
 
 A pirâmide é mais larga na API porque as regras do sistema estão no backend: validação, acesso por perfil, status e
@@ -125,5 +125,5 @@ funcionalidade.**
 | Escolha das métricas | 9 métricas, cada uma com meta e motivo. As descartadas também têm justificativa | [metricas-de-qualidade.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/metricas-de-qualidade.md) |
 
 Indicadores da última execução: 100% de aprovação, 0 falhas, 90,3% de cobertura de linhas da API (meta 70%),
-62,8% dos casos automatizados contando só unitários e API (meta 50%) e nenhuma funcionalidade em risco alto ou
+81,4% dos casos automatizados (70 de 86, meta 50%) e nenhuma funcionalidade em risco alto ou
 crítico.

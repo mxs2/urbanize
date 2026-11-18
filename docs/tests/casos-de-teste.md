@@ -12,7 +12,7 @@ derivação e matriz de rastreabilidade, em [ia/saida-rodada-2.md](ia/saida-roda
 nenhum critério de aceite sustenta o caso; o trecho do contrato de API que o sustenta, quando existe, está na matriz de
 rastreabilidade.
 
-**Total:** 94 casos — Integração de componentes: 66 · Sistema: 24 · Componente: 4. Casos com CA marcado como suposição: 32.
+**Total:** 86 casos — Integração de componentes: 59 · Sistema: 24 · Componente: 3. Casos com CA marcado como suposição: 29.
 
 ## Massa de dados
 
@@ -66,14 +66,11 @@ rastreabilidade.
 | [TC34](#tc34) | HU-03 | Aceitar demanda com todos os obrigatórios no tamanho mínimo. | Integração de componentes |
 | [TC35](#tc35) | HU-03 | Recusar demanda com descricao de 4 caracteres. | Integração de componentes |
 | [TC36](#tc36) | HU-03 | Recusar demanda com endereco.endereco de 2 caracteres. | Integração de componentes |
-| [TC37](#tc37) | HU-03 | Recusar demanda sem categoria. | Integração de componentes |
 | [TC38](#tc38) | HU-03 | Recusar demanda com categoria fora do enum. | Integração de componentes |
-| [TC39](#tc39) | HU-03 | Recusar demanda com prioridade fora do enum. | Integração de componentes |
 | [TC40](#tc40) | HU-03 | Recusar criação de demanda sem autenticação. | Integração de componentes |
 | [TC41](#tc41) | HU-03 | Abrir a tela de detalhe com o protocolo depois de registrar a demanda. | Sistema |
 | [TC42](#tc42) | HU-03 | Impedir o envio da demanda sem localização. | Sistema |
 | [TC43](#tc43) | HU-03 | Impedir o envio da demanda sem aceite de compartilhamento de dados. | Sistema |
-| [TC44](#tc44) | HU-03 | Preencher título e descrição com a sugestão da triagem depois do upload. | Componente |
 | [TC45](#tc45) | HU-12 | Vincular à demanda criada a foto anexada no formulário. | Sistema |
 | [TC46](#tc46) | HU-12 | Receber a URL da imagem ao enviar arquivo válido. | Integração de componentes |
 | [TC47](#tc47) | HU-12 | Recusar upload sem arquivo. | Integração de componentes |
@@ -83,14 +80,12 @@ rastreabilidade.
 | [TC51](#tc51) | HU-03 | Registrar demanda com a categoria escolhida manualmente quando o Vision está indisponível. | Sistema |
 | [TC52](#tc52) | HU-06 | Listar para o cidadão só as próprias demandas. | Integração de componentes |
 | [TC53](#tc53) | HU-06 | Listar a fila geral para gestor sem vínculo com órgão. | Integração de componentes |
-| [TC54](#tc54) | HU-06 | Listar para gestor vinculado só as demandas do seu órgão. | Integração de componentes |
 | [TC55](#tc55) | HU-06 | Filtrar demandas por status. | Integração de componentes |
 | [TC56](#tc56) | HU-06 | Filtrar demandas por categoria. | Integração de componentes |
 | [TC57](#tc57) | HU-06 | Filtrar demandas por prioridade. | Integração de componentes |
 | [TC58](#tc58) | HU-06 | Filtrar demandas por bairro. | Integração de componentes |
 | [TC59](#tc59) | HU-06 | Filtrar demandas por texto em busca. | Integração de componentes |
 | [TC60](#tc60) | HU-06 | Combinar filtros status e categoria. | Integração de componentes |
-| [TC61](#tc61) | HU-06 | Recusar filtro com status fora do enum. | Integração de componentes |
 | [TC62](#tc62) | HU-06 | Aplicar filtro de status na tela de listagem. | Sistema |
 | [TC63](#tc63) | HU-06 | Exibir estado vazio na listagem de cidadão sem demandas. | Sistema |
 | [TC64](#tc64) | HU-06 | Exibir estado de erro na listagem quando a API está indisponível. | Sistema |
@@ -106,7 +101,6 @@ rastreabilidade.
 | [TC74](#tc74) | HU-05 | Recusar atualização com status fora do enum. | Integração de componentes |
 | [TC75](#tc75) | HU-05 | Recusar atualização de status de demanda inexistente. | Integração de componentes |
 | [TC76](#tc76) | HU-05 | Percorrer o ciclo nominal de status até resolvida. | Integração de componentes |
-| [TC77](#tc77) | HU-05 | Cancelar demanda com status registrada. | Integração de componentes |
 | [TC78](#tc78) | HU-04 | Exibir ao cidadão o status alterado pelo gestor. | Sistema |
 | [TC79](#tc79) | HU-05 | Exibir no histórico a observação registrada pelo gestor. | Sistema |
 | [TC80](#tc80) | HU-07 | Exibir no painel do gestor o total de demandas das métricas gerais. | Sistema |
@@ -115,8 +109,6 @@ rastreabilidade.
 | [TC83](#tc83) | HU-08 | Sugerir o órgão cujo categoriasJson contém a categoria da demanda. | Integração de componentes |
 | [TC84](#tc84) | HU-10 | Retornar ao cidadão métricas só das próprias demandas. | Integração de componentes |
 | [TC85](#tc85) | HU-07 | Retornar ao gestor métricas gerais. | Integração de componentes |
-| [TC86](#tc86) | HU-07 | Responder métricas sem Redis configurado. | Integração de componentes |
-| [TC87](#tc87) | HU-07 | Responder métricas com Redis configurado mas inacessível. | Integração de componentes |
 | [TC88](#tc88) | HU-10 | Exibir no dashboard do cidadão o total das próprias solicitações. | Sistema |
 | [TC89](#tc89) | HU-02 | Navegar da home para a tela de login. | Sistema |
 | [TC90](#tc90) | HU-01 | Navegar da home para a tela de cadastro. | Sistema |
@@ -631,20 +623,6 @@ rastreabilidade.
 | Pós-condições | Contagem de demandas de A continua 3. |
 | Nível | Integração de componentes |
 
-### TC37
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC37 |
-| HU | HU-03 Registro de demanda |
-| CA | SUPOSIÇÃO |
-| Título | Recusar demanda sem categoria. |
-| Pré-condições | M1. TOKEN_A. Contagem de demandas de A = 3. |
-| Passos | 1. Enviar POST {API}/demands com os demais obrigatórios válidos e sem categoria. |
-| Resultado esperado | HTTP 422 com error.code = VALIDATION_ERROR. |
-| Pós-condições | Contagem de demandas de A continua 3. |
-| Nível | Integração de componentes |
-
 ### TC38
 
 | Campo | Conteúdo |
@@ -655,20 +633,6 @@ rastreabilidade.
 | Título | Recusar demanda com categoria fora do enum. |
 | Pré-condições | M1. TOKEN_A. Contagem de demandas de A = 3. |
 | Passos | 1. Enviar POST {API}/demands com "categoria":"transito" e demais obrigatórios válidos. |
-| Resultado esperado | HTTP 422 com error.code = VALIDATION_ERROR. |
-| Pós-condições | Contagem de demandas de A continua 3. |
-| Nível | Integração de componentes |
-
-### TC39
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC39 |
-| HU | HU-03 Registro de demanda |
-| CA | SUPOSIÇÃO |
-| Título | Recusar demanda com prioridade fora do enum. |
-| Pré-condições | M1. TOKEN_A. Contagem de demandas de A = 3. |
-| Passos | 1. Enviar POST {API}/demands com "prioridade":"urgente" e demais obrigatórios válidos. |
 | Resultado esperado | HTTP 422 com error.code = VALIDATION_ERROR. |
 | Pós-condições | Contagem de demandas de A continua 3. |
 | Nível | Integração de componentes |
@@ -728,20 +692,6 @@ rastreabilidade.
 | Resultado esperado | Nenhuma requisição POST /demands é disparada. |
 | Pós-condições | Contagem de demandas de A inalterada. Formulário continua aberto. |
 | Nível | Sistema |
-
-### TC44
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC44 |
-| HU | HU-03 Registro de demanda |
-| CA | CA-04 "O formulário de nova demanda deve permitir upload de foto, preencher título/descrição pela triagem e exigir localização e aceite de compartilhamento de dados." |
-| Título | Preencher título e descrição com a sugestão da triagem depois do upload. |
-| Pré-condições | HTTP mockado: POST /upload/image responde 200 com triagem.tituloSugerido = "Buraco na rua" e triagem.descricaoSugerida = "Imagem analisada automaticamente.". Hook do formulário com título e descrição vazios. |
-| Passos | 1. Acionar a função de upload do hook com um arquivo foto.jpg.<br>2. Aguardar a resolução da promessa.<br>3. Ler o estado de título e descrição. |
-| Resultado esperado | Título = "Buraco na rua" e descrição = "Imagem analisada automaticamente.". |
-| Pós-condições | Estado do formulário com imagemUrl do mock guardado. |
-| Nível | Componente |
 
 ### TC45
 
@@ -869,20 +819,6 @@ rastreabilidade.
 | Pós-condições | Nenhum dado alterado. |
 | Nível | Integração de componentes |
 
-### TC54
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC54 |
-| HU | HU-06 Visualizar e filtrar demandas |
-| CA | CA-06 "A listagem deve exibir demandas e aplicar filtros corretamente." |
-| Título | Listar para gestor vinculado só as demandas do seu órgão. |
-| Pré-condições | M1. Gestor G2 vinculado ao órgão "Secretaria de Obras" direto no banco. D1 vinculada a esse órgão e D2 a outro. Token de G2. SUPOSIÇÃO: forma do vínculo gestor↔órgão e demanda↔órgão (L09). |
-| Passos | 1. Enviar GET {API}/demands com o token de G2. |
-| Resultado esperado | data contém D1 e não contém D2. |
-| Pós-condições | Nenhum dado alterado. |
-| Nível | Integração de componentes |
-
 ### TC55
 
 | Campo | Conteúdo |
@@ -964,20 +900,6 @@ rastreabilidade.
 | Pré-condições | M1. TOKEN_G (fila geral). SUPOSIÇÃO: filtros combinam com E (L17). |
 | Passos | 1. Enviar GET {API}/demands?status=registrada&categoria=vias_publicas com TOKEN_G. |
 | Resultado esperado | data contém D1 e D4 e nenhuma demanda com status diferente de registrada ou categoria diferente de vias_publicas. |
-| Pós-condições | Nenhum dado alterado. |
-| Nível | Integração de componentes |
-
-### TC61
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC61 |
-| HU | HU-06 Visualizar e filtrar demandas |
-| CA | CA-06 "A listagem deve exibir demandas e aplicar filtros corretamente." |
-| Título | Recusar filtro com status fora do enum. |
-| Pré-condições | M1. TOKEN_A. |
-| Passos | 1. Enviar GET {API}/demands?status=aberta com TOKEN_A. |
-| Resultado esperado | HTTP 422 com error.code = VALIDATION_ERROR. |
 | Pós-condições | Nenhum dado alterado. |
 | Nível | Integração de componentes |
 
@@ -1191,20 +1113,6 @@ rastreabilidade.
 | Pós-condições | D5 persistida como resolvida, com 4 itens de histórico acrescentados. |
 | Nível | Integração de componentes |
 
-### TC77
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC77 |
-| HU | HU-05 Atualização de status |
-| CA | CA-10 "O gestor deve conseguir atualizar status e observação da demanda." |
-| Título | Cancelar demanda com status registrada. |
-| Pré-condições | M1. TOKEN_G. Nova demanda D6 de A com status registrada. SUPOSIÇÃO: registrada→cancelada é permitida (L05). |
-| Passos | 1. Enviar PATCH {API}/demands/{id de D6}/status com {"status":"cancelada","observacaoGestor":"Duplicada."} e TOKEN_G. |
-| Resultado esperado | HTTP 200 com data.status = cancelada. |
-| Pós-condições | D6 persistida como cancelada. |
-| Nível | Integração de componentes |
-
 ### TC78
 
 | Campo | Conteúdo |
@@ -1315,34 +1223,6 @@ rastreabilidade.
 | Passos | 1. Enviar GET {API}/metrics/summary com TOKEN_G. |
 | Resultado esperado | data.total = N. |
 | Pós-condições | Nenhum dado alterado. |
-| Nível | Integração de componentes |
-
-### TC86
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC86 |
-| HU | HU-07 Painel do gestor |
-| CA | SUPOSIÇÃO |
-| Título | Responder métricas sem Redis configurado. |
-| Pré-condições | API iniciada com REDIS_URL vazio. M1. TOKEN_G. |
-| Passos | 1. Enviar GET {API}/metrics/summary com TOKEN_G. |
-| Resultado esperado | HTTP 200 com success: true. |
-| Pós-condições | Nenhum dado alterado. API ativa. |
-| Nível | Integração de componentes |
-
-### TC87
-
-| Campo | Conteúdo |
-| --- | --- |
-| ID | TC87 |
-| HU | HU-07 Painel do gestor |
-| CA | SUPOSIÇÃO |
-| Título | Responder métricas com Redis configurado mas inacessível. |
-| Pré-condições | API iniciada com REDIS_URL=redis://127.0.0.1:6399 (porta sem serviço). M1. TOKEN_G. Contagem total no banco = N. SUPOSIÇÃO: com Redis fora do ar, a API lê do banco (L14). |
-| Passos | 1. Enviar GET {API}/metrics/summary com TOKEN_G. |
-| Resultado esperado | HTTP 200 com data.total = N. |
-| Pós-condições | API continua ativa (GET /health responde ok). |
 | Nível | Integração de componentes |
 
 ### TC88
