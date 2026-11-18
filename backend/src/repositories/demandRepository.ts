@@ -49,7 +49,13 @@ export const demandRepository = {
   },
   updateStatus(
     id: string,
-    data: { status: DemandStatus; observacaoGestor?: string; descricao: string; autor: string }
+    data: {
+      status: DemandStatus;
+      observacaoGestor?: string;
+      descricao: string;
+      autor: string;
+      notificacao?: { userId: string; mensagem: string };
+    }
   ) {
     return prisma.demand.update({
       where: { id },
@@ -63,6 +69,7 @@ export const demandRepository = {
             autor: data.autor,
           },
         },
+        notificacoes: data.notificacao ? { create: data.notificacao } : undefined,
       },
       include: includeHistory,
     });
