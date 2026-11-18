@@ -316,6 +316,8 @@ ${[
   jobsComErro.some((s) => !s.falhou) && "Uma etapa da pipeline falhou antes de rodar os testes; a equipe técnica deve verificar o ambiente.",
   riscos.some((r) => r.risco === "Alto" && !r.falhando) &&
     `Priorizar automação das funcionalidades essenciais sem cobertura: ${riscos.filter((r) => r.risco === "Alto" && !r.falhando).map((r) => r.id).join(", ")}.`,
+  riscos.some((r) => r.risco === "Médio") &&
+    `Completar a automação das funcionalidades com cobertura parcial: ${riscos.filter((r) => r.risco === "Médio").map((r) => `${r.id} (${r.motivo.toLowerCase().replace(/\.$/, "")})`).join("; ")}.`,
   metricas.casosDeTeste.pct < META.casosAutomatizados &&
     `Ampliar a automação: faltam ${Math.ceil((META.casosAutomatizados / 100) * tcs.length) - tcsAutomatizados} cenários para atingir a meta de ${META.casosAutomatizados}%.`,
   (coberturaApi ?? 0) < META.coberturaLinhas && "Aumentar a cobertura de código do servidor até a meta.",
