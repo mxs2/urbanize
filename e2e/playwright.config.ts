@@ -22,5 +22,10 @@ export default defineConfig({
       slowMo: process.env.SLOWMO ? Number(process.env.SLOWMO) : 0,
     },
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // Toda a suíte roda em dois dispositivos: navegador desktop e celular emulado (Pixel 7: tela 412x915,
+  // toque, user agent e densidade de pixels de Android). O responsivo já troca o viewport sozinho.
+  projects: [
+    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
+    { name: "mobile", use: { ...devices["Pixel 7"] }, testIgnore: /registrar-demanda-responsivo/ },
+  ],
 });
