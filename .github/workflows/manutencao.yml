@@ -197,7 +197,9 @@ jobs:
 
       - name: 📥 Resultados da última regressão completa da main
         run: |
-          id=$(gh run list --workflow regressao.yml --branch main --event schedule --status completed --limit 1 --json databaseId --jq '.[0].databaseId')
+          id=$(gh run list --workflow regressao.yml --branch main --event schedule --status completed --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          # sem execução agendada (repositório novo ou fork): usa a última regressão completa disparada manualmente
+          [ -n "$id" ] || id=$(gh run list --workflow regressao.yml --branch main --event workflow_dispatch --status completed --limit 1 --json databaseId --jq '.[0].databaseId // empty')
           echo "RODADA=$id" >> "$GITHUB_ENV"
           gh run download "$id" --pattern 'resultados-*' --dir resultados || true
           for d in resultados/resultados-*; do [ -d "$d" ] && mv "$d" "resultados/${d#resultados/resultados-}"; done
