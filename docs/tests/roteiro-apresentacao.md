@@ -35,7 +35,7 @@ nível de teste definido.**
 
 | Critério | O que foi feito | Evidência |
 | --- | --- | --- |
-| Plano com escopo, níveis, riscos e pirâmide | Escopo (seção 1). Níveis com justificativa de cada nível incluído e excluído (seção 2). Pirâmide: 11 unitários, 72 de API e 8 E2E (seção 2). Riscos (seção 3) | [plano-de-testes-e-backlog.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/plano-de-testes-e-backlog.md) · [plano-de-testes.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/plano-de-testes.md) |
+| Plano com escopo, níveis, riscos e pirâmide | Escopo (seção 1). Níveis com justificativa de cada nível incluído e excluído (seção 2). Pirâmide: 11 unitários, 74 de API e 13 E2E (seção 2). Riscos (seção 3) | [plano-de-testes-e-backlog.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/plano-de-testes-e-backlog.md) · [plano-de-testes.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/plano-de-testes.md) |
 | Casos rastreáveis aos critérios de aceite | Histórias com critérios de aceite, 82 casos (IDs de TC01 a TC94) citando a HU de origem e matriz de rastreabilidade (seção 4.5 do plano) | [historias-de-usuario.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/historias-de-usuario.md) · [casos-de-teste.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/casos-de-teste.md) |
 | Cobre os fluxos prioritários | Registrar demanda (HU-03), acompanhar status e histórico (HU-04 e HU-05): são as histórias *Must have* e concentram a maior parte dos casos | mesmos arquivos |
 
@@ -48,12 +48,12 @@ histórico. O E2E fica só com os fluxos que precisam passar por app, API e banc
 
 | Critério | O que foi feito | Evidência |
 | --- | --- | --- |
-| Unidade e API sobre o código real | 11 unitários dos serviços do app (Jest). 70 testes de API (Jest + Supertest) e 2 cenários BDD (Cucumber) contra o backend real com SQLite e seed | [tests/unit](https://github.com/elbedie/urbanize-tas/tree/main/tests/unit) · [tests/acceptance](https://github.com/elbedie/urbanize-tas/tree/main/tests/acceptance) · [tests/bdd](https://github.com/elbedie/urbanize-tas/tree/main/tests/bdd) |
+| Unidade e API sobre o código real | 11 unitários dos serviços do app (Jest). 72 testes de API (Jest + Supertest) e 2 cenários BDD (Cucumber) contra o backend real com SQLite e seed | [tests/unit](https://github.com/elbedie/urbanize-tas/tree/main/tests/unit) · [tests/acceptance](https://github.com/elbedie/urbanize-tas/tree/main/tests/acceptance) · [tests/bdd](https://github.com/elbedie/urbanize-tas/tree/main/tests/bdd) |
 | Comando único, sem passos manuais | `bash scripts/testes.sh` instala as dependências, prepara o banco e roda os três níveis do mesmo jeito que o CI | [scripts/testes.sh](https://github.com/elbedie/urbanize-tas/blob/main/scripts/testes.sh) · [organizacao-e-execucao.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/organizacao-e-execucao.md) |
 | Resultado registrado | Logs e JUnit em `test-results/`. No CI, os artefatos `resultados-unitarios` e `resultados-api` ficam guardados em cada execução | [execuções da Regressão](https://github.com/elbedie/urbanize-tas/actions/workflows/regressao.yml) · [evidências da API](https://github.com/elbedie/urbanize-tas/tree/main/docs/evidencias-testes-api) |
 
-Execução local mais recente (18/11): `Tests: 11 passed`, `Tests: 70 passed`, `2 scenarios (2 passed)`, saída
-`Tudo verde`.
+Última regressão completa: 11 unitários e 74 de API (72 Jest + 2 BDD), todos aprovados. Rodando `bash scripts/testes.sh`
+localmente, a saída termina com `Tudo verde`.
 
 ## 3. Backlog de automação — U1 (25)
 
@@ -101,7 +101,9 @@ Detalhes em [entrega-politica-manutencao.md](https://github.com/elbedie/urbanize
 **O fluxo registrar → acompanhar → notificar é testado de ponta a ponta, com app e backend reais, e inclui
 cenários negativos.**
 
-Playwright roda contra o app web (Expo) e a API reais, com banco SQLite e seed, sem mock.
+Playwright roda contra o app web (Expo) e a API reais, com banco SQLite e seed, sem mock. A suíte roda em dois
+dispositivos: navegador desktop e **celular emulado (Pixel 7: tela 412x915, toque e user agent Android)**. Na
+regressão completa são 23 execuções E2E, 13 no desktop e 10 no celular.
 Configuração: [playwright.config.ts](https://github.com/elbedie/urbanize-tas/blob/main/e2e/playwright.config.ts) ·
 [e2e/README.md](https://github.com/elbedie/urbanize-tas/blob/main/e2e/README.md).
 
@@ -124,6 +126,6 @@ funcionalidade.**
 | Interpretação e riscos | `relatorio-negocio.html` traz três coisas: a decisão (Aprovado, Atenção ou Reprovado), o risco de cada funcionalidade (cruza resultado com prioridade da HU) e recomendações. Hoje aponta automação parcial em HU-03, HU-07 e HU-09 | mesmo artefato |
 | Escolha das métricas | 9 métricas, cada uma com meta e motivo. As descartadas também têm justificativa | [metricas-de-qualidade.md](https://github.com/elbedie/urbanize-tas/blob/main/docs/tests/metricas-de-qualidade.md) |
 
-Indicadores da última execução: 100% de aprovação, 0 falhas, 90,3% de cobertura de linhas da API (meta 70%),
+Indicadores da última execução: 100% de aprovação, 0 falhas, 90,8% de cobertura de linhas da API (meta 70%),
 85,4% dos casos automatizados (70 de 82, meta 50%) e nenhuma funcionalidade em risco alto ou
 crítico.

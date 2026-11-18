@@ -59,9 +59,9 @@ Fica fora do escopo: o comportamento de sistemas externos fora do controle da sq
 Quantos testes automatizados existem em cada camada (contagem da regressão de novembro de 2026), da base para o topo:
 
 ```
-            /  E2E  \            8 testes  · Playwright · app web + API reais · ~30 s cada
+            /  E2E  \           13 testes  · Playwright · app web + API reais · desktop e celular (Pixel 7)
            /---------\
-          /    API    \         72 testes  · Jest + Supertest + BDD · API em memória · < 1 s cada
+          /    API    \         74 testes  · Jest + Supertest + BDD · API em memória · < 1 s cada
          /-------------\
         /   Unitários   \       11 testes  · Jest (jest-expo) · serviços do app, rede mockada · ms
 ```
@@ -69,7 +69,7 @@ Quantos testes automatizados existem em cada camada (contagem da regressão de n
 A forma não é a pirâmide clássica (base de unitários mais larga), e a escolha é deliberada: quase toda regra do
 escopo (validação, acesso por perfil, status e histórico, fallback do Vision) vive na API, não no app. Por isso a
 camada mais larga é a de API, que é quase tão barata e rápida quanto a unitária e já exercita o código real com banco.
-O topo continua estreito: o E2E fica só com os fluxos que precisam atravessar app, API e banco juntos (registrar,
+O topo continua estreito e roda em dois dispositivos, navegador desktop e celular emulado: o E2E fica só com os fluxos que precisam atravessar app, API e banco juntos (registrar,
 acompanhar, gestor altera status), porque é a camada mais lenta e mais sujeita a instabilidade.
 
 Para rodar a base da pirâmide (unitários e API) com um único comando, sem passos manuais: `bash scripts/testes.sh`.
