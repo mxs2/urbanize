@@ -1,0 +1,51 @@
+name: Remoção de teste
+description: Pedido para descontinuar um teste automatizado (docs/tas.md, 3.5). Precisa de aprovação antes do PR.
+title: "[REMOÇÃO DE TESTE] "
+labels: [manutencao, remocao-teste, squad:test]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Um teste só sai da suíte com esta issue **aprovada** (label `remocao-aprovada`) por alguém do squad de Testes
+        **e** pelo dono da funcionalidade. O PR que remove o teste deve citar `Remove teste: #<esta issue>`; o check
+        `Manutenção da TAS` falha se o PR apagar testes sem essa referência.
+  - type: textarea
+    id: testes
+    attributes:
+      label: Teste(s) afetado(s)
+      description: Nome, arquivo e caso de teste (TCxx) que ele automatiza.
+    validations:
+      required: true
+  - type: dropdown
+    id: motivo
+    attributes:
+      label: Motivo
+      options:
+        - Funcionalidade removida ou fora do escopo
+        - Duplicado (outro teste cobre o mesmo caso)
+        - Instável sem correção viável após a quarentena
+        - Custo de manutenção maior que o valor (baixo risco coberto)
+        - Movido para outro nível (ex.: E2E substituído por teste de API)
+    validations:
+      required: true
+  - type: textarea
+    id: justificativa
+    attributes:
+      label: Justificativa
+      description: Evidências (issues, execuções, cobertura) que sustentam a remoção.
+    validations:
+      required: true
+  - type: textarea
+    id: substituto
+    attributes:
+      label: Cobertura que fica
+      description: Qual teste (ou teste manual) continua cobrindo o caso. Escreva "nenhuma" se o caso deixa de ser coberto.
+    validations:
+      required: true
+  - type: textarea
+    id: risco
+    attributes:
+      label: Risco assumido
+      description: O que pode passar sem ser detectado depois da remoção e por que é aceitável.
+    validations:
+      required: true
