@@ -1,3 +1,4 @@
+import { signUploadUrl } from "./signedUpload";
 import { Demand, DemandHistory } from "../generated/prisma/client";
 
 type DemandWithHistory = Demand & { historico: DemandHistory[] };
@@ -23,7 +24,7 @@ export const toDemandResponse = (demand: DemandWithHistory) => ({
   },
   origem: demand.origem,
   orgaoResponsavel: demand.orgaoResponsavel ?? undefined,
-  imagemUrl: demand.imagemUrl ?? undefined,
+  imagemUrl: signUploadUrl(demand.imagemUrl),
   observacaoGestor: demand.observacaoGestor ?? undefined,
   scoreTriagem: demand.scoreTriagem ?? undefined,
   sugestaoEncaminhamento: demand.sugestaoEncaminhamento ?? undefined,

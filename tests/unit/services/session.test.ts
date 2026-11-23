@@ -1,4 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
+import { secureStorage } from "@/services/secureStorage";
 import {
   AUTH_STORAGE_KEY,
   clearAuthToken,
@@ -10,18 +11,18 @@ import {
 describe("Session", () => {
   beforeEach(async () => {
     resetSessionForTests();
-    await AsyncStorage.clear();
+    (SecureStore as unknown as { __store: Map<string, string> }).__store.clear();
   });
 
   it("TC20: deve preferir o token em memória ao valor persistido (evita a corrida do persist)", async () => {
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ state: { token: "token-antigo" } }));
+    await secureStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ state: { token: "token-antigo" } }));
     setAuthToken("token-novo");
 
     await expect(getAuthToken()).resolves.toBe("token-novo");
   });
 
   it("deve recuperar o token persistido no cold start", async () => {
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ state: { token: "token-persistido" } }));
+    await secureStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ state: { token: "token-persistido" } }));
 
     await expect(getAuthToken()).resolves.toBe("token-persistido");
   });
@@ -30,7 +31,7 @@ describe("Session", () => {
     await expect(getAuthToken()).resolves.toBeNull();
 
     resetSessionForTests();
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, "não é json");
+    await secureStorage.setItem(AUTH_STORAGE_KEY, "não é json");
 
     await expect(getAuthToken()).resolves.toBeNull();
   });

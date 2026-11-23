@@ -30,10 +30,10 @@ Fizemos esta análise a partir do código-fonte atual. Cada requisito informa o 
 | ID | Ameaça | Como acontece | Probabilidade | Impacto | Risco | Evidência | Entrega |
 | :---- | :---- | :---- | :---- | :---- | :---- | :---- | :---- |
 | R1 | Usuário comum ganha acesso de gestor | `POST /api/auth/register` aceita o campo `role` enviado pelo cliente | Alta | Alto | **Crítico** — corrigido em [#49](https://github.com/mxs2/urbanize/issues/49) | `backend/src/controllers/authController.ts:13-18`, `backend/src/services/authService.ts:24-31` | 1 |
-| R2 | Roubo de sessão | O token JWT fica em `AsyncStorage`, sem criptografia, no celular | Média | Alto | **Alto** | `mobile/src/store/authStore.ts:66`, `mobile/src/services/session.ts:19` | 1 |
+| R2 | Roubo de sessão | O token JWT fica em `AsyncStorage`, sem criptografia, no celular | Média | Alto | **Alto** — corrigido | `mobile/src/store/authStore.ts`, `mobile/src/services/session.ts:19` | 1 |
 | R3 | Criação de tokens falsos | Se `JWT_SECRET` não for definido, o código usa o valor fixo `"urbanize-dev-secret-change-me"` | Baixa (com `.env`) / Alta (sem `.env`) | Alto | **Alto** — corrigido em [#50](https://github.com/mxs2/urbanize/issues/50) | `backend/src/config/env.ts` | 1 |
-| R4 | Fotos de demandas expostas | A pasta `/uploads` é pública, sem `requireAuth` | Média | Médio-Alto | **Alto** | `backend/src/app.ts:22` | 2 |
-| R5 | Leitura de senhas e dados na rede | Nenhum ambiente usa TLS (HTTPS) | Média | Alto | **Alto** | `docker/docker-compose.yml` (healthcheck e `EXPO_PUBLIC_API_URL` em HTTP) | 4 |
+| R4 | Fotos de demandas expostas | A pasta `/uploads` é pública, sem `requireAuth` | Média | Médio-Alto | **Alto** — corrigido | `backend/src/app.ts` | 2 |
+| R5 | Leitura de senhas e dados na rede | Nenhum ambiente usa TLS (HTTPS) | Média | Alto | **Alto** — corrigido no código; falta ativar em produção | `docker/docker-compose.yml` (profile `tls`), `docker/Caddyfile` | 4 |
 | R6 | Ataque de força bruta no login | Não existe limite de tentativas em `/api/auth/login` e `/api/auth/register` | Média | Médio | **Médio** | `backend/package.json` não tem `express-rate-limit` | 1, 4 |
 | R7 | Senhas fracas | `senha: z.string().min(1)` aceita senha de 1 caractere | Alta | Médio | **Médio** | `backend/src/controllers/authController.ts:11` | 1 |
 | R8 | Gestor acessa demandas de outro órgão | O acesso do gestor não é limitado ao seu `organId` | Baixa-Média | Médio | **Médio** | `backend/src/services/demandService.ts:39-49` | 1 |
@@ -126,7 +126,7 @@ Os riscos estão agrupados pela parte do código onde ficam. Os links apontam pa
 - **RS11** — Segredos (chave do JWT, senhas de banco e de serviços externos) não podem ter valor padrão no código.
   Atendido para `JWT_SECRET` — o backend não inicia sem a variável e mostra uma mensagem de erro clara ([#50](https://github.com/mxs2/urbanize/issues/50)). `backend/.env.example` e `scripts/setup-env.sh` já definem o valor.
 - **RS12** — O app deve guardar o token no cofre seguro do sistema do celular.
-  **Não atendido.** O pacote `expo-secure-store` já está instalado, mas não é usado (ver R2). **Ação:** trocar `AsyncStorage` por `SecureStore` em `authStore` e `session.ts`.
+  Atendido no iOS e no Android — `authStore` e `session.ts` usam `expo-secure-store` por `mobile/src/services/secureStorage.ts`. A sessão antiga em `AsyncStorage` é migrada e apagada na primeira leitura. **Limite:** na web não há cofre do sistema, e o app usa `localStorage`.
 
 **Permissões**
 
@@ -162,7 +162,7 @@ Os riscos estão agrupados pela parte do código onde ficam. Os links apontam pa
 - **RS09** — Dados pessoais (contato e localização) devem ter controle de acesso também no local onde estão guardados.
   Parcial — não há criptografia de coluna nem de arquivo. Aceitamos isso para o SQLite de desenvolvimento. **Antes de ir para produção, a ação é obrigatória:** criptografar o banco ou migrar para um banco gerenciado com criptografia nativa.
 - **RS10** — Fotos enviadas pelos usuários não podem ser públicas.
-  **Não atendido — alto.** Ver R4. **Ação:** proteger `/uploads` com `requireAuth` ou usar links assinados e temporários.
+  Atendido — `/uploads` só responde com link assinado (HMAC) e temporário (`UPLOAD_URL_TTL_SECONDS`, padrão 1 hora). A API gera o link em `toDemandResponse`, só para quem pode ver a demanda. O banco guarda apenas `/uploads/<arquivo>`. A extensão do arquivo agora vem do mimetype validado.
 - **RS13** — Ao excluir uma conta, o sistema deve anonimizar os dados pessoais das demandas que precisam continuar no histórico da gestão pública.
   Não atendido. Hoje, a exclusão do usuário apenas remove o vínculo (`onDelete: SetNull`, `schema.prisma:111`). Os campos `nomeSolicitante`, `emailSolicitante` e `telefoneSolicitante` continuam na demanda. **Ação:** trocar esses campos por um valor neutro (ex.: `"Anônimo"`) e apagar `telefoneSolicitante`. Manter bairro, categoria e status para as métricas.
 - **RS14** — Métricas e relatórios devem usar apenas dados agregados, sem identificar o cidadão.
@@ -225,7 +225,11 @@ Os requisitos RS01 a RS16 das Entregas 1 e 2 fazem parte do dever de segurança 
 #### Requisitos
 
 - **RS08** — Toda comunicação entre o app e o backend deve usar TLS (HTTPS), exceto em `localhost` de desenvolvimento.
-  Não atendido em nenhum ambiente (R5). **Ação:** colocar um proxy reverso com TLS (ex.: Nginx ou Caddy) na frente da API antes de qualquer publicação.
+  Parcial — o código está pronto, falta ativar no ambiente de produção.
+  - `docker compose --profile tls up` sobe o Caddy (`docker/Caddyfile`) com certificado automático para `API_DOMAIN`.
+  - Em `NODE_ENV=production` a API responde 426 a quem chegar por HTTP (exceto `/api/health`) e envia HSTS. Ela lê o protocolo do proxy por `trust proxy` (`TRUST_PROXY`).
+  - Com o proxy, use `BACKEND_BIND=127.0.0.1` para não expor a porta 4000, e `EXPO_PUBLIC_API_URL=https://...` no app.
+  - Em desenvolvimento (localhost e rede local) continua HTTP.
 - **RS03** (ver Entrega 1) — Limitar tentativas nas rotas `/auth/*`.
 - **RS22** — Limitar o número de requisições por IP em toda a API, com limite menor nas rotas de upload.
   Não atendido (R12). **Ação:** usar `express-rate-limit`. Com várias instâncias, guardar os contadores no Redis.
@@ -285,9 +289,9 @@ Todos os dados do sistema ficam em dois lugares: o arquivo `dev.db` e a pasta `b
 | :---- | :---- | :---- | :---- | :---- |
 | Crítica | Remover `role` do cadastro público — **feito** ([#49](https://github.com/mxs2/urbanize/issues/49)) | RS05 | R1 | 1 |
 | Crítica | Remover o valor padrão de `JWT_SECRET`. O servidor não inicia sem ele. — **feito** ([#50](https://github.com/mxs2/urbanize/issues/50)) | RS11 | R3 | 1 |
-| Alta | Proteger `/uploads` com login ou links assinados | RS10 | R4 | 2 |
-| Alta | Guardar o token do app em `expo-secure-store` | RS12 | R2 | 1 |
-| Alta | Usar TLS em todo ambiente fora do `localhost` | RS08 | R5 | 4 |
+| Alta | Proteger `/uploads` com login ou links assinados — **feito** | RS10 | R4 | 2 |
+| Alta | Guardar o token do app em `expo-secure-store` — **feito** | RS12 | R2 | 1 |
+| Alta | Usar TLS em todo ambiente fora do `localhost` — **código pronto; ativar em produção** | RS08 | R5 | 4 |
 | Alta | Criar backup diário do banco e das fotos, com teste de restauração | RS26–RS30 | R11 | 5 |
 | Média | Limitar tentativas em `/api/auth/*` e requisições em toda a API | RS03, RS22 | R6, R12 | 1, 4 |
 | Média | Exigir senha com no mínimo 8 caracteres | RS02 | R7 | 1 |

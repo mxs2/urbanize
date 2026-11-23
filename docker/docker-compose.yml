@@ -26,7 +26,9 @@ services:
       BACKEND_HOST: 0.0.0.0
       BACKEND_PORT: 4000
     ports:
-      - "${BACKEND_PORT:-4000}:4000"
+      # Com o proxy TLS (profile `tls`) use BACKEND_BIND=127.0.0.1: a API só fica
+      # acessível pelo HTTPS do proxy, nunca direto por HTTP.
+      - "${BACKEND_BIND:-0.0.0.0}:${BACKEND_PORT:-4000}:4000"
     volumes:
       # Código montado do host: editar um arquivo recarrega a API (tsx watch).
       - ../backend:/app
@@ -42,6 +44,28 @@ services:
       retries: 12
       start_period: 60s
 
+  # RS08: proxy reverso com TLS na frente da API. Não sobe por padrão (o ambiente de
+  # desenvolvimento usa HTTP em localhost/rede local); ative com `--profile tls`.
+  # Com API_DOMAIN (DNS apontando para este host, portas 80/443 abertas) o Caddy obtém e
+  # renova o certificado Let's Encrypt sozinho. Sem ele, usa `localhost` com CA interna.
+  proxy:
+    image: caddy:2.8.4-alpine
+    profiles: ["tls"]
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: "${API_DOMAIN:-localhost}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificados e chave da conta ACME: sem o volume, cada recriação pede um novo.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+
   mobile:
     build:
       context: ..
@@ -52,7 +76,7 @@ services:
     environment:
       # IP do host: o bundle roda no navegador/celular, então a URL da API e a do
       # Metro precisam ser alcançáveis de fora do container.
-      EXPO_PUBLIC_API_URL: "http://${HOST_LAN_IP:-127.0.0.1}:${BACKEND_PORT:-4000}/api"
+      EXPO_PUBLIC_API_URL: "${EXPO_PUBLIC_API_URL:-http://${HOST_LAN_IP:-127.0.0.1}:${BACKEND_PORT:-4000}/api}"
       REACT_NATIVE_PACKAGER_HOSTNAME: "${HOST_LAN_IP:-127.0.0.1}"
     # TTY para o Expo desenhar o QR code do Expo Go no log e aceitar as teclas
     # do menu interativo (`docker compose attach mobile`).
@@ -74,3 +98,5 @@ volumes:
   backend_node_modules:
   mobile_node_modules:
   mobile_dotslash_cache:
+  caddy_data:
+  caddy_config:
