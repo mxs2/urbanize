@@ -4,6 +4,7 @@ import { DemandCategory, DemandPriority, DemandSource, DemandStatus } from "../g
 import { demandService } from "../services/demandService";
 import { AppError } from "../utils/appError";
 import { asyncHandler } from "../utils/asyncHandler";
+import { toStoredUploadPath } from "../utils/signedUpload";
 
 const demandFiltersSchema = z.object({
   status: z.enum(DemandStatus).optional(),
@@ -30,7 +31,15 @@ const createDemandSchema = z.object({
     longitude: z.number().optional(),
   }),
   origem: z.enum(DemandSource).optional(),
-  imagemUrl: z.string().min(1).optional(),
+  // Guarda sempre `/uploads/<arquivo>`; o link assinado devolvido pela API perde a query.
+  imagemUrl: z
+    .string()
+    .transform((value, ctx) => {
+      const stored = toStoredUploadPath(value);
+      if (!stored) ctx.addIssue({ code: "custom", message: "imagemUrl deve apontar para um arquivo enviado em /uploads." });
+      return stored ?? z.NEVER;
+    })
+    .optional(),
 });
 
 const updateStatusSchema = z.object({

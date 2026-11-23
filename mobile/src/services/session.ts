@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { secureStorage } from "./secureStorage";
 
 /** Chave usada pelo `persist` do authStore — compartilhada para não haver divergência. */
 export const AUTH_STORAGE_KEY = "urbanize-auth";
@@ -6,7 +6,7 @@ export const AUTH_STORAGE_KEY = "urbanize-auth";
 /**
  * O token vive em memória e é a fonte da verdade para as requisições.
  *
- * O `persist` do zustand grava em AsyncStorage de forma assíncrona, então ler do
+ * O `persist` do zustand grava no armazenamento seguro de forma assíncrona, então ler do
  * storage a cada request abre uma janela em que a escrita do login ainda não
  * terminou e a próxima chamada sai sem Authorization. Aqui o login atualiza a
  * memória de forma síncrona e o storage serve apenas para o cold start.
@@ -16,7 +16,7 @@ let coldStartRead: Promise<string | null> | null = null;
 
 const readPersistedToken = async (): Promise<string | null> => {
   try {
-    const raw = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
+    const raw = await secureStorage.getItem(AUTH_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
     return parsed.state?.token ?? null;

@@ -1,5 +1,6 @@
 import request from "supertest";
 import { app } from "../../backend/src/app";
+import { env } from "../../backend/src/config/env";
 
 describe("SUT API Tests - Infraestrutura, Healthcheck e Roteamento Geral", () => {
   describe("GET /api - Catálogo e Metadados da API", () => {
@@ -46,6 +47,40 @@ describe("SUT API Tests - Infraestrutura, Healthcheck e Roteamento Geral", () =>
 
       expect(response.status).toBe(302);
       expect(response.headers.location).toBe("/api");
+    });
+  });
+
+  describe("HTTPS obrigatório em produção (RS08)", () => {
+    const original = { requireHttps: env.requireHttps, trustProxy: app.get("trust proxy") };
+
+    beforeEach(() => {
+      env.requireHttps = true;
+      app.set("trust proxy", 1);
+    });
+
+    afterEach(() => {
+      env.requireHttps = original.requireHttps;
+      app.set("trust proxy", original.trustProxy);
+    });
+
+    it("TC101: Deve recusar com 426 requisição que chegou por HTTP", async () => {
+      const response = await request(app).get("/api").set("X-Forwarded-Proto", "http");
+
+      expect(response.status).toBe(426);
+      expect(response.body.error.code).toBe("HTTPS_REQUIRED");
+    });
+
+    it("TC102: Deve aceitar requisição que o proxy informa ter chegado por HTTPS e enviar HSTS", async () => {
+      const response = await request(app).get("/api").set("X-Forwarded-Proto", "https");
+
+      expect(response.status).toBe(200);
+      expect(response.headers["strict-transport-security"]).toMatch(/max-age=\d+/);
+    });
+
+    it("TC103: Deve manter o healthcheck acessível por HTTP para o Docker", async () => {
+      const response = await request(app).get("/api/health");
+
+      expect(response.status).toBe(200);
     });
   });
 });

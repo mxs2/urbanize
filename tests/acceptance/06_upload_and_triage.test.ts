@@ -99,6 +99,109 @@ describe("SUT API Tests - Upload de imagem e triagem (/api/upload, /api/demands)
     });
   });
 
+  describe("GET /uploads - Acesso às fotos (RS10)", () => {
+    const criarDemandaComFoto = async () => {
+      const upload = await enviarFoto("vias_publicas");
+      guardarArquivo(upload.body.data.imageUrl);
+      const demanda = await request(app)
+        .post("/api/demands")
+        .set("Authorization", `Bearer ${cidadaoToken}`)
+        .send({
+          titulo: "Buraco com foto",
+          descricao: "Buraco grande no meio da rua, perigo para motos.",
+          categoria: "vias_publicas",
+          endereco: { endereco: "Rua Exemplo, 100" },
+          imagemUrl: upload.body.data.imageUrl,
+        });
+      return { upload: upload.body.data.imageUrl as string, demanda };
+    };
+
+    it("TC95: Deve recusar a foto sem link assinado e retornar status 403", async () => {
+      env.googleCredentials = null;
+      const { upload } = await criarDemandaComFoto();
+
+      const response = await request(app).get(upload);
+
+      expect(response.status).toBe(403);
+      expect(response.body.error.code).toBe("INVALID_UPLOAD_LINK");
+    });
+
+    it("TC96: Deve devolver a foto pelo link assinado presente na demanda", async () => {
+      env.googleCredentials = null;
+      const { demanda } = await criarDemandaComFoto();
+
+      expect(demanda.status).toBe(201);
+      expect(demanda.body.data.imagemUrl).toMatch(/^\/uploads\/[^?]+\?expires=\d+&signature=[0-9a-f]{64}$/);
+
+      const response = await request(app).get(demanda.body.data.imagemUrl);
+      expect(response.status).toBe(200);
+      expect(response.headers["x-content-type-options"]).toBe("nosniff");
+    });
+
+    it("TC97: Deve recusar link com assinatura adulterada ou de outro arquivo", async () => {
+      env.googleCredentials = null;
+      const { demanda, upload } = await criarDemandaComFoto();
+      const link = demanda.body.data.imagemUrl as string;
+
+      const adulterada = link.replace(/signature=./, "signature=0");
+      expect((await request(app).get(adulterada)).status).toBe(403);
+
+      const outroArquivo = link.replace(path.basename(upload), "outra-foto.jpg");
+      expect((await request(app).get(outroArquivo)).status).toBe(403);
+    });
+
+    it("TC98: Deve recusar link expirado", async () => {
+      env.googleCredentials = null;
+      const { demanda } = await criarDemandaComFoto();
+      jest.useFakeTimers({ now: Date.now() + (env.uploadUrlTtlSeconds + 60) * 1000, doNotFake: ["nextTick", "setImmediate", "setTimeout"] });
+      try {
+        const response = await request(app).get(demanda.body.data.imagemUrl);
+        expect(response.status).toBe(403);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it("TC99: Deve recusar path traversal em /uploads", async () => {
+      const response = await request(app).get("/uploads/..%2f..%2fpackage.json?expires=9999999999&signature=x");
+      expect([403, 404]).toContain(response.status);
+    });
+
+    it("TC104: Deve responder 404 (e não 500) a nome de arquivo com escape malformado", async () => {
+      const response = await request(app).get("/uploads/%E0%A4%A");
+      expect(response.status).toBe(404);
+    });
+
+    it("TC100: Deve gravar apenas o caminho, sem a assinatura, e recusar imagemUrl fora de /uploads", async () => {
+      env.googleCredentials = null;
+      const { demanda } = await criarDemandaComFoto();
+      const reenviada = await request(app)
+        .post("/api/demands")
+        .set("Authorization", `Bearer ${cidadaoToken}`)
+        .send({
+          titulo: "Reenvio",
+          descricao: "Reenviando o link assinado devolvido pela API.",
+          categoria: "vias_publicas",
+          endereco: { endereco: "Rua Exemplo, 100" },
+          imagemUrl: demanda.body.data.imagemUrl,
+        });
+      expect(reenviada.status).toBe(201);
+      expect(reenviada.body.data.imagemUrl).toMatch(/^\/uploads\/[^?]+\?expires=/);
+
+      const invalida = await request(app)
+        .post("/api/demands")
+        .set("Authorization", `Bearer ${cidadaoToken}`)
+        .send({
+          titulo: "Externa",
+          descricao: "Tentando apontar para uma URL de fora.",
+          categoria: "vias_publicas",
+          endereco: { endereco: "Rua Exemplo, 100" },
+          imagemUrl: "http://exemplo.com/foto.jpg",
+        });
+      expect(invalida.status).toBe(422);
+    });
+  });
+
   describe("POST /api/demands - Sugestão de encaminhamento", () => {
     it("TC83: Deve sugerir o órgão cujo categoriasJson contém a categoria da demanda", async () => {
       const organs = await request(app).get("/api/organs").set("Authorization", `Bearer ${cidadaoToken}`);

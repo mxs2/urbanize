@@ -38,17 +38,43 @@ const requireEnv = (name: string) => {
   return value;
 };
 
+const JWT_SECRET_PLACEHOLDERS = ["troque-este-segredo", "urbanize-dev-secret-change-me"];
+const JWT_SECRET_MIN_LENGTH = 32;
+
+/**
+ * Em produção recusa segredos de exemplo (públicos no repositório) ou curtos.
+ * Em desenvolvimento e testes aceita qualquer valor não vazio.
+ */
+const requireJwtSecret = () => {
+  const value = requireEnv("JWT_SECRET");
+  if (isProductionEnv && (JWT_SECRET_PLACEHOLDERS.includes(value) || value.length < JWT_SECRET_MIN_LENGTH)) {
+    throw new Error(
+      `JWT_SECRET é de exemplo ou tem menos de ${JWT_SECRET_MIN_LENGTH} caracteres. Gere um valor aleatório, por exemplo: openssl rand -hex 32`
+    );
+  }
+  return value;
+};
+
 export const env = {
   nodeEnv,
   port: toNumber(process.env.BACKEND_PORT ?? process.env.PORT, 4000),
   /** 0.0.0.0 permite acesso pelo IP da rede local (dispositivo físico). */
   host: process.env.BACKEND_HOST ?? "0.0.0.0",
   allowedOrigins,
-  jwtSecret: requireEnv("JWT_SECRET"),
+  /**
+   * Saltos de proxy reverso confiáveis (Caddy, Render...). Sem isso `req.secure` e `req.ip`
+   * ignoram X-Forwarded-*. Em produção o padrão é 1; 0 desliga.
+   */
+  trustProxy: toNumber(process.env.TRUST_PROXY, isProductionEnv ? 1 : 0),
+  /** RS08: em produção recusa requisições que não chegaram por HTTPS. */
+  requireHttps: isProductionEnv && process.env.REQUIRE_HTTPS !== "false",
+  jwtSecret: requireJwtSecret(),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
   cookieName: process.env.AUTH_COOKIE_NAME ?? "urbanize_session",
   redisUrl: process.env.REDIS_URL,
   metricsCron: process.env.METRICS_CRON ?? "*/15 * * * *",
+  /** Validade dos links assinados de /uploads. */
+  uploadUrlTtlSeconds: toNumber(process.env.UPLOAD_URL_TTL_SECONDS, 3600),
   googleCredentials: process.env.GOOGLE_VISION_CREDENTIALS ?? null,
 };
 

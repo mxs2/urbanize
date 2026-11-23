@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authService } from "@/services/authService";
+import { secureStorage } from "@/services/secureStorage";
 import { AUTH_STORAGE_KEY, clearAuthToken, setAuthToken } from "@/services/session";
 import { User } from "@/types/user";
 
@@ -63,7 +63,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: AUTH_STORAGE_KEY,
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => secureStorage),
       partialize: (state) => ({ user: state.user, token: state.token }),
       onRehydrateStorage: () => (state) => {
         setAuthToken(state?.token ?? null);
