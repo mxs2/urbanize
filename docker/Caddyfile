@@ -1,0 +1,13 @@
+# Proxy reverso com TLS para a API (RS08). Usado pelo profile `tls` do docker-compose.
+#
+# API_DOMAIN com domínio público: certificado Let's Encrypt automático (portas 80 e 443).
+# API_DOMAIN=localhost (padrão): certificado de uma CA interna do Caddy, só para testar o fluxo.
+{$API_DOMAIN:localhost} {
+	encode zstd gzip
+
+	# O backend também envia HSTS; aqui vale para qualquer resposta, inclusive as de erro do proxy.
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+	# X-Forwarded-Proto/For são enviados pelo Caddy; o backend os lê com `trust proxy`.
+	reverse_proxy backend:4000
+}

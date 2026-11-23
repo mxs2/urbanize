@@ -1,19 +1,27 @@
+import crypto from "crypto";
 import multer from "multer";
-import path from "path";
 import fs from "fs";
 import { AppError } from "../utils/appError";
-
-const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
+import { UPLOAD_DIR } from "./uploadAccessMiddleware";
 
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
+const EXTENSIONS: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+};
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`;
+    // A extensão vem do mimetype validado, não do nome enviado: evita gravar `.html` com mimetype de imagem.
+    const ext = EXTENSIONS[file.mimetype] ?? "";
+    // Nome imprevisível: o nome é o que separa uma foto da outra, então não pode ser adivinhável.
+    const unique = `${crypto.randomUUID()}${ext}`;
     cb(null, unique);
   },
 });

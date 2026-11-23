@@ -324,6 +324,15 @@ Consulte [docs/requisitos-urbanize.md](docs/requisitos-urbanize.md) para o check
 
 > O backend está hospedado no plano gratuito do Render e pode ficar inativo após alguns minutos sem uso — acesse o link acima antes de testar o app para "acordar" o serviço.
 
+**HTTPS (produção):** com `NODE_ENV=production` a API recusa requisições que não chegaram por HTTPS (426) e confia no cabeçalho `X-Forwarded-Proto` do proxy (`TRUST_PROXY=1`). No Render o TLS já é do próprio serviço. Em um servidor próprio, suba o proxy Caddy:
+
+```bash
+# docker/.env: API_DOMAIN=api.seudominio.com  BACKEND_BIND=127.0.0.1  EXPO_PUBLIC_API_URL=https://api.seudominio.com/api
+docker compose -f docker/docker-compose.yml --profile tls up -d
+```
+
+**Fotos:** `/uploads` só responde com o link assinado que a API devolve em `imagemUrl` (válido por `UPLOAD_URL_TTL_SECONDS`, 1 hora por padrão). Acesso direto a `/uploads/arquivo.jpg` retorna 403.
+
 O app mobile não possui deploy público; rode-o localmente com Expo (veja "Início rápido" acima) apontando `EXPO_PUBLIC_API_URL` para o backend acima ou para sua instância local.
 
 **Credenciais de teste:**
