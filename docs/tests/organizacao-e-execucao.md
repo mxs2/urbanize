@@ -1,143 +1,151 @@
 # Como os testes estão organizados e como rodar cada um
 
-Três níveis de automação no projeto. Cada um mora num lugar diferente, com sua própria
-ferramenta e seu próprio comando — não tem um "rodar tudo" único porque as camadas testam
-coisas diferentes (função isolada × API em memória × app real no navegador).
+O Urbanize tem três níveis de testes automatizados: unitários, API e ponta a ponta (E2E). Os cenários BDD fazem parte dos testes de API e descrevem comportamentos em Gherkin.
 
-## Visão geral
-
-| Nível | Onde fica | Ferramenta | O que testa |
+| Nível | Onde fica | Ferramenta | O que cobre |
 | --- | --- | --- | --- |
-| Unitário | [`tests/unit/`](../../tests/unit) | Jest (`jest-expo`) | Serviços do app mobile isolados (`api.ts`, `authService.ts`, `session.ts`), sem rede real |
-| API / aceitação | [`tests/acceptance/`](../../tests/acceptance) | Jest + Supertest | Rotas do backend chamando `app` direto em memória — status code, contrato, autorização por perfil |
-| BDD | [`tests/bdd/`](../../tests/bdd) | Cucumber | Cenários de login em Gherkin, mesma ideia de aceitação, formato legível por não-dev |
-| E2E | [`e2e/`](../../e2e) | Playwright | App web de verdade (`expo start --web`) + backend de verdade — fluxo completo pela UI, como um usuário |
+| Unitário | [`tests/unit/`](../../tests/unit) | Jest com `jest-expo` | Serviços do app mobile, como autenticação, sessão e tratamento de respostas, com a rede simulada |
+| API | [`tests/acceptance/`](../../tests/acceptance) | Jest e Supertest | Contratos das rotas, autorização por perfil e regras de negócio |
+| API (BDD) | [`tests/bdd/`](../../tests/bdd) | Cucumber | Cenários de aceitação escritos em Gherkin |
+| E2E | [`e2e/`](../../e2e) | Playwright | Jornadas pela interface web, com o backend e o banco de testes em execução |
 
-## 1. Testes unitários (mobile)
+## Execução local com um comando
+
+Com Node.js 24 e Bash, execute na raiz do repositório:
+
+```bash
+bash scripts/testes.sh
+```
+
+O script instala as dependências, prepara o SQLite com os dados de teste e roda os testes unitários, de API e BDD. Ele retorna código `1` se alguma dessas etapas falhar. Para executar a suíte E2E, siga a seção [Testes E2E](#4-testes-e2e).
+
+Os logs e relatórios JUnit são gravados em `test-results/unitarios/` e `test-results/api/`. A pasta `test-results/` está no [`.gitignore`](../../.gitignore) e pode ser consultada depois da execução local.
+
+## 1. Testes unitários
+
+Execute a partir da raiz do repositório:
 
 ```bash
 cd mobile
-npm install
+npm ci
 npm test
 ```
 
-Não precisa de backend nem banco rodando — mocka a camada de rede.
+A suíte simula a camada de rede e pode ser executada sem iniciar o backend ou o banco. Se o Jest acusar `Cannot find module 'expo-modules-core'`, confira [`mobile/jest.config.js`](../../mobile/jest.config.js). O arquivo configura a resolução do pacote quando ele fica instalado dentro de `node_modules/expo/node_modules`.
 
-**Se der `Cannot find module 'expo-modules-core'`:** já é um problema conhecido e corrigido em
-[`mobile/jest.config.js`](../../mobile/jest.config.js) (peer dependency conflito com
-`react-native-worklets` deixa o pacote aninhado em vez de na raiz do `node_modules`; o config
-já aponta pro caminho certo). Se aparecer de novo depois de reinstalar dependências, é o mesmo
-motivo.
+## 2. Testes de API
 
-## 2. Testes de API / aceitação (backend)
+Na primeira execução, prepare o ambiente local. Se `backend/.env` já existir, preserve a configuração existente e confira se ela aponta para o banco SQLite de testes.
 
 ```bash
 cd backend
-npm install
-cp .env.example .env
+npm ci
+[ -f .env ] || cp .env.example .env
 npm run db:generate
-npm run db:migrate
+npx prisma migrate deploy
 npm run db:seed
 npm test
 ```
 
-Resultado esperado: `Test Suites: 5 passed, 5 total` / `Tests: 44 passed, 44 total`.
-
-Rodar um arquivo específico:
+Para rodar apenas os testes de demandas, execute dentro de `backend/`:
 
 ```bash
-npx jest tests/acceptance/02_demands.test.ts
+npm test -- --runTestsByPath ../tests/acceptance/02_demands.test.ts
 ```
 
-**Importante:** o script `test` do backend usa `--runInBand` (roda os arquivos em série, não em
-paralelo). É proposital — os testes escrevem no mesmo arquivo SQLite (`dev.db`), e workers
-paralelos do Jest disputando o mesmo arquivo causam falhas intermitentes por contenção. Não tire
-essa flag.
+O script do backend usa `--runInBand` para executar as suítes em série. Como elas escrevem no mesmo arquivo SQLite, executá-las em paralelo pode causar falhas intermitentes por contenção.
 
-Helpers reutilizáveis ficam em `tests/acceptance/helpers/`:
-- `authHelper.ts` — sessões prontas de cidadão/gestor e criação de usuário único descartável.
-- `testDb.ts` — acesso ao Prisma Client e limpeza de dados de teste.
+Os [helpers de aceitação](../../tests/acceptance/helpers) incluem `authHelper.ts`, para sessões de cidadão e gestor e criação de usuários de teste, e `testDb.ts`, para acesso ao Prisma e limpeza dos dados.
 
-## 3. BDD (backend)
+## 3. Testes BDD
+
+Com o ambiente do backend preparado conforme a seção anterior, execute a partir da raiz:
 
 ```bash
 cd backend
 npm run test:bdd
 ```
 
-## 4. Testes E2E (produto completo)
+Os cenários ficam em [`tests/bdd/`](../../tests/bdd). O Cucumber usa a configuração de [`tests/cucumber.js`](../../tests/cucumber.js).
 
-Precisa do backend **e** do app web rodando de verdade, em terminais separados:
+## 4. Testes E2E
+
+Prepare o banco do backend seguindo a seção de testes de API. Depois, abra três terminais na raiz do repositório. Inicie a API e o app web antes de rodar a suíte.
+
+**Terminal 1 — API em `http://localhost:4000/api`**
 
 ```bash
-# Terminal 1 — API
 cd backend
-npm run dev                 # http://localhost:4000/api
+npm run dev
+```
 
-# Terminal 2 — App web
+**Terminal 2 — app web em `http://localhost:8081`**
+
+```bash
 cd mobile
-npm run web                  # http://localhost:8081
+npm ci
+[ -f .env ] || cp .env.example .env
+npm run web
+```
 
-# Terminal 3 — testes
+**Terminal 3 — Playwright**
+
+```bash
 cd e2e
-npm install
-npm run install-browsers     # só na primeira vez
+npm ci
+npm run install-browsers
 npm test
 ```
 
-Ver rodando no navegador (bom pra demonstração):
+Para acompanhar os testes no Chromium ou executar apenas os cenários smoke, use os comandos abaixo dentro de `e2e/`:
 
 ```bash
 npm run test:headed
-SLOWMO=800 npm run test:headed   # mais devagar, dá pra acompanhar cada passo
+SLOWMO=800 npm run test:headed
+npm test -- --grep @smoke --grep-invert @quarentena
 ```
 
-Antes de cada execução, `e2e/global-setup.ts` roda `backend/scripts/e2eCleanup.ts`, que apaga
-demandas de execuções anteriores dos testes (filtra pelos prefixos de título usados nos cenários) — a listagem não
-fica acumulando repetição a cada rodada.
+Antes de cada execução, o [`global-setup.ts`](../../e2e/global-setup.ts) chama [`e2eCleanup.ts`](../../backend/scripts/e2eCleanup.ts) para remover do banco local as demandas geradas em rodadas anteriores. Após a execução, abra o relatório HTML com `npx playwright show-report` a partir de `e2e/`.
 
-Cenários automatizados (detalhes em [`e2e/README.md`](../../e2e/README.md)):
+| Spec | Cenário coberto |
+| --- | --- |
+| [`cadastro-cidadao.spec.ts`](../../e2e/tests/cadastro-cidadao.spec.ts) | Criação de conta pela tela de cadastro |
+| [`registrar-demanda.spec.ts`](../../e2e/tests/registrar-demanda.spec.ts) | Registro de demanda e confirmação em **Minhas demandas** |
+| [`registrar-demanda-responsivo.spec.ts`](../../e2e/tests/registrar-demanda-responsivo.spec.ts) | Registro em diferentes tamanhos de tela, sem rolagem horizontal |
+| [`buscar-demandas.spec.ts`](../../e2e/tests/buscar-demandas.spec.ts) | Busca na listagem de demandas |
+| [`filtrar-status.spec.ts`](../../e2e/tests/filtrar-status.spec.ts) | Filtro de demandas pelo status **Em análise** |
+| [`gestor-aceita-triagem.spec.ts`](../../e2e/tests/gestor-aceita-triagem.spec.ts) | Aceite da sugestão de triagem e atualização de métricas e histórico |
+| [`gestor-gerencia-demanda.spec.ts`](../../e2e/tests/gestor-gerencia-demanda.spec.ts) | Gestão da demanda até **Resolvida**, com confirmação pelo cidadão |
+| [`triagem-gestor.spec.ts`](../../e2e/tests/triagem-gestor.spec.ts) | Registro pelo cidadão, aceite em outra sessão e persistência após recarregar a página |
 
-| Spec | O que cobre |
-|---|---|
-| [`registrar-demanda.spec.ts`](../../e2e/tests/registrar-demanda.spec.ts) | Cidadão faz login, registra uma demanda pelo formulário e a vê em "Minhas demandas" |
-| [`buscar-demandas.spec.ts`](../../e2e/tests/buscar-demandas.spec.ts) | Cidadão busca demandas na listagem |
-| [`gestor-aceita-triagem.spec.ts`](../../e2e/tests/gestor-aceita-triagem.spec.ts) | Gestor aceita a sugestão da Triagem Inteligente; métricas e histórico atualizam |
-| [`gestor-gerencia-demanda.spec.ts`](../../e2e/tests/gestor-gerencia-demanda.spec.ts) | Gestor conduz a demanda até "Resolvida"; cidadão vê o status final |
-| [`triagem-gestor.spec.ts`](../../e2e/tests/triagem-gestor.spec.ts) | Cidadão registra pela UI, gestor aceita a triagem em outra sessão; persiste após reload |
+## Pipeline no GitHub Actions
 
-## Pipeline no GitHub Actions — como acionar
+O workflow [Regressão](../../.github/workflows/regressao.yml) dispara suítes diferentes conforme o evento:
 
-O workflow [`.github/workflows/regressao.yml`](../../.github/workflows/regressao.yml) tem um job
-por nível — **Unitários**, **API** (Jest + BDD) e **E2E** — que rodam em paralelo. O que roda
-depende do evento:
+| Evento | Unitários | API (Jest e BDD) | E2E |
+| --- | --- | --- | --- |
+| Push em qualquer branch | Sim | Sim | — |
+| Pull request para `main` | Sim | Sim | Cenários `@smoke` fora da quarentena |
+| Execução diária, prevista para 02h UTC (23h do dia anterior em Brasília) | Sim | Sim | Suíte completa fora da quarentena |
+| Execução manual | Sim | Sim | Suíte completa fora da quarentena |
 
-| Evento | Unitários | API | E2E |
-|---|---|---|---|
-| Push em qualquer branch | ✅ | ✅ | — |
-| Pull request para `main` (antes do merge) | ✅ | ✅ | só `@smoke` |
-| Diário, 23h de Brasília (`0 2 * * *` UTC) | ✅ | ✅ | completo |
-| Manual (**Run workflow**) | ✅ | ✅ | completo |
+Os cenários smoke cobrem o registro de demanda pelo cidadão e a gestão da demanda até a resolução. Nas execuções diárias e manuais, os testes marcados com `@quarentena` rodam em uma etapa separada que não bloqueia o pipeline. A [política de manutenção](../tas.md) descreve como tratar esses testes.
 
-Os testes smoke são os marcados com `{ tag: "@smoke" }` no Playwright:
-`registrar-demanda.spec.ts` (cidadão) e `gestor-gerencia-demanda.spec.ts` (gestor). Para rodar
-só eles localmente: `npm test -- --grep @smoke`.
+Para disparar a execução manual, abra **Actions → Regressão → Run workflow** e selecione a branch, quando o botão estiver disponível. O horário da execução diária é previsto e pode sofrer atrasos.
 
-O agendamento do GitHub Actions é *best-effort*: as execuções diárias começam com algumas horas de
-atraso (observado entre 06h20 e 07h10 UTC) e podem ser puladas em períodos de alta demanda.
+No CI, o app web é exportado com `npx expo export -p web` e servido como build estático na porta `8081`. O job **Qualidade** consolida os resultados e publica as métricas e as verificações de manutenção no resumo da execução.
 
-Para rodar manualmente: aba **Actions** → **Regressão** → **Run workflow** → escolher a branch.
+## Logs, relatórios e evidências
 
-No CI o app web não roda com `expo start --web`: é gerado com `npx expo export -p web` e servido
-estático em `:8081` (`npx serve dist -s`), o que é mais rápido e estável. O relatório do
-Playwright fica em **Artifacts → playwright-report** da execução.
+No GitHub, abra **Actions → Regressão → execução desejada**. Clique no job para consultar a saída de cada etapa ou baixe os arquivos em **Artifacts**, no resumo da execução.
 
-## Como os níveis se complementam
+| Artefato | Conteúdo | Retenção configurada |
+| --- | --- | --- |
+| `resultados-unitarios` | `unitarios.log`, JUnit e cobertura | 30 dias |
+| `resultados-api` | `jest.log`, `bdd.log`, relatórios JUnit e cobertura | 30 dias |
+| `resultados-e2e` | Logs do Playwright, backend e app web, relatórios e evidências geradas | 30 dias |
+| `relatorios-qualidade` | Métricas consolidadas e verificações da política de manutenção | 90 dias |
 
-- **Unitário** garante que cada serviço isolado (parsing de resposta, guarda de sessão) se
-  comporta certo antes de qualquer coisa integrar.
-- **API** cobre a maior parte do risco de negócio (autorização por perfil, regras de status,
-  contrato da API) rápido e sem depender de UI — é onde a maioria dos casos de teste vive.
-- **E2E** prova que app e API realmente conversam do jeito que o usuário usa, algo que nenhum
-  teste isolado consegue garantir sozinho — mas é caro de rodar e manter, por isso cobre só as
-  jornadas críticas, não cada variação de regra de negócio (essas já estão na camada de API).
+Para ver o relatório HTML do Playwright, baixe `resultados-e2e`, extraia o arquivo e abra `playwright-report/index.html`. Se a execução falhar antes de gerar o relatório, consulte os logs disponíveis no job **E2E**.
+
+Quando for preciso manter uma evidência além do prazo de retenção, registre um resumo com a data, o commit testado, o resultado das suítes e o link da execução.

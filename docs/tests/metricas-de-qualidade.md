@@ -22,7 +22,7 @@ execução do workflow (push, PR, agendamento diário e execução manual), sem 
 | M1 | Taxa de aprovação | testes que passaram ÷ (executados − ignorados), geral e por suíte | 100% | técnico e negócio | É o sinal direto de regressão; qualquer valor abaixo de 100% bloqueia a liberação (objetivo 1). |
 | M2 | Testes com falha (quantidade e lista) | casos com `<failure>`/`<error>` nos JUnit XML, com mensagem | 0 | técnico, issue | A equipe precisa saber *qual* teste quebrou e por quê, não só que algo quebrou. Alimenta a issue automática. |
 | M3 | Status do Quality Gate | Reprovado se há falha ou job com erro; Atenção se cobertura da API abaixo da meta; senão Aprovado | Aprovado | técnico e negócio | Resume M1, M2 e M5 numa decisão (liberar ou não) legível por qualquer pessoa. |
-| M4 | Casos de teste automatizados | TCs de `casos-de-teste.md` cujo ID aparece no nome de um teste executado ÷ 94 | 50% | técnico e negócio | Mede o avanço da automação contra o que foi planejado (objetivo 2), algo que a cobertura de código não mostra. |
+| M4 | Casos de teste automatizados | TCs de `casos-de-teste.md` cujo ID aparece no nome de um teste executado ÷ 82 | 50% | técnico e negócio | Mede o avanço da automação contra o que foi planejado (objetivo 2), algo que a cobertura de código não mostra. |
 | M5 | Cobertura de código da API | `coverage-summary.json` do Jest (linhas, statements, funções, branches) sobre `backend/src` | 70% de linhas | técnico (negócio vê só linhas) | A API concentra as regras de negócio e permissões; cobertura baixa ali indica áreas sem nenhuma verificação. |
 | M6 | Cobertura de código do mobile | idem, para os arquivos exercitados pelos unitários | informativa | técnico | Mostrada para dar visibilidade, mas sem meta: o Jest só mede os arquivos que os testes importam, então o número não representa o app inteiro. |
 | M7 | Risco por funcionalidade (HU) | cruza status dos TCs com a prioridade MoSCoW da HU: Crítico (Must com falha), Alto (falha em Should/Could, ou Must sem automação), Médio (automação abaixo de 50%), Baixo | 0 em Alto/Crítico | negócio (técnico mostra a rastreabilidade) | Traduz resultado de teste em linguagem de produto: o stakeholder vê *qual funcionalidade* está em risco (objetivo 3). |
@@ -31,11 +31,13 @@ execução do workflow (push, PR, agendamento diário e execução manual), sem 
 
 As metas ficam no topo do script (`META`) e podem ser ajustadas pela equipe.
 
+Testes instáveis não viraram métrica com meta, mas passaram a ser **detectados**: o Playwright reexecuta uma vez no
+CI só para diagnóstico e cada teste que passa na segunda tentativa abre issue `flaky` (política em [../tas.md](../tas.md), 3.3).
+
 ## Métricas descartadas
 
 | Métrica | Por que ficou de fora |
 | --- | --- |
-| Taxa de testes instáveis (flaky) | O projeto roda com `retries: 0` e não reexecuta testes; sem reexecução não há como distinguir falha intermitente de falha real. Reavaliar se ativarem retries no Playwright. |
 | Mutation score (Stryker) | Custo alto de execução (multiplica o tempo da suíte) e de configuração para o tamanho atual do projeto; agrega pouco enquanto a cobertura de casos (M4) ainda está baixa. |
 | Densidade de defeitos / defeitos escapados para produção | Exige registro manual e consistente de bugs por origem e um ambiente de produção com usuários reais, que o projeto não tem. Não dá para coletar automaticamente. |
 | MTTR (tempo médio de correção) | Depende de histórico longo de issues abertas/fechadas; com a abertura automática de issues agora existe a base, mas ainda não há volume para o número ser significativo. Candidata para uma próxima etapa. |
