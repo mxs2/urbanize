@@ -5,6 +5,7 @@ import { metricsRoutes } from "./metricsRoutes";
 import { uploadRoutes } from "./uploadRoutes";
 import { organRoutes } from "./organRoutes";
 import { notificationRoutes } from "./notificationRoutes";
+import { docsRoutes } from "./docsRoutes";
 
 export const routes = Router();
 
@@ -17,6 +18,7 @@ routes.get("/", (_req, res) =>
       status: "ok",
       endpoints: {
         health: "/api/health",
+        docs: "/api/docs",
         auth: "/api/auth",
         demands: "/api/demands",
         metrics: "/api/metrics",
@@ -28,6 +30,7 @@ routes.get("/", (_req, res) =>
   })
 );
 
+routes.use("/docs", docsRoutes);
 routes.get("/health", (_req, res) => res.json({ success: true, data: { status: "ok" } }));
 routes.use("/auth", authRoutes);
 routes.use("/demands", demandRoutes);

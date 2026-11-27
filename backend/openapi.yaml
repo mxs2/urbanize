@@ -1,0 +1,870 @@
+openapi: 3.1.0
+info:
+  title: Urbanize API
+  version: 1.0.0
+  description: |
+    API REST do Urbanize: cadastro e autenticação de cidadãos e gestores, registro e
+    acompanhamento de demandas urbanas, triagem de fotos, métricas do painel do gestor e
+    registro de aparelhos para notificações push.
+
+    **Autenticação.** `POST /auth/login` e `POST /auth/register` devolvem um JWT de curta
+    duração em `data.token` e um `data.refreshToken`. Envie o JWT em
+    `Authorization: Bearer <token>` (o app mobile) ou use o cookie `urbanize_session` que as
+    mesmas rotas definem (clientes web). Quando o JWT vence, `POST /auth/refresh` troca o
+    refresh token por um par novo; cada refresh token vale uma única vez.
+
+    **Envelope.** Toda resposta tem o formato `{ "success": true, "data": ... }` ou
+    `{ "success": false, "error": { "code", "message" } }`.
+
+    **Credenciais de demonstração** (criadas pelo seed): `cidadao@urbanize.com` / `demo`
+    e `gestor@urbanize.com` / `demo`.
+servers:
+  - url: http://localhost:4000/api
+    description: Desenvolvimento local
+  - url: https://urbanize-backend.onrender.com/api
+    description: Render (plano gratuito, pode levar ~1 min para acordar)
+tags:
+  - name: Sistema
+  - name: Autenticação
+  - name: Demandas
+  - name: Upload
+  - name: Métricas
+  - name: Órgãos
+  - name: Notificações
+
+security:
+  - bearerAuth: []
+  - cookieAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Sistema]
+      summary: Verifica se a API está no ar
+      security: []
+      responses:
+        "200":
+          description: API disponível
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Envelope"
+              example: { success: true, data: { status: ok } }
+
+  /auth/register:
+    post:
+      tags: [Autenticação]
+      summary: Cria uma conta de cidadão
+      description: O cadastro público só cria o perfil `cidadao`. Gestores são criados pelo seed.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Conta criada e sessão iniciada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEnvelope"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/login:
+    post:
+      tags: [Autenticação]
+      summary: Autentica com email e senha
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+            example: { email: cidadao@urbanize.com, senha: demo }
+      responses:
+        "200":
+          description: Sessão iniciada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/refresh:
+    post:
+      tags: [Autenticação]
+      summary: Renova a sessão
+      description: |
+        Troca o refresh token por um JWT e um refresh token novos. O token usado é revogado;
+        reapresentar um token já usado revoga a sessão inteira (todos os tokens daquele login).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshInput"
+      responses:
+        "200":
+          description: Novo par de tokens
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  data:
+                    type: object
+                    properties:
+                      token: { type: string }
+                      refreshToken: { type: string }
+        "401":
+          description: Refresh token inválido, vencido ou já usado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { success: false, error: { code: INVALID_REFRESH_TOKEN, message: Sessão expirada. Faça login novamente. } }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/me:
+    get:
+      tags: [Autenticação]
+      summary: Usuário da sessão atual
+      responses:
+        "200":
+          description: Usuário autenticado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  data:
+                    type: object
+                    properties:
+                      user: { $ref: "#/components/schemas/User" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags: [Autenticação]
+      summary: Corrige os dados da própria conta (LGPD, art. 18)
+      description: |
+        Atualiza nome, email ou telefone, inclusive as cópias deles nas demandas do titular.
+        Trocar o email exige `senhaAtual`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileInput"
+      responses:
+        "200":
+          description: Dados atualizados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/InvalidPassword"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    delete:
+      tags: [Autenticação]
+      summary: Exclui a própria conta (LGPD, art. 18)
+      description: |
+        Pede a senha atual. Apaga a conta e as sessões; as demandas ficam anonimizadas. Um
+        gestor precisa ser descredenciado antes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [senha]
+              properties:
+                senha: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Conta excluída
+          content:
+            application/json:
+              example: { success: true, data: null }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/InvalidPassword"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/me/dados:
+    get:
+      tags: [Autenticação]
+      summary: Exporta os dados da própria conta (LGPD, art. 18)
+      description: |
+        Cópia dos dados pessoais do titular: conta, demandas (com links assinados das fotos e
+        histórico sem nomes de gestores), sessões e registros de acesso.
+      responses:
+        "200":
+          description: Dados do titular
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  data:
+                    type: object
+                    properties:
+                      geradoEm: { type: string, format: date-time }
+                      usuario: { type: object }
+                      demandas: { type: array, items: { type: object } }
+                      sessoes: { type: array, items: { type: object } }
+                      registrosDeAcesso: { type: array, items: { type: object } }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/gestores:
+    post:
+      tags: [Autenticação]
+      summary: Promove um cidadão a gestor
+      description: |
+        Só gestores. Um gestor de órgão só adiciona gestores ao próprio órgão; o gestor com
+        acesso geral informa `organId`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+                organId: { type: string }
+      responses:
+        "200":
+          description: Usuário promovido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Usuário ou órgão não encontrado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: O usuário já é gestor
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { success: false, error: { code: ALREADY_GESTOR, message: Usuário já é gestor. } }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Autenticação]
+      summary: Descredencia um gestor (volta a cidadão)
+      description: Só gestores, e nunca a própria conta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Gestor descredenciado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Usuário não encontrado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: O usuário não é gestor
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { success: false, error: { code: NOT_GESTOR, message: Usuário não é gestor. } }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/logout:
+    post:
+      tags: [Autenticação]
+      summary: Encerra a sessão
+      description: Revoga o refresh token enviado (se houver) e remove o cookie.
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: Sessão encerrada
+          content:
+            application/json:
+              example: { success: true, data: null }
+
+  /demands:
+    get:
+      tags: [Demandas]
+      summary: Lista demandas
+      description: |
+        Cidadão recebe só as próprias demandas; gestor recebe todas.
+        Os filtros podem ser combinados e são aplicados no banco.
+      parameters:
+        - { name: status, in: query, schema: { $ref: "#/components/schemas/DemandStatus" } }
+        - { name: categoria, in: query, schema: { $ref: "#/components/schemas/DemandCategory" } }
+        - { name: prioridade, in: query, schema: { $ref: "#/components/schemas/DemandPriority" } }
+        - { name: bairro, in: query, description: Nome exato do bairro, schema: { type: string } }
+        - { name: busca, in: query, description: "Trecho do título, da descrição ou do protocolo", schema: { type: string } }
+      responses:
+        "200":
+          description: Demandas, da mais recente para a mais antiga
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Demand" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    post:
+      tags: [Demandas]
+      summary: Registra uma demanda
+      description: |
+        A demanda nasce `em_analise`: o backend gera o protocolo, sugere o órgão responsável
+        pela categoria (triagem automática) e grava o histórico inicial.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemandInput"
+      responses:
+        "201":
+          description: Demanda criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemandEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /demands/{id}:
+    get:
+      tags: [Demandas]
+      summary: Detalhe de uma demanda com histórico
+      parameters:
+        - $ref: "#/components/parameters/DemandId"
+      responses:
+        "200":
+          description: Demanda
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemandEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /demands/{id}/status:
+    patch:
+      tags: [Demandas]
+      summary: Altera o status (somente gestor)
+      description: |
+        Grava a mudança no histórico e envia uma notificação push aos aparelhos do
+        cidadão que registrou a demanda (ver `/notifications/token`).
+      parameters:
+        - $ref: "#/components/parameters/DemandId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: "#/components/schemas/DemandStatus" }
+                observacaoGestor:
+                  type: string
+                  description: Texto que aparece no histórico da demanda
+            example: { status: em_atendimento, observacaoGestor: Equipe a caminho. }
+      responses:
+        "200":
+          description: Demanda atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemandEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /upload/image:
+    post:
+      tags: [Upload]
+      summary: Envia a foto de uma demanda e devolve a triagem
+      description: |
+        Aceita JPEG, PNG, WebP ou GIF até 10 MB. Com Google Vision configurado
+        (`GOOGLE_VISION_CREDENTIALS`) a categoria vem da análise da imagem; sem ele, vale a
+        `categoria` enviada pelo cliente ou `outros`. Use `imageUrl` no campo `imagemUrl`
+        ao criar a demanda.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [imagem]
+              properties:
+                imagem: { type: string, format: binary }
+                categoria: { $ref: "#/components/schemas/DemandCategory" }
+      responses:
+        "200":
+          description: Foto gravada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  data:
+                    type: object
+                    properties:
+                      imageUrl: { type: string, example: /uploads/2f1c7a0e-6b0e-4a43-9d0a-8f0d3c2e1b11.jpg }
+                      triagem:
+                        type: object
+                        properties:
+                          categoria: { $ref: "#/components/schemas/DemandCategory" }
+                          score: { type: number, minimum: 0, maximum: 1 }
+                          labels: { type: array, items: { type: string } }
+        "400":
+          description: Nenhum arquivo ou formato não suportado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /metrics/summary:
+    get:
+      tags: [Métricas]
+      summary: Indicadores do painel
+      description: |
+        Para o gestor, considera todas as demandas; para o cidadão, só as dele.
+        O tempo médio de atendimento é calculado sobre as demandas resolvidas.
+        Fica em cache por 60 s quando `REDIS_URL` está configurado.
+      responses:
+        "200":
+          description: Indicadores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  data: { $ref: "#/components/schemas/MetricsSummary" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /organs:
+    get:
+      tags: [Órgãos]
+      summary: Órgãos públicos e categorias que atendem
+      responses:
+        "200":
+          description: Órgãos cadastrados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Organ" }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /notifications/token:
+    post:
+      tags: [Notificações]
+      summary: Registra o token Expo Push do aparelho
+      description: Se o token já existia para outro usuário (troca de conta no mesmo aparelho), passa a ser do usuário atual.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushTokenInput"
+      responses:
+        "201":
+          description: Token registrado
+          content:
+            application/json:
+              example: { success: true, data: { token: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]" } }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Notificações]
+      summary: Remove o token do aparelho (logout)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        "200":
+          description: Token removido
+          content:
+            application/json:
+              example: { success: true, data: null }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: urbanize_session
+
+  parameters:
+    DemandId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Sessão ausente, inválida ou expirada (ou credenciais erradas no login)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { success: false, error: { code: INVALID_TOKEN, message: Token inválido ou expirado. } }
+    Forbidden:
+      description: O perfil não pode acessar este recurso
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { success: false, error: { code: FORBIDDEN, message: Somente gestores podem alterar status. } }
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { success: false, error: { code: DEMAND_NOT_FOUND, message: Demanda não encontrada. } }
+    Conflict:
+      description: Email já cadastrado
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { success: false, error: { code: EMAIL_ALREADY_EXISTS, message: Email já cadastrado. } }
+    InvalidPassword:
+      description: Senha atual ausente ou incorreta (403, e não 401, para o app não tentar renovar a sessão)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { success: false, error: { code: INVALID_PASSWORD, message: Senha atual incorreta. } }
+    TooManyRequests:
+      description: Limite de tentativas atingido
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { success: false, error: { code: TOO_MANY_REQUESTS, message: Muitas tentativas. Aguarde alguns minutos. } }
+    ValidationError:
+      description: Corpo ou parâmetros fora do formato esperado
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Error"
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      details:
+                        type: array
+                        description: Problemas apontados pelo zod (campo e mensagem)
+                        items: { type: object }
+
+  schemas:
+    Envelope:
+      type: object
+      required: [success, data]
+      properties:
+        success: { type: boolean }
+        data: {}
+
+    Error:
+      type: object
+      required: [success, error]
+      properties:
+        success: { type: boolean, const: false }
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+
+    UserRole:
+      type: string
+      enum: [cidadao, gestor]
+
+    DemandStatus:
+      type: string
+      enum: [registrada, em_analise, encaminhada, em_atendimento, resolvida, cancelada]
+
+    DemandCategory:
+      type: string
+      enum: [vias_publicas, iluminacao_publica, coleta_de_lixo, saneamento, fiscalizacao, zeladoria, outros]
+
+    DemandPriority:
+      type: string
+      enum: [baixa, media, alta]
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        email: { type: string, format: email }
+        telefone: { type: string }
+        role: { $ref: "#/components/schemas/UserRole" }
+
+    LoginInput:
+      type: object
+      required: [email, senha]
+      properties:
+        email: { type: string, format: email }
+        senha: { type: string, minLength: 1 }
+
+    RegisterInput:
+      type: object
+      required: [nome, email, senha]
+      properties:
+        nome: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        senha:
+          type: string
+          minLength: 8
+          description: Pelo menos 8 caracteres, com letra e número
+        telefone: { type: string }
+      example: { nome: Maria Silva, email: maria@exemplo.com, senha: senhaSegura123, telefone: "81999990000" }
+
+    RefreshInput:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken: { type: string }
+
+    ProfileInput:
+      type: object
+      description: Pelo menos um entre nome, email e telefone.
+      properties:
+        nome: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        telefone: { type: [string, "null"] }
+        senhaAtual: { type: string, description: Obrigatória para trocar o email }
+
+    UserEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: object
+          properties:
+            user: { $ref: "#/components/schemas/User" }
+
+    AuthEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data:
+          type: object
+          properties:
+            user: { $ref: "#/components/schemas/User" }
+            token: { type: string, description: "JWT, válido por JWT_EXPIRES_IN (15 minutos por padrão)" }
+            refreshToken: { type: string, description: "Uso único, válido por REFRESH_TOKEN_TTL_DAYS (7 dias por padrão)" }
+
+    Address:
+      type: object
+      required: [endereco]
+      properties:
+        endereco: { type: string, minLength: 3 }
+        bairro: { type: string, description: "Padrão: \"Não informado\"" }
+        cidade: { type: string, description: "Padrão: \"Recife\"" }
+        referencia: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+
+    DemandInput:
+      type: object
+      required: [titulo, descricao, categoria, endereco]
+      properties:
+        titulo: { type: string, minLength: 3 }
+        descricao: { type: string, minLength: 5 }
+        categoria: { $ref: "#/components/schemas/DemandCategory" }
+        prioridade: { $ref: "#/components/schemas/DemandPriority" }
+        endereco: { $ref: "#/components/schemas/Address" }
+        imagemUrl:
+          type: string
+          description: "`imageUrl` devolvido por `/upload/image` (o link assinado também é aceito)."
+        nomeSolicitante: { type: string, description: Padrão é o nome do usuário }
+        emailSolicitante: { type: string, format: email }
+        telefoneSolicitante: { type: string }
+      example:
+        titulo: Lixo acumulado na calçada
+        descricao: Sacos de lixo acumulados há três dias.
+        categoria: coleta_de_lixo
+        prioridade: alta
+        endereco: { endereco: "Rua da Aurora, 120", bairro: Boa Vista, cidade: Recife, latitude: -8.0631, longitude: -34.8711 }
+
+    DemandHistoryItem:
+      type: object
+      properties:
+        id: { type: string }
+        status: { $ref: "#/components/schemas/DemandStatus" }
+        descricao: { type: string }
+        data: { type: string, format: date-time }
+        autor: { type: string }
+
+    Demand:
+      type: object
+      properties:
+        id: { type: string }
+        protocolo: { type: string, example: URB-48213 }
+        titulo: { type: string }
+        descricao: { type: string }
+        categoria: { $ref: "#/components/schemas/DemandCategory" }
+        prioridade: { $ref: "#/components/schemas/DemandPriority" }
+        status: { $ref: "#/components/schemas/DemandStatus" }
+        nomeSolicitante: { type: string }
+        emailSolicitante: { type: string }
+        telefoneSolicitante: { type: string }
+        endereco: { $ref: "#/components/schemas/Address" }
+        origem: { type: string, enum: [cidadao, sistema_externo, orgao] }
+        imagemUrl:
+          type: string
+          description: Link assinado para a foto, válido por UPLOAD_URL_TTL_SECONDS (1 h por padrão)
+          example: /uploads/2f1c7a0e.jpg?expires=1767225600&signature=9c1d...
+        observacaoGestor: { type: string }
+        scoreTriagem: { type: number }
+        sugestaoEncaminhamento: { type: string, description: Órgão sugerido pela triagem automática }
+        criadaEm: { type: string, format: date-time }
+        atualizadaEm: { type: string, format: date-time }
+        historico:
+          type: array
+          items: { $ref: "#/components/schemas/DemandHistoryItem" }
+
+    DemandEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        data: { $ref: "#/components/schemas/Demand" }
+
+    MetricsSummary:
+      type: object
+      properties:
+        total: { type: integer }
+        porStatus:
+          type: object
+          additionalProperties: { type: integer }
+          example: { em_analise: 12, encaminhada: 3, resolvida: 4 }
+        porCategoria:
+          type: object
+          additionalProperties: { type: integer }
+          example: { vias_publicas: 9, coleta_de_lixo: 5 }
+        tempoMedioAtendimentoDias: { type: number, example: 2.5 }
+
+    Organ:
+      type: object
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        sigla: { type: string }
+        email: { type: [string, "null"] }
+        telefone: { type: [string, "null"] }
+        whatsapp: { type: [string, "null"] }
+        site: { type: [string, "null"] }
+        categoriasJson:
+          type: string
+          description: Array JSON com as categorias que o órgão atende
+          example: '["coleta_de_lixo","zeladoria"]'
+
+    PushTokenInput:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          pattern: '^(Exponent|Expo)PushToken\[[^\]]+\]$'
+          example: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+        platform: { type: string, enum: [ios, android, web] }
