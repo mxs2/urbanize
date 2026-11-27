@@ -90,7 +90,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       const response = await request(app).post("/api/auth/register").send({
         nome: "Maria Silva",
         email,
-        senha: "demo",
+        senha: "senhaSegura123",
       });
 
       expect(response.status).toBe(201);
@@ -105,7 +105,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       const response = await request(app).post("/api/auth/register").send({
         nome: "Maria Silva",
         email,
-        senha: "demo",
+        senha: "senhaSegura123",
       });
 
       expect(response.status).toBe(201);
@@ -118,7 +118,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       const response = await request(app).post("/api/auth/register").send({
         nome: "Gestor Teste",
         email,
-        senha: "demo",
+        senha: "senhaSegura123",
         role: "gestor",
       });
 
@@ -126,7 +126,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe("VALIDATION_ERROR");
 
-      const login = await request(app).post("/api/auth/login").send({ email, senha: "demo" });
+      const login = await request(app).post("/api/auth/login").send({ email, senha: "senhaSegura123" });
       expect(login.status).toBe(401);
     });
 
@@ -135,7 +135,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       const response = await request(app).post("/api/auth/register").send({
         nome: "Maria Silva",
         email,
-        senha: "demo",
+        senha: "senhaSegura123",
         role: "admin",
       });
 
@@ -149,7 +149,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       const response = await request(app).post("/api/auth/register").send({
         nome: "M",
         email,
-        senha: "demo",
+        senha: "senhaSegura123",
       });
 
       expect(response.status).toBe(422);
@@ -162,7 +162,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       const response = await request(app).post("/api/auth/register").send({
         nome: "Ma",
         email,
-        senha: "demo",
+        senha: "senhaSegura123",
       });
 
       expect(response.status).toBe(201);
@@ -183,7 +183,7 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
       expect(response.body.error.code).toBe("VALIDATION_ERROR");
     });
 
-    it("TC09: Deve aceitar cadastro com senha de 1 caractere e retornar status 201", async () => {
+    it("TC09: Deve recusar cadastro com senha de 1 caractere e retornar status 422", async () => {
       const email = `novo09-${Date.now()}@urbanize.test`;
       const response = await request(app).post("/api/auth/register").send({
         nome: "Maria Silva",
@@ -191,15 +191,15 @@ describe("SUT API Tests - Módulo de Autenticação (/api/auth)", () => {
         senha: "a",
       });
 
-      expect(response.status).toBe(201);
-      expect(response.body.success).toBe(true);
+      expect(response.status).toBe(422);
+      expect(response.body.error.code).toBe("VALIDATION_ERROR");
     });
 
     it("TC10: Deve recusar cadastro com e-mail em formato inválido e retornar status 422", async () => {
       const response = await request(app).post("/api/auth/register").send({
         nome: "Maria Silva",
         email: "maria.teste.com",
-        senha: "demo",
+        senha: "senhaSegura123",
       });
 
       expect(response.status).toBe(422);

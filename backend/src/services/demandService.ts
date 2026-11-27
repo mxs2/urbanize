@@ -3,13 +3,13 @@ import {
   DemandPriority,
   DemandSource,
   DemandStatus,
-  UserRole,
 } from "../generated/prisma/client";
-import { cache } from "../config/redis";
 import { demandRepository, DemandFilters } from "../repositories/demandRepository";
 import { AppError } from "../utils/appError";
 import { toDemandResponse } from "../utils/demandMapper";
 import { organService } from "./organService";
+import { Actor, canAccessDemand, demandScope } from "../utils/demandScope";
+import { invalidateMetrics } from "./metricsService";
 import { prisma } from "../config/prisma";
 
 const categoryToDepartment: Record<DemandCategory, string> = {
@@ -24,30 +24,21 @@ const categoryToDepartment: Record<DemandCategory, string> = {
 
 const generateProtocol = () => `URB-${Math.floor(Math.random() * 90000 + 10000)}`;
 
-const ensureAllowed = (
-  demand: Awaited<ReturnType<typeof demandRepository.findById>>,
-  user: { id: string; role: UserRole }
-) => {
+const ensureAllowed = (demand: Awaited<ReturnType<typeof demandRepository.findById>>, user: Actor) => {
   if (!demand) throw new AppError("Demanda não encontrada.", 404, "DEMAND_NOT_FOUND");
-  if (user.role !== "gestor" && demand.userId !== user.id) {
+  if (!canAccessDemand(user, demand)) {
     throw new AppError("Você não tem permissão para acessar esta demanda.", 403, "FORBIDDEN");
   }
   return demand;
 };
 
 export const demandService = {
-  async list(
-    filters: Omit<DemandFilters, "userId">,
-    user: { id: string; role: UserRole; organId?: string | null }
-  ) {
-    if (user.role === "gestor") {
-      const demands = await demandRepository.list(filters);
-      return demands.map(toDemandResponse);
-    }
-    const demands = await demandRepository.list({ ...filters, userId: user.id });
+  async list(filters: Omit<DemandFilters, "userId">, user: Actor) {
+    // O escopo vem depois dos filtros do cliente, para que nenhum deles o sobrescreva.
+    const demands = await demandRepository.list({ ...filters, ...demandScope(user) });
     return demands.map(toDemandResponse);
   },
-  async getById(id: string, user: { id: string; role: UserRole }) {
+  async getById(id: string, user: Actor) {
     const demand = ensureAllowed(await demandRepository.findById(id), user);
     return toDemandResponse(demand);
   },
@@ -119,17 +110,16 @@ export const demandService = {
       },
     });
 
-    await cache.del("metrics:summary:all");
+    await invalidateMetrics(organ?.id);
     return toDemandResponse(demand);
   },
+  /** O papel é exigido na rota (`requireRole`); aqui vale o escopo por órgão. */
   async updateStatus(
     id: string,
     input: { status: DemandStatus; observacaoGestor?: string },
-    user: { id: string; nome: string; role: UserRole }
+    user: Actor & { nome: string }
   ) {
-    if (user.role !== "gestor")
-      throw new AppError("Somente gestores podem alterar status.", 403, "FORBIDDEN");
-    ensureAllowed(await demandRepository.findById(id), user);
+    const current = ensureAllowed(await demandRepository.findById(id), user);
 
     const updated = await demandRepository.updateStatus(id, {
       status: input.status,
@@ -138,7 +128,7 @@ export const demandService = {
       autor: user.nome,
     });
 
-    await cache.del("metrics:summary:all");
+    await invalidateMetrics(current.organId);
     return toDemandResponse(updated);
   },
 };

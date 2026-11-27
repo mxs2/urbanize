@@ -11,36 +11,62 @@ export const AUTH_STORAGE_KEY = "urbanize-auth";
  * terminou e a próxima chamada sai sem Authorization. Aqui o login atualiza a
  * memória de forma síncrona e o storage serve apenas para o cold start.
  */
-let token: string | null = null;
-let coldStartRead: Promise<string | null> | null = null;
+export interface SessionTokens {
+  token: string | null;
+  refreshToken: string | null;
+}
 
-const readPersistedToken = async (): Promise<string | null> => {
+const EMPTY: SessionTokens = { token: null, refreshToken: null };
+
+let current: SessionTokens | null = null;
+let coldStartRead: Promise<SessionTokens> | null = null;
+let listener: ((tokens: SessionTokens) => void) | null = null;
+
+const readPersisted = async (): Promise<SessionTokens> => {
   try {
     const raw = await secureStorage.getItem(AUTH_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
-    return parsed.state?.token ?? null;
+    if (!raw) return EMPTY;
+    const { state } = JSON.parse(raw) as { state?: Partial<SessionTokens> };
+    return { token: state?.token ?? null, refreshToken: state?.refreshToken ?? null };
   } catch {
-    return null;
+    return EMPTY;
   }
 };
 
-export const setAuthToken = (next: string | null) => {
-  token = next;
-  // A memória passa a valer; não há mais motivo para consultar o storage.
-  coldStartRead = Promise.resolve(next);
+const read = async (): Promise<SessionTokens> => {
+  if (current) return current;
+  coldStartRead ??= readPersisted();
+  const persisted = await coldStartRead;
+  // Um login pode ter acontecido enquanto o storage era lido: a memória vence.
+  return current ?? persisted;
 };
 
-export const clearAuthToken = () => setAuthToken(null);
+export const setSession = (token: string | null, refreshToken: string | null = null) => {
+  current = { token, refreshToken };
+};
 
-export const getAuthToken = async (): Promise<string | null> => {
-  if (token) return token;
-  coldStartRead ??= readPersistedToken();
-  return coldStartRead;
+export const setAuthToken = (next: string | null) => setSession(next, current?.refreshToken ?? null);
+
+export const clearAuthToken = () => setSession(null, null);
+
+export const getAuthToken = async () => (await read()).token;
+
+export const getRefreshToken = async () => (await read()).refreshToken;
+
+/** O authStore se registra aqui para persistir a renovação (ou o fim) da sessão. */
+export const onSessionChange = (next: (tokens: SessionTokens) => void) => {
+  listener = next;
+};
+
+/** Mudança de sessão originada na camada de API (renovação ou expiração). */
+export const publishSession = (token: string | null, refreshToken: string | null) => {
+  setSession(token, refreshToken);
+  listener?.({ token, refreshToken });
 };
 
 /** Apenas para testes: volta ao estado inicial do módulo. */
 export const resetSessionForTests = () => {
-  token = null;
+  current = null;
   coldStartRead = null;
+  listener = null;
 };

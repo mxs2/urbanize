@@ -69,7 +69,11 @@ export const env = {
   /** RS08: em produção recusa requisições que não chegaram por HTTPS. */
   requireHttps: isProductionEnv && process.env.REQUIRE_HTTPS !== "false",
   jwtSecret: requireJwtSecret(),
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
+  /** Token de acesso curto; a sessão se renova pelo refresh token (RS04). */
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "15m",
+  refreshTokenTtlDays: toNumber(process.env.REFRESH_TOKEN_TTL_DAYS, 7),
+  /** RS03. Desligado nos testes, que fazem muitos logins do mesmo IP. */
+  authRateLimit: nodeEnv !== "test" && process.env.AUTH_RATE_LIMIT !== "false",
   cookieName: process.env.AUTH_COOKIE_NAME ?? "urbanize_session",
   redisUrl: process.env.REDIS_URL,
   metricsCron: process.env.METRICS_CRON ?? "*/15 * * * *",

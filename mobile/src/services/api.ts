@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { getAuthToken } from "./session";
+import { getAuthToken, getRefreshToken, publishSession } from "./session";
 import { Demand, DemandCategory, FilterState } from "@/types/demand";
 import { MetricsSummary } from "@/types/metrics";
 import { User } from "@/types/user";
@@ -34,6 +34,46 @@ http.interceptors.request.use(async (config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+});
+
+/** Nestas rotas um 401 é a resposta final, não um token de acesso vencido. */
+const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/refresh", "/auth/logout"];
+
+let refreshing: Promise<boolean> | null = null;
+
+const renewSession = async (): Promise<boolean> => {
+  const refreshToken = await getRefreshToken();
+  if (!refreshToken) {
+    publishSession(null, null);
+    return false;
+  }
+  try {
+    const { data } = await http.post<ApiResponse<{ token: string; refreshToken: string }>>("/auth/refresh", {
+      refreshToken,
+    });
+    publishSession(data.data.token, data.data.refreshToken);
+    return true;
+  } catch (error) {
+    // Só encerra a sessão se o servidor recusou; falha de rede permite tentar de novo.
+    if ((error as AxiosError).response?.status === 401) publishSession(null, null);
+    return false;
+  }
+};
+
+http.interceptors.response.use(undefined, async (error: AxiosError) => {
+  const config = error.config as (typeof error.config & { retried?: boolean }) | undefined;
+  if (error.response?.status !== 401 || !config || config.retried || NO_REFRESH.includes(config.url ?? "")) {
+    throw error;
+  }
+
+  // Uma única renovação para todas as requisições que falharam juntas: o refresh token é de uso único.
+  refreshing ??= renewSession().finally(() => {
+    refreshing = null;
+  });
+  if (!(await refreshing)) throw error;
+
+  config.retried = true;
+  return http.request(config);
 });
 
 const unwrap = <T>(response: { data: ApiResponse<T> }) => response.data.data;
@@ -93,10 +133,10 @@ export const api = {
     }
   },
 
-  async login(email: string, senha: string): Promise<{ user: User; token: string }> {
+  async login(email: string, senha: string): Promise<{ user: User; token: string; refreshToken: string }> {
     try {
       return unwrap(
-        await http.post<ApiResponse<{ user: User; token: string }>>("/auth/login", { email, senha })
+        await http.post<ApiResponse<{ user: User; token: string; refreshToken: string }>>("/auth/login", { email, senha })
       );
     } catch (error) {
       return normalizeError(error);
@@ -108,10 +148,10 @@ export const api = {
     email: string,
     senha: string,
     telefone?: string
-  ): Promise<{ user: User; token: string }> {
+  ): Promise<{ user: User; token: string; refreshToken: string }> {
     try {
       return unwrap(
-        await http.post<ApiResponse<{ user: User; token: string }>>("/auth/register", {
+        await http.post<ApiResponse<{ user: User; token: string; refreshToken: string }>>("/auth/register", {
           nome,
           email,
           senha,
@@ -134,7 +174,8 @@ export const api = {
 
   async logout(): Promise<void> {
     try {
-      await http.post<ApiResponse<null>>("/auth/logout");
+      const refreshToken = await getRefreshToken();
+      await http.post<ApiResponse<null>>("/auth/logout", refreshToken ? { refreshToken } : {});
     } catch (error) {
       return normalizeError(error);
     }

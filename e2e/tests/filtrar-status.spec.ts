@@ -16,7 +16,7 @@ test("TC62: cidadão filtra a listagem por status Em análise", async ({ page, r
   const tituloEncaminhada = `Filtro status - teste e2e encaminhada ${sufixo}`;
 
   const registro = await request.post(`${API_URL}/auth/register`, {
-    data: { nome: "Cidadão Filtro", email, senha: "demo" },
+    data: { nome: "Cidadão Filtro", email, senha: "senhaSegura123" },
   });
   expect(registro.status()).toBe(201);
   const tokenCidadao = (await registro.json()).data.token;
@@ -49,7 +49,7 @@ test("TC62: cidadão filtra a listagem por status Em análise", async ({ page, r
 
   await page.goto("/login");
   await page.getByTestId("input-email").fill(email);
-  await page.getByTestId("input-senha").fill("demo");
+  await page.getByTestId("input-senha").fill("senhaSegura123");
   await page.getByTestId("btn-entrar").click();
   await expect(page).toHaveURL(/\/dashboard$/);
 

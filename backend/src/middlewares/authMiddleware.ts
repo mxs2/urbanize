@@ -4,10 +4,13 @@ import { UserRole } from "../generated/prisma/client";
 import { env } from "../config/env";
 import { prisma } from "../config/prisma";
 import { AppError } from "../utils/appError";
+import { sessionService } from "../services/sessionService";
 import "../types";
 
 interface JwtPayload {
   sub: string;
+  /** Família do refresh token: permite revogar o acesso antes do `exp` (RS04). */
+  sid?: string;
 }
 
 export const requireAuth = async (req: Request, _res: Response, next: NextFunction) => {
@@ -23,6 +26,9 @@ export const requireAuth = async (req: Request, _res: Response, next: NextFuncti
     const user = await prisma.user.findUnique({ where: { id: payload.sub } });
 
     if (!user) throw new AppError("Usuário não encontrado.", 401, "UNAUTHENTICATED");
+    if (!payload.sid || !(await sessionService.isActive(payload.sid))) {
+      throw new AppError("Sessão encerrada. Faça login novamente.", 401, "SESSION_REVOKED");
+    }
 
     req.user = {
       id: user.id,
@@ -30,6 +36,7 @@ export const requireAuth = async (req: Request, _res: Response, next: NextFuncti
       role: user.role,
       nome: user.nome,
       organId: user.organId,
+      acessoGeral: user.acessoGeral,
     };
 
     next();
@@ -40,12 +47,11 @@ export const requireAuth = async (req: Request, _res: Response, next: NextFuncti
   }
 };
 
+/** RS07: ponto único de checagem de papel. Use depois de `requireAuth`. */
 export const requireRole =
-  (...roles: UserRole[]) =>
+  (roles: UserRole[], message = "Perfil sem permissão para esta ação.") =>
   (req: Request, _res: Response, next: NextFunction) => {
     if (!req.user) return next(new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED"));
-    if (!roles.includes(req.user.role)) {
-      return next(new AppError("Perfil sem permissão para esta ação.", 403, "FORBIDDEN"));
-    }
+    if (!roles.includes(req.user.role)) return next(new AppError(message, 403, "FORBIDDEN"));
     return next();
   };

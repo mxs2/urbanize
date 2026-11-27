@@ -78,7 +78,27 @@ model User {
   organId String?
   organ   Organ?  @relation(fields: [organId], references: [id])
 
-  demands Demand[]
+  /// Gestor com acesso a todos os órgãos (administrador geral). Só o seed concede.
+  acessoGeral Boolean @default(false)
+
+  demands       Demand[]
+  refreshTokens RefreshToken[]
+}
+
+/// Sessão renovável (RS04). Guarda só o hash do token; a família identifica um login.
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  familyId  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+  @@index([userId])
 }
 
 model Demand {
