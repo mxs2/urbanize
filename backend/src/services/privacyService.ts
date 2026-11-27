@@ -4,6 +4,7 @@ import { AppError } from "../utils/appError";
 import { signUploadUrl } from "../utils/signedUpload";
 import { anonymizeContact, removeOrphanPhotos } from "./anonymizationService";
 import { auditService } from "./auditService";
+import { erasureLedger } from "./erasureLedger";
 import { publicUser } from "./authService";
 
 const findUser = async (id: string) => {
@@ -115,6 +116,13 @@ export const privacyService = {
     }
     await confirmPassword(senha, user.senhaHash);
 
+    await privacyService.erase(userId);
+    await erasureLedger.add(userId);
+    await auditService.record("exclusao_conta", { userId, ip });
+  },
+
+  /** Anonimiza e apaga, sem conferir senha. Também reaplicado após restaurar um backup. */
+  async erase(userId: string) {
     const photos = await prisma.$transaction(async (tx) => {
       const demands = await tx.demand.findMany({ where: { userId } });
       for (const demand of demands) {
@@ -126,6 +134,5 @@ export const privacyService = {
     });
 
     await removeOrphanPhotos(photos);
-    await auditService.record("exclusao_conta", { userId, ip });
   },
 };

@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
+    "backup": "tsx scripts/backup.ts create",
+    "backup:verify": "tsx scripts/backup.ts verify",
+    "restore": "tsx scripts/backup.ts restore",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",

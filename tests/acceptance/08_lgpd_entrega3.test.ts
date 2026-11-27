@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
 import request from "supertest";
+import os from "os";
 import { app } from "../../backend/src/app";
+import { env } from "../../backend/src/config/env";
 import { UPLOAD_DIR } from "../../backend/src/middlewares/uploadAccessMiddleware";
 import { retentionService } from "../../backend/src/services/retentionService";
 import { getGestorSession } from "./helpers/authHelper";
@@ -40,8 +42,15 @@ const buscar = (id: string) =>
 
 describe("SUT API Tests - Entrega 3 (LGPD)", () => {
   const demandas: string[] = [];
+  const backupDir = env.backupDir;
+
+  beforeAll(() => {
+    env.backupDir = fs.mkdtempSync(path.join(os.tmpdir(), "urbanize-lgpd-"));
+  });
 
   afterAll(async () => {
+    fs.rmSync(env.backupDir, { recursive: true, force: true });
+    env.backupDir = backupDir;
     await testDb.prisma.demand.deleteMany({ where: { id: { in: demandas } } });
     await testDb.cleanTestData();
     await testDb.disconnect();
