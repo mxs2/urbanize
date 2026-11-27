@@ -160,3 +160,17 @@ model MetricsSnapshot {
   tempoMedioAtendimentoDias Float
   createdAt                 DateTime @default(now())
 }
+
+/// RS21: trilha de auditoria. Sem relação com User, para sobreviver à exclusão da conta,
+/// e sem nome, e-mail, senha ou token.
+model AuditLog {
+  id        String   @id @default(cuid())
+  evento    String
+  userId    String?
+  alvoId    String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}

@@ -77,6 +77,9 @@ export const env = {
   cookieName: process.env.AUTH_COOKIE_NAME ?? "urbanize_session",
   redisUrl: process.env.REDIS_URL,
   metricsCron: process.env.METRICS_CRON ?? "*/15 * * * *",
+  retentionCron: process.env.RETENTION_CRON ?? "0 3 * * *",
+  /** RS20: meses até anonimizar o contato de demandas encerradas. */
+  retentionMonths: Math.max(1, toNumber(process.env.RETENTION_MONTHS, 12)),
   /** Validade dos links assinados de /uploads. */
   uploadUrlTtlSeconds: toNumber(process.env.UPLOAD_URL_TTL_SECONDS, 3600),
   googleCredentials: process.env.GOOGLE_VISION_CREDENTIALS ?? null,

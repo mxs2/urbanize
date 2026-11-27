@@ -34,6 +34,13 @@ export const loginAccountLimiter = limiter({
   skip: (req) => !env.authRateLimit || !emailKey(req),
 });
 
+/** Erros de senha em rotas do titular, para que um token roubado não permita adivinhá-la. */
+export const passwordConfirmLimiter = limiter({
+  limit: 10,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => req.user!.id,
+});
+
 /** Cadastros por IP. */
 export const registerLimiter = limiter({ windowMs: 60 * 60 * 1000, limit: 20 });
 
