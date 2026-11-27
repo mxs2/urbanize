@@ -143,7 +143,8 @@ describe("SUT API Tests - Upload de imagem e triagem (/api/upload, /api/demands)
       const { demanda, upload } = await criarDemandaComFoto();
       const link = demanda.body.data.imagemUrl as string;
 
-      const adulterada = link.replace(/signature=./, "signature=0");
+      // Troca o primeiro caractere por outro diferente: um "0" fixo às vezes não mudava nada.
+      const adulterada = link.replace(/signature=(.)/, (_, c) => `signature=${c === "0" ? "1" : "0"}`);
       expect((await request(app).get(adulterada)).status).toBe(403);
 
       const outroArquivo = link.replace(path.basename(upload), "outra-foto.jpg");
