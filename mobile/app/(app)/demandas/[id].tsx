@@ -10,6 +10,8 @@ import { formatLocation } from "@/utils/locationLabel";
 import { statusLabel } from "@/utils/statusLabel";
 import { colors, fontSizes, spacing } from "@/theme";
 import { Button } from "@/components/Button";
+import { ErrorState } from "@/components/ErrorState";
+import { errorMessage } from "@/utils/errorMessage";
 import { DemandTimeline } from "@/components/DemandTimeline";
 import { LoadingState } from "@/components/LoadingState";
 import { PriorityBadge } from "@/components/PriorityBadge";
@@ -28,19 +30,29 @@ const GESTOR_TRANSITIONS: DemandStatus[] = [
 export default function DemandDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { ready, user } = useRoleGuard(["cidadao", "gestor"]);
-  const { selected, loading, fetchDemandById, updateDemandStatus } = useDemandStore();
+  const { selected, loading, saving, error, fetchDemandById, updateDemandStatus } = useDemandStore();
   const [observacao, setObservacao] = useState("");
+  const [actionError, setActionError] = useState<string>();
 
   useEffect(() => {
     if (ready && id) fetchDemandById(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, id]);
 
-  if (!ready || !user || loading || !selected) return <LoadingState />;
+  if (!ready || !user) return <LoadingState />;
+  if (error && !selected) {
+    return (
+      <View style={styles.container}>
+        <ErrorState testID="erro-detalhe" message={error} onRetry={() => id && fetchDemandById(id)} />
+      </View>
+    );
+  }
+  if (loading || !selected) return <LoadingState />;
 
   const isGestor = user.role === "gestor";
 
   const handleTransition = async (status: DemandStatus) => {
+    setActionError(undefined);
     try {
       await updateDemandStatus(
         selected.id,
@@ -49,8 +61,8 @@ export default function DemandDetail() {
       );
       Alert.alert("Demanda atualizada", `Status alterado para ${statusLabel[status]}.`);
       setObservacao("");
-    } catch {
-      Alert.alert("Erro", "Não foi possível atualizar a demanda.");
+    } catch (err) {
+      setActionError(errorMessage(err, "Não foi possível atualizar a demanda."));
     }
   };
 
@@ -84,6 +96,7 @@ export default function DemandDetail() {
             value={observacao}
             onChangeText={setObservacao}
           />
+          {actionError ? <ErrorState testID="erro-status" message={actionError} /> : null}
           <View style={styles.transitionRow}>
             {GESTOR_TRANSITIONS.map((status) => (
               <Button
@@ -91,7 +104,7 @@ export default function DemandDetail() {
                 testID={`btn-status-${status}`}
                 label={statusLabel[status]}
                 variant={status === selected.status ? "ghost" : "outline"}
-                disabled={status === selected.status}
+                disabled={status === selected.status || saving}
                 onPress={() => handleTransition(status)}
               />
             ))}

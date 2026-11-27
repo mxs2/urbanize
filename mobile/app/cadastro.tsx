@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet, Text } from "react-native";
 import { Link, router } from "expo-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Screen } from "@/components/Screen";
+import { FieldErrors, PASSWORD_RULE, hasErrors, validateSignup } from "@/utils/validation";
+import { errorMessage } from "@/utils/errorMessage";
 import { colors, fontSizes, spacing } from "@/theme";
 import { Button } from "@/components/Button";
+import { ErrorState } from "@/components/ErrorState";
 import { TextField } from "@/components/TextField";
-
-const REGRA_SENHA = "A senha precisa de pelo menos 8 caracteres, com letra e número.";
 
 export default function Cadastro() {
   const { register, loading } = useAuth();
@@ -15,43 +16,68 @@ export default function Cadastro() {
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [senha, setSenha] = useState("");
-  const [erroSenha, setErroSenha] = useState("");
+  const [errors, setErrors] = useState<FieldErrors<"nome" | "email" | "senha" | "telefone">>({});
+  const [apiError, setApiError] = useState<string>();
 
   const handleSubmit = async () => {
-    // Mesma regra do backend, para a pessoa saber o motivo antes de enviar.
-    if (senha.length < 8 || !/\p{L}/u.test(senha) || !/\d/.test(senha)) {
-      setErroSenha(REGRA_SENHA);
-      return;
-    }
-    setErroSenha("");
+    const validation = validateSignup({ nome, email, senha, telefone });
+    setErrors(validation);
+    setApiError(undefined);
+    if (hasErrors(validation)) return;
+
     try {
-      await register(nome, email, senha, telefone || undefined);
+      await register(nome.trim(), email.trim(), senha, telefone.trim() || undefined);
       router.replace("/dashboard");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Verifique os dados e tente novamente.";
-      Alert.alert("Erro ao criar conta", message);
+      setApiError(errorMessage(error, "Verifique os dados e tente novamente."));
     }
   };
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Criar conta</Text>
-        <TextField testID="input-nome" label="Nome" value={nome} onChangeText={setNome} />
+        <Text style={styles.hint}>
+          O cadastro cria um perfil de cidadão. Contas de gestor são criadas pela prefeitura.
+        </Text>
+        {apiError ? <ErrorState testID="erro-cadastro" message={apiError} /> : null}
+        <TextField testID="input-nome" label="Nome" required value={nome} onChangeText={setNome} error={errors.nome} />
         <TextField
           testID="input-email"
           label="Email"
+          required
           autoCapitalize="none"
+          autoComplete="email"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
+          error={errors.email}
         />
-        <TextField label="Telefone" keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
-        <TextField testID="input-senha" label="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
-        <Text testID="regra-senha" style={erroSenha ? styles.erro : styles.dica}>
-          {erroSenha || REGRA_SENHA}
-        </Text>
-        <Text testID="aviso-privacidade" style={styles.dica}>
+        <TextField
+          testID="input-telefone"
+          label="Telefone"
+          keyboardType="phone-pad"
+          placeholder="(81) 99999-9999"
+          value={telefone}
+          onChangeText={setTelefone}
+          error={errors.telefone}
+        />
+        <TextField
+          testID="input-senha"
+          label="Senha"
+          required
+          secureTextEntry
+          autoComplete="new-password"
+          value={senha}
+          onChangeText={setSenha}
+          error={errors.senha}
+        />
+        {errors.senha ? null : (
+          <Text testID="regra-senha" style={styles.hint}>
+            {PASSWORD_RULE}
+          </Text>
+        )}
+        <Text testID="aviso-privacidade" style={styles.hint}>
           Usamos seu nome, e-mail e telefone para criar a conta e responder às suas demandas, que são vistas pelo órgão
           responsável. Em Perfil você corrige, baixa ou exclui seus dados. O contato em demandas encerradas é
           anonimizado após 12 meses.
@@ -66,9 +92,8 @@ export default function Cadastro() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: spacing.lg, backgroundColor: colors.background, flexGrow: 1 },
-  title: { fontSize: fontSizes.xl, fontWeight: "700", color: colors.text, marginBottom: spacing.lg },
-  dica: { color: colors.text, opacity: 0.7, marginBottom: spacing.md },
-  erro: { color: "#b91c1c", marginBottom: spacing.md },
+  container: { padding: spacing.lg, gap: spacing.sm, backgroundColor: colors.background, flexGrow: 1 },
+  title: { fontSize: fontSizes.xl, fontWeight: "700", color: colors.text },
+  hint: { fontSize: fontSizes.sm, color: colors.textMuted, marginBottom: spacing.md },
   link: { marginTop: spacing.md, color: colors.brand[500], textAlign: "center" },
 });

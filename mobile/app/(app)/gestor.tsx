@@ -8,6 +8,7 @@ import { resolveImageUrl } from "@/services/api";
 import { DemandCategory, DemandStatus } from "@/types/demand";
 import { categoryLabel } from "@/utils/categoryLabel";
 import { statusLabel } from "@/utils/statusLabel";
+import { errorMessage } from "@/utils/errorMessage";
 import { colors, radii, spacing } from "@/theme";
 import { Button } from "@/components/Button";
 import { DemandCard } from "@/components/DemandCard";
@@ -51,8 +52,8 @@ export default function GestorPanel() {
       await updateDemandStatus(id, "encaminhada", sugestao ?? "Aceito triagem");
       await refetchMetrics();
       Alert.alert("Triagem aceita", "Demanda encaminhada.");
-    } catch {
-      Alert.alert("Erro", "Não foi possível aceitar a triagem.");
+    } catch (error) {
+      Alert.alert("Erro", errorMessage(error, "Não foi possível aceitar a triagem."));
     }
   };
 
@@ -61,12 +62,7 @@ export default function GestorPanel() {
       <SectionTitle title="Painel do gestor" subtitle={`Olá, ${user.nome}`} />
 
       {metricsLoading ? <LoadingState /> : null}
-      {metricsError ? (
-        <View style={styles.metricsError}>
-          <ErrorState message={metricsError} />
-          <Button label="Tentar novamente" variant="outline" onPress={refetchMetrics} />
-        </View>
-      ) : null}
+      {metricsError ? <ErrorState message={metricsError} onRetry={refetchMetrics} /> : null}
       {metrics ? (
         <>
           <View style={styles.metricsRow}>
@@ -183,7 +179,6 @@ const styles = StyleSheet.create({
   container: { padding: spacing.lg, gap: spacing.sm },
   metricsRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.lg },
   empty: { color: colors.textMuted, marginBottom: spacing.md },
-  metricsError: { gap: spacing.sm, marginBottom: spacing.md },
   categoryList: { marginBottom: spacing.lg },
   categoryRow: {
     flexDirection: "row",

@@ -9,12 +9,13 @@ import { Button } from "@/components/Button";
 import { MetricsCard } from "@/components/MetricsCard";
 import { DemandCard } from "@/components/DemandCard";
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { LoadingState } from "@/components/LoadingState";
 import { SectionTitle } from "@/components/SectionTitle";
 
 export default function Dashboard() {
   const { ready, user } = useRoleGuard(["cidadao"]);
-  const { demands, fetchDemands } = useDemandStore();
+  const { demands, error, fetchDemands } = useDemandStore();
   const { metrics, loading: metricsLoading } = useMetrics();
 
   useEffect(() => {
@@ -49,7 +50,8 @@ export default function Dashboard() {
       )}
 
       <SectionTitle title="Últimas demandas" />
-      {myDemands.length === 0 ? (
+      {error ? <ErrorState message={error} onRetry={() => fetchDemands()} /> : null}
+      {myDemands.length === 0 && !error ? (
         <EmptyState
           message="Você ainda não registrou nenhuma demanda."
           actionLabel="Nova demanda"

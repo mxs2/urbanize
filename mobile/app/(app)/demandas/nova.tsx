@@ -7,8 +7,11 @@ import { organService } from "@/services/organService";
 import { DemandCategory, DemandPriority, ImageTriage, NewDemandInput } from "@/types/demand";
 import { Organ, buildEmailLink, buildWhatsappLink } from "@/types/organ";
 import { categoryLabel } from "@/utils/categoryLabel";
+import { errorMessage } from "@/utils/errorMessage";
+import { FieldErrors, hasErrors, validateDemand } from "@/utils/validation";
 import { colors, fontSizes, radii, spacing } from "@/theme";
 import { Button } from "@/components/Button";
+import { ErrorState } from "@/components/ErrorState";
 import { ImageUpload } from "@/components/ImageUpload";
 import { CapturedAddress, Coordinates, LocationCapture } from "@/components/LocationCapture";
 import { Select } from "@/components/Select";
@@ -16,7 +19,7 @@ import { TextField } from "@/components/TextField";
 
 export default function NovaDemanda() {
   const { ready, user } = useRoleGuard(["cidadao"]);
-  const { createDemand } = useDemandStore();
+  const { createDemand, saving } = useDemandStore();
 
   const [organs, setOrgans] = useState<Organ[]>([]);
   const [titulo, setTitulo] = useState("");
@@ -30,7 +33,8 @@ export default function NovaDemanda() {
   const [referencia, setReferencia] = useState("");
   const [coordenadas, setCoordenadas] = useState<Coordinates | undefined>();
   const [aceite, setAceite] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors<"titulo" | "descricao" | "endereco" | "aceite">>({});
+  const [apiError, setApiError] = useState<string>();
 
   useEffect(() => {
     if (ready)
@@ -69,17 +73,11 @@ export default function NovaDemanda() {
   };
 
   const handleSubmit = async () => {
-    if (!aceite) {
-      Alert.alert("Confirme o aceite", "É necessário concordar em compartilhar estes dados.");
-      return;
-    }
-    if (!titulo.trim() || !descricao.trim() || !endereco.trim()) {
-      Alert.alert("Campos obrigatórios", "Preencha os campos obrigatórios.");
-      return;
-    }
-    if (!user) return;
+    const validation = validateDemand({ titulo, descricao, endereco, aceite });
+    setErrors(validation);
+    setApiError(undefined);
+    if (hasErrors(validation) || !user) return;
 
-    setSubmitting(true);
     try {
       const payload: NewDemandInput = {
         titulo,
@@ -104,10 +102,8 @@ export default function NovaDemanda() {
       const created = await createDemand(payload);
       Alert.alert("Demanda registrada", `Protocolo ${created.protocolo}`);
       router.replace(`/demandas/${created.id}`);
-    } catch {
-      Alert.alert("Erro", "Não foi possível registrar a demanda.");
-    } finally {
-      setSubmitting(false);
+    } catch (error) {
+      setApiError(errorMessage(error, "Não foi possível registrar a demanda."));
     }
   };
 
@@ -126,6 +122,11 @@ export default function NovaDemanda() {
           anexar uma foto ou registrar.
         </Text>
       </Pressable>
+      {errors.aceite ? (
+        <Text testID="checkbox-aceite-erro" style={styles.fieldError}>
+          {errors.aceite}
+        </Text>
+      ) : null}
 
       <ImageUpload onResult={handleImageResult} disabled={!aceite} />
 
@@ -160,7 +161,14 @@ export default function NovaDemanda() {
         </View>
       ) : null}
 
-      <TextField testID="input-titulo" label="Título" required value={titulo} onChangeText={setTitulo} />
+      <TextField
+        testID="input-titulo"
+        label="Título"
+        required
+        value={titulo}
+        onChangeText={setTitulo}
+        error={errors.titulo}
+      />
       <TextField
         testID="input-descricao"
         label="Descrição"
@@ -169,6 +177,7 @@ export default function NovaDemanda() {
         numberOfLines={4}
         value={descricao}
         onChangeText={setDescricao}
+        error={errors.descricao}
       />
       <Select
         label="Prioridade"
@@ -182,14 +191,23 @@ export default function NovaDemanda() {
       />
 
       <Text style={styles.sectionLabel}>Localização</Text>
-      <TextField testID="input-endereco" label="Endereço/Rua" required value={endereco} onChangeText={setEndereco} />
+      <TextField
+        testID="input-endereco"
+        label="Endereço/Rua"
+        required
+        value={endereco}
+        onChangeText={setEndereco}
+        error={errors.endereco}
+      />
       <TextField label="Bairro" value={bairro} onChangeText={setBairro} />
       <TextField label="Cidade" value={cidade} onChangeText={setCidade} />
       <TextField label="Ponto de referência" value={referencia} onChangeText={setReferencia} />
       <LocationCapture value={coordenadas} onChange={setCoordenadas} onAddressResolved={handleAddressResolved} />
 
+      {apiError ? <ErrorState testID="erro-registrar" message={apiError} /> : null}
+
       <View style={styles.footerActions}>
-        <Button testID="btn-registrar" label="Registrar demanda" onPress={handleSubmit} loading={submitting} />
+        <Button testID="btn-registrar" label="Registrar demanda" onPress={handleSubmit} loading={saving} />
         <Button label="Cancelar" variant="ghost" onPress={() => router.push("/demandas")} />
       </View>
     </ScrollView>
@@ -220,5 +238,6 @@ const styles = StyleSheet.create({
   },
   checkboxChecked: { backgroundColor: colors.brand[500], borderColor: colors.brand[500] },
   consentText: { flex: 1, fontSize: 12, color: colors.textMuted },
+  fieldError: { color: colors.danger, fontSize: 12, marginTop: -spacing.sm },
   footerActions: { gap: spacing.sm },
 });

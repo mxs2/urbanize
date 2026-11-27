@@ -25,8 +25,27 @@ export const resolveImageUrl = (imagemUrl?: string) => {
   return imagemUrl.startsWith("http") ? imagemUrl : `${SERVER_BASE_URL}${imagemUrl}`;
 };
 
+/** Erro de comunicação com a API, com o motivo separado para a UI decidir o que mostrar. */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly kind: "offline" | "timeout" | "http",
+    readonly status?: number,
+    readonly code?: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+export const isOfflineError = (error: unknown) =>
+  error instanceof ApiError && (error.kind === "offline" || error.kind === "timeout");
+
+const REQUEST_TIMEOUT_MS = 15_000;
+
 const http = axios.create({
   baseURL: API_BASE_URL,
+  timeout: REQUEST_TIMEOUT_MS,
 });
 
 http.interceptors.request.use(async (config) => {
@@ -78,13 +97,20 @@ http.interceptors.response.use(undefined, async (error: AxiosError) => {
 });
 
 const normalizeError = (error: unknown): never => {
-  if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<ApiErrorResponse>;
-    const message = axiosError.response?.data?.error?.message ?? "Erro ao comunicar com o backend.";
-    throw new Error(message);
+  if (!axios.isAxiosError(error)) throw error;
+
+  const axiosError = error as AxiosError<ApiErrorResponse>;
+  if (axiosError.code === "ECONNABORTED") {
+    throw new ApiError("O servidor demorou para responder. Tente novamente.", "timeout");
+  }
+  if (!axiosError.response) {
+    throw new ApiError("Sem conexão com o servidor. Verifique sua internet.", "offline");
   }
 
-  throw error;
+  // Um 401 que chega aqui já passou pela tentativa de renovação do interceptor.
+  const { status, data } = axiosError.response;
+  const message = data?.error?.message ?? `Erro ao comunicar com o backend (HTTP ${status}).`;
+  throw new ApiError(message, "http", status, data?.error?.code);
 };
 
 /** Executa a chamada, devolve `data` do envelope `{ success, data }` e padroniza o erro. */

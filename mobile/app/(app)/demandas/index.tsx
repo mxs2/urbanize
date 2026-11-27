@@ -1,8 +1,8 @@
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { useDemands } from "@/hooks/useDemands";
-import { spacing } from "@/theme";
+import { colors, spacing } from "@/theme";
 import { Button } from "@/components/Button";
 import { DemandCard } from "@/components/DemandCard";
 import { DemandFilters } from "@/components/DemandFilters";
@@ -13,7 +13,8 @@ import { SectionTitle } from "@/components/SectionTitle";
 
 export default function DemandasList() {
   const { ready, user } = useRoleGuard(["cidadao", "gestor"]);
-  const { demands, loading, error } = useDemands(ready);
+  const { demands, loading, error, filters, fetchDemands } = useDemands(ready);
+  const refresh = () => fetchDemands(filters);
 
   if (!ready || !user) return <LoadingState />;
 
@@ -24,6 +25,9 @@ export default function DemandasList() {
       contentContainerStyle={styles.container}
       data={loading || error ? [] : demands}
       keyExtractor={(item) => item.id}
+      refreshControl={
+        <RefreshControl refreshing={loading && demands.length > 0} onRefresh={refresh} tintColor={colors.brand[500]} />
+      }
       renderItem={({ item }) => <DemandCard demand={item} />}
       ListHeaderComponent={
         <View style={styles.header}>
@@ -38,7 +42,7 @@ export default function DemandasList() {
           {isCidadao ? <Button label="Nova demanda" onPress={() => router.push("/demandas/nova")} /> : null}
           <DemandFilters />
           {loading ? <LoadingState /> : null}
-          {error ? <ErrorState message={error} /> : null}
+          {error ? <ErrorState testID="erro-listagem" message={error} onRetry={refresh} /> : null}
         </View>
       }
       ListEmptyComponent={
