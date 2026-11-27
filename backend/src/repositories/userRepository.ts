@@ -13,6 +13,14 @@ export const userRepository = {
   promoteToGestor(id: string, organId: string) {
     return prisma.user.update({ where: { id }, data: { role: "gestor", organId } });
   },
+  /** Volta a cidadão e encerra as sessões, na mesma transação. */
+  async demoteGestor(id: string) {
+    const [user] = await prisma.$transaction([
+      prisma.user.update({ where: { id }, data: { role: "cidadao", organId: null } }),
+      prisma.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } }),
+    ]);
+    return user;
+  },
   create(data: { nome: string; email: string; senhaHash: string; telefone?: string }) {
     return prisma.user.create({
       data: {

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { env, isProduction } from "../config/env";
 import { authService } from "../services/authService";
+import { privacyService } from "../services/privacyService";
 import { asyncHandler } from "../utils/asyncHandler";
 import { AppError } from "../utils/appError";
 import { newPasswordSchema } from "../utils/passwordPolicy";
@@ -23,6 +24,19 @@ const registerSchema = loginSchema.extend({
 const refreshSchema = z.object({ refreshToken: z.string().min(1) });
 const logoutSchema = refreshSchema.partial();
 const promoteSchema = z.object({ email: z.string().email(), organId: z.string().min(1).optional() });
+
+const demoteSchema = z.object({ email: z.string().email() });
+const updateMeSchema = z
+  .object({
+    nome: z.string().trim().min(2).optional(),
+    email: z.string().email().optional(),
+    telefone: z.string().trim().nullable().optional(),
+    senhaAtual: z.string().optional(),
+  })
+  .refine((data) => data.nome !== undefined || data.email !== undefined || data.telefone !== undefined, {
+    message: "Informe ao menos um dado para corrigir.",
+  });
+const deleteMeSchema = z.object({ senha: z.string().min(1) });
 
 const setAuthCookie = (res: Response, token: string) => {
   // O cookie dura o mesmo que o token que carrega (JWT_EXPIRES_IN).
@@ -46,13 +60,13 @@ const clearAuthCookie = (res: Response) => {
 export const authController = {
   register: asyncHandler(async (req: Request, res: Response) => {
     const { role: _role, ...payload } = registerSchema.parse(req.body);
-    const result = await authService.register(payload);
+    const result = await authService.register(payload, req.ip);
     setAuthCookie(res, result.token);
     res.status(201).json({ success: true, data: result });
   }),
   login: asyncHandler(async (req: Request, res: Response) => {
     const payload = loginSchema.parse(req.body);
-    const result = await authService.login(payload);
+    const result = await authService.login(payload, req.ip);
     setAuthCookie(res, result.token);
     res.json({ success: true, data: result });
   }),
@@ -60,6 +74,24 @@ export const authController = {
     if (!req.user) throw new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED");
     const user = await authService.me(req.user.id);
     res.json({ success: true, data: { user } });
+  }),
+  updateMe: asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) throw new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED");
+    const user = await privacyService.update(req.user.id, updateMeSchema.parse(req.body), req.ip);
+    res.json({ success: true, data: { user } });
+  }),
+  exportMe: asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) throw new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED");
+    const data = await privacyService.exportData(req.user.id, req.ip);
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ success: true, data });
+  }),
+  deleteMe: asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) throw new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED");
+    const { senha } = deleteMeSchema.parse(req.body);
+    await privacyService.deleteAccount(req.user.id, senha, req.ip);
+    clearAuthCookie(res);
+    res.json({ success: true, data: null });
   }),
   refresh: asyncHandler(async (req: Request, res: Response) => {
     const { refreshToken } = refreshSchema.parse(req.body);
@@ -69,7 +101,13 @@ export const authController = {
   }),
   promoteGestor: asyncHandler(async (req: Request, res: Response) => {
     if (!req.user) throw new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED");
-    const user = await authService.promoteGestor(promoteSchema.parse(req.body), req.user);
+    const user = await authService.promoteGestor(promoteSchema.parse(req.body), req.user, req.ip);
+    res.json({ success: true, data: { user } });
+  }),
+  demoteGestor: asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) throw new AppError("Sessão não autenticada.", 401, "UNAUTHENTICATED");
+    const { email } = demoteSchema.parse(req.body);
+    const user = await authService.demoteGestor(email, req.user, req.ip);
     res.json({ success: true, data: { user } });
   }),
   logout: asyncHandler(async (req: Request, res: Response) => {
