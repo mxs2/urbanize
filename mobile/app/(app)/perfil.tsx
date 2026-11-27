@@ -132,7 +132,8 @@ export default function Perfil() {
           <SectionTitle title="Excluir conta" />
           <Text style={styles.texto}>
             A exclusão é definitiva. Suas demandas continuam no histórico da gestão pública sem seu nome, contato,
-            ponto de referência, coordenadas e foto. Endereço, título e descrição são mantidos.
+            ponto de referência, coordenadas e foto. Endereço, título e descrição são mantidos. Cópias de segurança cifradas
+            ainda guardam seus dados por até 28 dias.
           </Text>
           {confirmando ? (
             <>
