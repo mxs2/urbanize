@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { useMetrics } from "@/hooks/useMetrics";
 import { useDemandStore } from "@/store/demandStore";
+import { resolveImageUrl } from "@/services/api";
 import { DemandCategory, DemandStatus } from "@/types/demand";
 import { categoryLabel } from "@/utils/categoryLabel";
 import { statusLabel } from "@/utils/statusLabel";
@@ -17,13 +18,6 @@ import { LoadingState } from "@/components/LoadingState";
 import { Select } from "@/components/Select";
 
 const QUEUE_STATUSES: DemandStatus[] = ["registrada", "em_analise"];
-
-const apiOrigin = (process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:4000/api").replace(/\/api\/?$/, "");
-
-const resolveImageUrl = (imagemUrl?: string) => {
-  if (!imagemUrl) return undefined;
-  return imagemUrl.startsWith("http") ? imagemUrl : `${apiOrigin}${imagemUrl}`;
-};
 
 export default function GestorPanel() {
   const { ready, user } = useRoleGuard(["gestor"]);

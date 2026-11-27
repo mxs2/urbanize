@@ -10,7 +10,8 @@ export interface RegisterPayload extends AuthPayload {
   telefone?: string;
 }
 
-export interface AuthStateSnapshot {
-  user: User | null;
-  token: string | null;
+export interface AuthResult {
+  user: User;
+  token: string;
+  refreshToken: string;
 }

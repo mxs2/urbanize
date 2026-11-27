@@ -3,13 +3,13 @@ import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "r
 import { router } from "expo-router";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { useDemandStore } from "@/store/demandStore";
-import { api } from "@/services/api";
-import { Demand, DemandCategory, DemandPriority } from "@/types/demand";
+import { organService } from "@/services/organService";
+import { DemandCategory, DemandPriority, ImageTriage, NewDemandInput } from "@/types/demand";
 import { Organ, buildEmailLink, buildWhatsappLink } from "@/types/organ";
 import { categoryLabel } from "@/utils/categoryLabel";
 import { colors, fontSizes, radii, spacing } from "@/theme";
 import { Button } from "@/components/Button";
-import { ImageUpload, ImageUploadResult } from "@/components/ImageUpload";
+import { ImageUpload } from "@/components/ImageUpload";
 import { CapturedAddress, Coordinates, LocationCapture } from "@/components/LocationCapture";
 import { Select } from "@/components/Select";
 import { TextField } from "@/components/TextField";
@@ -34,14 +34,14 @@ export default function NovaDemanda() {
 
   useEffect(() => {
     if (ready)
-      api
-        .getOrgans()
+      organService
+        .list()
         .then(setOrgans)
         .catch(() => undefined);
   }, [ready]);
 
   const matchedOrgan = useMemo(
-    () => organs.find((organ) => (JSON.parse(organ.categoriasJson) as DemandCategory[]).includes(categoria)),
+    () => organService.findByCategory(organs, categoria),
     [organs, categoria]
   );
 
@@ -62,7 +62,7 @@ export default function NovaDemanda() {
     if (address.cidade) setCidade(address.cidade);
   };
 
-  const handleImageResult = (result: ImageUploadResult) => {
+  const handleImageResult = (result: ImageTriage) => {
     setImagemUrl(result.imageUrl);
     setCategoria(result.triagem.categoria);
     setTitulo(categoryLabel[result.triagem.categoria]);
@@ -81,7 +81,7 @@ export default function NovaDemanda() {
 
     setSubmitting(true);
     try {
-      const payload: Omit<Demand, "id" | "protocolo" | "criadaEm" | "atualizadaEm"> = {
+      const payload: NewDemandInput = {
         titulo,
         descricao,
         categoria,

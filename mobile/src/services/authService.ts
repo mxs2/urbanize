@@ -1,11 +1,10 @@
 import { api } from "./api";
-import { AuthPayload, RegisterPayload } from "@/types/auth";
+import { AuthPayload, AuthResult, RegisterPayload } from "@/types/auth";
 import { ProfileChanges, User } from "@/types/user";
 
 export const authService = {
-  login: (payload: AuthPayload): Promise<{ user: User; token: string; refreshToken: string }> =>
-    api.login(payload.email, payload.senha),
-  register: (payload: RegisterPayload): Promise<{ user: User; token: string; refreshToken: string }> =>
+  login: (payload: AuthPayload): Promise<AuthResult> => api.login(payload.email, payload.senha),
+  register: (payload: RegisterPayload): Promise<AuthResult> =>
     api.register(payload.nome, payload.email, payload.senha, payload.telefone),
   me: (): Promise<User> => api.me(),
   updateMe: (changes: ProfileChanges): Promise<User> => api.updateMe(changes),

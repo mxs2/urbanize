@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { demandService } from "@/services/demandService";
-import { Demand, FilterState } from "@/types/demand";
+import { Demand, FilterState, NewDemandInput } from "@/types/demand";
 
 const mergeBairros = (current: string[], demands: Demand[]) =>
   Array.from(new Set([...current, ...demands.map((d) => d.endereco.bairro).filter(Boolean)])).sort((a, b) =>
@@ -16,7 +16,7 @@ interface DemandState {
   filters: FilterState;
   fetchDemands: (filters?: FilterState) => Promise<void>;
   fetchDemandById: (id: string) => Promise<void>;
-  createDemand: (payload: Omit<Demand, "id" | "protocolo" | "criadaEm" | "atualizadaEm">) => Promise<Demand>;
+  createDemand: (payload: NewDemandInput) => Promise<Demand>;
   updateDemandStatus: (id: string, status: Demand["status"], observacaoGestor?: string) => Promise<void>;
   setFilters: (filters: FilterState) => void;
   clearFilters: () => void;

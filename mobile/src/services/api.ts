@@ -1,9 +1,11 @@
 import axios, { AxiosError } from "axios";
 import { getAuthToken, getRefreshToken, publishSession } from "./session";
-import { Demand, DemandCategory, FilterState } from "@/types/demand";
+import { API_BASE_URL, SERVER_BASE_URL } from "@/config/env";
+import { Demand, DemandCategory, FilterState, ImageTriage, NewDemandInput } from "@/types/demand";
 import { MetricsSummary } from "@/types/metrics";
 import { ProfileChanges, User } from "@/types/user";
 import { Organ } from "@/types/organ";
+import { AuthResult } from "@/types/auth";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -18,11 +20,10 @@ interface ApiErrorResponse {
   };
 }
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:4000/api";
-const SERVER_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, "");
-
-export const resolveImageUrl = (imagemUrl: string) =>
-  imagemUrl.startsWith("http") ? imagemUrl : `${SERVER_BASE_URL}${imagemUrl}`;
+export const resolveImageUrl = (imagemUrl?: string) => {
+  if (!imagemUrl) return undefined;
+  return imagemUrl.startsWith("http") ? imagemUrl : `${SERVER_BASE_URL}${imagemUrl}`;
+};
 
 const http = axios.create({
   baseURL: API_BASE_URL,
@@ -76,8 +77,6 @@ http.interceptors.response.use(undefined, async (error: AxiosError) => {
   return http.request(config);
 });
 
-const unwrap = <T>(response: { data: ApiResponse<T> }) => response.data.data;
-
 const normalizeError = (error: unknown): never => {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<ApiErrorResponse>;
@@ -88,153 +87,62 @@ const normalizeError = (error: unknown): never => {
   throw error;
 };
 
+/** Executa a chamada, devolve `data` do envelope `{ success, data }` e padroniza o erro. */
+const call = async <T>(request: () => Promise<{ data: ApiResponse<T> }>): Promise<T> => {
+  try {
+    return (await request()).data.data;
+  } catch (error) {
+    return normalizeError(error);
+  }
+};
+
 export const api = {
-  async getDemands(filters: FilterState = {}): Promise<Demand[]> {
-    try {
-      return unwrap(await http.get<ApiResponse<Demand[]>>("/demands", { params: filters }));
-    } catch (error) {
-      return normalizeError(error);
-    }
+  getDemands: (filters: FilterState = {}) =>
+    call(() => http.get<ApiResponse<Demand[]>>("/demands", { params: filters })),
+
+  getDemandById: (id: string) => call(() => http.get<ApiResponse<Demand>>(`/demands/${id}`)),
+
+  createDemand: (payload: NewDemandInput) => call(() => http.post<ApiResponse<Demand>>("/demands", payload)),
+
+  updateDemandStatus: (id: string, status: Demand["status"], observacaoGestor?: string) =>
+    call(() => http.patch<ApiResponse<Demand>>(`/demands/${id}/status`, { status, observacaoGestor })),
+
+  getMetrics: () => call(() => http.get<ApiResponse<MetricsSummary>>("/metrics/summary")),
+
+  login: (email: string, senha: string) =>
+    call(() => http.post<ApiResponse<AuthResult>>("/auth/login", { email, senha })),
+
+  register: (nome: string, email: string, senha: string, telefone?: string) =>
+    call(() => http.post<ApiResponse<AuthResult>>("/auth/register", { nome, email, senha, telefone })),
+
+  me: async (): Promise<User> => (await call(() => http.get<ApiResponse<{ user: User }>>("/auth/me"))).user,
+
+  updateMe: async (changes: ProfileChanges): Promise<User> =>
+    (await call(() => http.patch<ApiResponse<{ user: User }>>("/auth/me", changes))).user,
+
+  exportMyData: () => call(() => http.get<ApiResponse<unknown>>("/auth/me/dados")),
+
+  deleteMe: async (senha: string): Promise<void> => {
+    await call(() => http.delete<ApiResponse<null>>("/auth/me", { data: { senha } }));
   },
 
-  async getDemandById(id: string): Promise<Demand | undefined> {
-    try {
-      return unwrap(await http.get<ApiResponse<Demand>>(`/demands/${id}`));
-    } catch (error) {
-      return normalizeError(error);
-    }
+  logout: async (): Promise<void> => {
+    const refreshToken = await getRefreshToken();
+    await call(() => http.post<ApiResponse<null>>("/auth/logout", refreshToken ? { refreshToken } : {}));
   },
 
-  async createDemand(
-    payload: Omit<Demand, "id" | "protocolo" | "criadaEm" | "atualizadaEm">
-  ): Promise<Demand> {
-    try {
-      return unwrap(await http.post<ApiResponse<Demand>>("/demands", payload));
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
+  getOrgans: () => call(() => http.get<ApiResponse<Organ[]>>("/organs")),
 
-  async updateDemandStatus(id: string, status: Demand["status"], observacaoGestor?: string): Promise<Demand> {
-    try {
-      return unwrap(
-        await http.patch<ApiResponse<Demand>>(`/demands/${id}/status`, { status, observacaoGestor })
-      );
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
+  uploadImage: (photo: { uri: string; name: string; type: string }, categoria?: DemandCategory) => {
+    const formData = new FormData();
+    // O FormData do React Native aceita { uri, name, type } como arquivo.
+    formData.append("imagem", photo as unknown as Blob);
+    if (categoria) formData.append("categoria", categoria);
 
-  async getMetrics(): Promise<MetricsSummary> {
-    try {
-      return unwrap(await http.get<ApiResponse<MetricsSummary>>("/metrics/summary"));
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
-
-  async login(email: string, senha: string): Promise<{ user: User; token: string; refreshToken: string }> {
-    try {
-      return unwrap(
-        await http.post<ApiResponse<{ user: User; token: string; refreshToken: string }>>("/auth/login", { email, senha })
-      );
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
-
-  async register(
-    nome: string,
-    email: string,
-    senha: string,
-    telefone?: string
-  ): Promise<{ user: User; token: string; refreshToken: string }> {
-    try {
-      return unwrap(
-        await http.post<ApiResponse<{ user: User; token: string; refreshToken: string }>>("/auth/register", {
-          nome,
-          email,
-          senha,
-          telefone,
-        })
-      );
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
-
-  async me(): Promise<User> {
-    try {
-      const data = unwrap(await http.get<ApiResponse<{ user: User }>>("/auth/me"));
-      return data.user;
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
-
-  async updateMe(changes: ProfileChanges): Promise<User> {
-    try {
-      return unwrap(await http.patch<ApiResponse<{ user: User }>>("/auth/me", changes)).user;
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
-
-  async exportMyData(): Promise<unknown> {
-    try {
-      return unwrap(await http.get<ApiResponse<unknown>>("/auth/me/dados"));
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
-
-  async deleteMe(senha: string): Promise<void> {
-    try {
-      await http.delete<ApiResponse<null>>("/auth/me", { data: { senha } });
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
-
-  async logout(): Promise<void> {
-    try {
-      const refreshToken = await getRefreshToken();
-      await http.post<ApiResponse<null>>("/auth/logout", refreshToken ? { refreshToken } : {});
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
-
-  async getOrgans(): Promise<Organ[]> {
-    try {
-      return unwrap(await http.get<ApiResponse<Organ[]>>("/organs"));
-    } catch (error) {
-      return normalizeError(error);
-    }
-  },
-
-  async uploadImage(
-    photo: { uri: string; name: string; type: string },
-    categoria?: DemandCategory
-  ): Promise<{ imageUrl: string; triagem: { categoria: DemandCategory; score: number; labels: string[] } }> {
-    try {
-      const formData = new FormData();
-      // React Native's FormData accepts this { uri, name, type } shape for file fields.
-      formData.append("imagem", photo as unknown as Blob);
-      if (categoria) formData.append("categoria", categoria);
-
-      return unwrap(
-        await http.post<
-          ApiResponse<{
-            imageUrl: string;
-            triagem: { categoria: DemandCategory; score: number; labels: string[] };
-          }>
-        >("/upload/image", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
-      );
-    } catch (error) {
-      return normalizeError(error);
-    }
+    return call(() =>
+      http.post<ApiResponse<ImageTriage>>("/upload/image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+    );
   },
 };

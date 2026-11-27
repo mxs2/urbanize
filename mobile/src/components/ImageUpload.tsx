@@ -1,18 +1,13 @@
 import { useState } from "react";
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { api } from "@/services/api";
-import { DemandCategory } from "@/types/demand";
+import { uploadService } from "@/services/uploadService";
+import { ImageTriage } from "@/types/demand";
 import { colors, radii, spacing } from "@/theme";
 import { Button } from "./Button";
 
-export interface ImageUploadResult {
-  imageUrl: string;
-  triagem: { categoria: DemandCategory; score: number; labels: string[] };
-}
-
 interface ImageUploadProps {
-  onResult: (result: ImageUploadResult) => void;
+  onResult: (result: ImageTriage) => void;
   disabled?: boolean;
 }
 
@@ -26,7 +21,7 @@ export function ImageUpload({ onResult, disabled }: ImageUploadProps) {
     try {
       const fileName = asset.fileName ?? asset.uri.split("/").pop() ?? "foto.jpg";
       const mimeType = asset.mimeType ?? "image/jpeg";
-      const result = await api.uploadImage({ uri: asset.uri, name: fileName, type: mimeType });
+      const result = await uploadService.image({ uri: asset.uri, name: fileName, type: mimeType });
       onResult(result);
     } catch {
       Alert.alert("Erro ao processar imagem", "Não foi possível enviar ou classificar a foto.");

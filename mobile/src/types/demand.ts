@@ -65,3 +65,12 @@ export interface FilterState {
   bairro?: string;
   prioridade?: DemandPriority;
 }
+
+/** Corpo enviado ao criar uma demanda: o backend gera id, protocolo e datas. */
+export type NewDemandInput = Omit<Demand, "id" | "protocolo" | "criadaEm" | "atualizadaEm">;
+
+/** Resposta do upload de foto: URL gravada e categoria sugerida pela triagem. */
+export interface ImageTriage {
+  imageUrl: string;
+  triagem: { categoria: DemandCategory; score: number; labels: string[] };
+}
