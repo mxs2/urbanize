@@ -8,3 +8,5 @@ psycopg2-binary
 prefect
 streamlit
 plotly
+mcp[cli]>=2
+openai

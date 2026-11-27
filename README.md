@@ -12,6 +12,10 @@ src/
   load.py       # Load: MongoDB (load_mongo), SQLite (load_sqlite) e NeonDB (load_neon)
 dashboard/
   app.py        # dashboard em Streamlit que lê a tabela recife do Neon
+mcp_server/
+  banco.py      # BancoNeon (leitura no Neon) e BancoComLimite (no máximo 10 linhas)
+  servidor.py   # servidor MCP com as ferramentas sobre o Neon
+  agente.py     # agente de linha de comando (biblioteca openai) que usa o servidor MCP
 run_etl.py      # ponto de entrada do pipeline
 orchestration_prefect.py  # o mesmo pipeline orquestrado com Prefect (tasks + flow etl_radar_flow)
 docker-compose.yml  # opcional: MongoDB local (alternativa ao Atlas)
@@ -215,6 +219,58 @@ python -m streamlit run dashboard/app.py
 O dashboard abre no navegador em `http://localhost:8501`. Use `python -m streamlit` (e não só `streamlit run`): o `-m` coloca a raiz do projeto no caminho de busca de módulos do Python, e é isso que permite ao `app.py` importar `src.config`. Sem ele, o resultado é `ModuleNotFoundError: No module named 'src'`.
 
 A consulta ao Neon fica em cache por 10 minutos (`@st.cache_data(ttl=600)`). Se acabou de rodar o pipeline e não vê os dados novos, use o menu **⋮ → Clear cache** do Streamlit ou reinicie o dashboard.
+
+## Servidor MCP
+
+O diretório `mcp_server/` expõe a camada prata (tabela `recife` do Neon) como um servidor [MCP](https://modelcontextprotocol.io), para que um modelo de linguagem responda perguntas sobre o clima de Recife consultando o banco. Como o dashboard, ele só lê do Neon: nunca chama a API diretamente.
+
+| Ferramenta | O que faz |
+|------------|-----------|
+| `listar_tabelas()` | lista as tabelas do schema `public` |
+| `descrever_tabela(tabela)` | colunas e tipos de uma tabela |
+| `consultar(sql)` | executa um `SELECT` e devolve até 10 linhas |
+| `contar_linhas(tabela)` | quantas linhas a tabela tem (exercício 1) |
+
+- **`BancoNeon`** (`banco.py`) concentra o acesso ao banco, usando `config.DATABASE_URL`. As consultas rodam em transação `READ ONLY`, então o próprio Postgres recusa `INSERT`, `UPDATE`, `DELETE` e afins. Nomes de tabela são conferidos contra a lista de tabelas existentes antes de entrar no SQL.
+- **`BancoComLimite`** herda de `BancoNeon` e sobrescreve `consultar` para devolver no máximo 10 linhas (exercício 3). É a classe que o servidor usa, para não estourar o contexto do modelo.
+- Quando uma ferramenta falha (tabela inexistente, SQL inválido, tentativa de escrita), o servidor devolve a mensagem real do erro, para o modelo conseguir corrigir a chamada.
+
+### Agente
+
+`agente.py` sobe o servidor MCP por stdio, entrega as ferramentas dele ao modelo e conversa no terminal. A chave e o modelo vêm do `.env` (lidos em `src/config.py`):
+
+| Variável | Para quê |
+|----------|----------|
+| `OPENAI_API_KEY` | chave do serviço |
+| `MODELO` | nome do modelo; padrão `gpt-6-luna` (exercício 2) |
+| `OPENAI_BASE_URL` | opcional: endereço de um serviço gratuito compatível com a biblioteca `openai`. Vazio usa a OpenAI |
+
+```bash
+python -m mcp_server.agente
+```
+
+Exemplo de pergunta: "qual foi a temperatura média em outubro?". O agente mostra cada ferramenta que o modelo chamou antes da resposta.
+
+### Usar o servidor em outro cliente MCP
+
+O servidor também funciona com qualquer cliente MCP, e pode ser iniciado de qualquer diretório (ele mesmo põe a raiz do projeto no caminho de importação e o `.env` é encontrado a partir de `src/config.py`). Para inspecionar as ferramentas no navegador com o MCP Inspector (precisa do Node.js):
+
+```bash
+npx @modelcontextprotocol/inspector .venv/Scripts/python.exe mcp_server/servidor.py
+```
+
+Para usar no Claude Desktop ou no Claude Code, registre o servidor com caminhos absolutos para o Python do venv e para o `servidor.py`:
+
+```json
+{
+  "mcpServers": {
+    "radar-recife": {
+      "command": "C:/caminho/para/urbanize-dados/.venv/Scripts/python.exe",
+      "args": ["C:/caminho/para/urbanize-dados/mcp_server/servidor.py"]
+    }
+  }
+}
+```
 
 ## Ideias para quem quiser ir além
 
