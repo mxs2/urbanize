@@ -37,7 +37,7 @@ Fizemos esta análise a partir do código-fonte atual. Cada requisito informa o 
 | R6 | Ataque de força bruta no login | Não existe limite de tentativas em `/api/auth/login` e `/api/auth/register` | Média | Médio | **Médio** | `backend/package.json` não tem `express-rate-limit` | 1, 4 |
 | R7 | Senhas fracas | `senha: z.string().min(1)` aceita senha de 1 caractere | Alta | Médio | **Médio** | `backend/src/controllers/authController.ts:11` | 1 |
 | R8 | Gestor acessa demandas de outro órgão | O acesso do gestor não é limitado ao seu `organId` | Baixa-Média | Médio | **Médio** | `backend/src/services/demandService.ts:39-49` | 1 |
-| R9 | Incidentes sem registro | Não há log de login, cadastro ou troca de papel | Média | Médio | **Médio** | `backend/src` não tem biblioteca de log ou auditoria | 3, 4 |
+| R9 | Incidentes sem registro | Não há log de login, cadastro ou troca de papel | Média | Médio | **Médio** — corrigido | `backend/src/services/auditService.ts` | 3, 4 |
 | R10 | Envio de dados pessoais a terceiro sem base legal clara | Fotos podem ir para o Google Vision para triagem | Baixa | Médio | **Baixo-Médio** | `backend/src/config/env.ts:40` (`GOOGLE_VISION_CREDENTIALS`) | 3, 6 |
 | R11 | Perda total dos dados | Banco (`dev.db`) e fotos (`uploads/`) ficam em um único disco, sem cópia de segurança | Média | Alto | **Alto** | `backend/.env.example` (`DATABASE_URL="file:./dev.db"`), `backend/src/middlewares/uploadMiddleware.ts:12` | 5 |
 | R12 | API fora do ar por excesso de requisições | Sem limite de requisições e sem cabeçalhos de segurança HTTP | Média | Médio | **Médio** | `backend/src/app.ts` não usa `helmet` nem limite de taxa | 4 |
@@ -57,7 +57,7 @@ Os riscos estão agrupados pela parte do código onde ficam. Os links apontam pa
 | R3 (corrigido) | [`backend/src/config/env.ts:33-47`](https://github.com/mxs2/urbanize/blob/main/backend/src/config/env.ts#L33-L47) | `requireEnv("JWT_SECRET")` para a inicialização se a variável não existir. |
 | R6 | [`backend/src/routes/authRoutes.ts:7-8`](https://github.com/mxs2/urbanize/blob/main/backend/src/routes/authRoutes.ts#L7-L8) | As rotas `/register` e `/login` não têm limite de tentativas. |
 | R7 | [`backend/src/controllers/authController.ts:10-10`](https://github.com/mxs2/urbanize/blob/main/backend/src/controllers/authController.ts#L10-L10) | `senha: z.string().min(1)` aceita senha de 1 caractere. |
-| R9 | [`backend/src/services/authService.ts`](https://github.com/mxs2/urbanize/blob/main/backend/src/services/authService.ts) | Login e cadastro não geram registro de auditoria. |
+| R9 (corrigido) | [`backend/src/services/authService.ts`](https://github.com/mxs2/urbanize/blob/main/backend/src/services/authService.ts) | Login e cadastro geram registro de auditoria. |
 
 #### Backend — demandas e fotos
 
@@ -131,7 +131,7 @@ Os riscos estão agrupados pela parte do código onde ficam. Os links apontam pa
 **Permissões**
 
 - **RS05** — Somente o servidor pode definir o papel (`role`) do usuário. O cadastro público não pode aceitar esse campo.
-  Atendido ([#49](https://github.com/mxs2/urbanize/issues/49)). O cadastro público recusa `role` diferente de `cidadao` com 422, e o repositório sempre grava `cidadao`. O app não mostra mais a opção "Gestor público". Gestores são criados pelo seed (`backend/prisma/seed.ts`). Falta definir um fluxo de convite ou aprovação para novos gestores.
+  Atendido ([#49](https://github.com/mxs2/urbanize/issues/49)). O cadastro público recusa `role` diferente de `cidadao` com 422, e o repositório sempre grava `cidadao`. O app não mostra mais a opção "Gestor público". O primeiro gestor é criado pelo seed (`backend/prisma/seed.ts`). Os demais se cadastram como cidadãos e são promovidos por um gestor (`POST /api/auth/gestores`).
 - **RS06** — Toda rota que altera dados de outro usuário deve verificar se quem pede é o dono do dado ou tem o papel certo.
   Atendido para demandas (`demandService.ts:27-36`, `130-131`). Porém, o gestor não fica limitado ao seu `organId` (R8).
 - **RS07** — A verificação de papel deve ficar em um único middleware, e não espalhada pelo código.
@@ -139,7 +139,7 @@ Os riscos estão agrupados pela parte do código onde ficam. Os links apontam pa
 
 #### Modelo proposto
 
-1. Feito: o cadastro público só cria `cidadao`. Falta o fluxo separado para criar `gestor`: convite ou aprovação de um gestor. Hoje, só o seed cria gestores.
+1. Feito: o cadastro público só cria `cidadao`, e um gestor promove (`POST /api/auth/gestores`) ou descredencia (`DELETE /api/auth/gestores`).
 2. As rotas de gestor passam a usar `requireRole("gestor")`.
 3. O gestor só acessa e altera demandas do seu próprio órgão (`organId`). Se for necessário, criamos um papel de administrador geral.
 4. O app guarda o token com `expo-secure-store`.
@@ -164,7 +164,7 @@ Os riscos estão agrupados pela parte do código onde ficam. Os links apontam pa
 - **RS10** — Fotos enviadas pelos usuários não podem ser públicas.
   Atendido — `/uploads` só responde com link assinado (HMAC) e temporário (`UPLOAD_URL_TTL_SECONDS`, padrão 1 hora). A API gera o link em `toDemandResponse`, só para quem pode ver a demanda. O banco guarda apenas `/uploads/<arquivo>`. A extensão do arquivo agora vem do mimetype validado.
 - **RS13** — Ao excluir uma conta, o sistema deve anonimizar os dados pessoais das demandas que precisam continuar no histórico da gestão pública.
-  Não atendido. Hoje, a exclusão do usuário apenas remove o vínculo (`onDelete: SetNull`, `schema.prisma:111`). Os campos `nomeSolicitante`, `emailSolicitante` e `telefoneSolicitante` continuam na demanda. **Ação:** trocar esses campos por um valor neutro (ex.: `"Anônimo"`) e apagar `telefoneSolicitante`. Manter bairro, categoria e status para as métricas.
+  Atendido (`backend/src/services/anonymizationService.ts`). Nome e e-mail viram valores neutros e o telefone é apagado, inclusive o nome na entrada "registrada" do histórico. Na exclusão de conta também são apagados o ponto de referência, as coordenadas e a foto (registro e arquivo). Endereço, bairro, título, descrição, categoria e status são mantidos para o atendimento e as métricas. **Limite:** título, descrição e endereço são texto livre e podem conter dados pessoais.
 - **RS14** — Métricas e relatórios devem usar apenas dados agregados, sem identificar o cidadão.
   Atendido — `MetricsSnapshot` e o cache no Redis guardam apenas totais por status e categoria e o tempo médio de atendimento (`metricsService.ts`).
 - **RS15** — O sistema deve apagar metadados EXIF das fotos (GPS, modelo do celular) ao receber o arquivo.
@@ -176,40 +176,50 @@ Os riscos estão agrupados pela parte do código onde ficam. Os links apontam pa
 
 #### Dados pessoais coletados
 
-| Dado | Onde fica | Finalidade | Base legal (LGPD) | Tempo de guarda atual |
+| Dado | Onde fica | Finalidade | Base legal (LGPD) | Tempo de guarda |
 | :---- | :---- | :---- | :---- | :---- |
-| Nome, e-mail e telefone do usuário | `User` (`schema.prisma`) | Login e identificação do usuário | Execução de contrato / consentimento no cadastro | Sem prazo. Não há rotina de exclusão. |
-| Nome, e-mail e telefone do solicitante, endereço, bairro, cidade e referência | `Demand` | Permitir que a gestão pública encontre o local e responda à demanda | Execução de política pública / legítimo interesse | Sem prazo |
-| Latitude e longitude | `Demand` | Localizar o problema no mapa | Consentimento explícito no formulário de nova demanda (`docs/old/plano-de-testes.md`, "aceite de compartilhamento de dados") | Sem prazo |
-| Foto da demanda | `backend/uploads/` | Mostrar o problema e fazer a triagem automática | Consentimento explícito no formulário | Sem prazo. **Hoje é pública (R4).** |
+| Nome, e-mail e telefone do usuário | `User` (`schema.prisma`) | Login e identificação do usuário | Execução de contrato (art. 7º, V) | Até o titular excluir a conta |
+| Nome, e-mail e telefone do solicitante | `Demand` | Permitir que a gestão pública responda à demanda | Execução de política pública (art. 7º, III) | 12 meses após o status final, ou até a exclusão da conta |
+| Endereço, bairro e cidade | `Demand` | Localizar o problema | Execução de política pública | Sem prazo (histórico da gestão pública) |
+| Ponto de referência, latitude e longitude | `Demand` | Localizar o problema no mapa | Consentimento no formulário de nova demanda | Até a exclusão da conta |
+| Foto da demanda | `backend/uploads/` | Mostrar o problema e fazer a triagem automática | Consentimento antes do envio da foto | Até a exclusão da conta |
+| Evento, identificador do usuário, IP e data | `AuditLog` | Segurança e resposta a incidentes | Legítimo interesse (art. 7º, IX) | 12 meses |
+| Hash e validade do token de renovação | `RefreshToken` | Manter e revogar sessões | Execução de contrato | Até a exclusão da conta |
+
+A tela de cadastro mostra um aviso de privacidade com a finalidade dos dados e os direitos do titular.
 
 #### Direitos dos titulares (art. 18)
 
-Hoje, nenhuma rota permite que o cidadão exporte, corrija ou exclua seus dados. **O que falta:**
+As rotas agem sempre sobre a conta autenticada (`backend/src/services/privacyService.ts`). No app, ficam na tela **Perfil** (`mobile/app/(app)/perfil.tsx`).
 
-- **RS17** — Rota para o cidadão excluir a própria conta e os dados ligados a ela. Para demandas que precisam ficar no histórico, aplicar a anonimização do RS13.
+- **RS17** — Rota para o cidadão excluir a própria conta e os dados ligados a ela.
+  Atendido — `DELETE /api/auth/me`, com confirmação de senha e anonimização do RS13. Gestores recebem 403 e precisam ser descredenciados antes: `DELETE /api/auth/gestores`, feito por outro gestor do mesmo órgão ou de acesso geral, devolve o papel de cidadão, encerra as sessões e registra `troca_papel`. Ninguém descredencia a si mesmo, e contas de acesso geral só mudam fora da API. O nome do ex-gestor continua no histórico das demandas que atualizou, por ser registro de ato público.
 - **RS18** — Rota para o cidadão baixar uma cópia dos seus dados pessoais (portabilidade).
+  Atendido — `GET /api/auth/me/dados` devolve conta, demandas, sessões e registros de acesso em JSON, sem hash de senha, tokens ou nomes de gestores.
 - **RS19** — Tela no app para o cidadão corrigir nome, e-mail e telefone.
+  Atendido — `PATCH /api/auth/me`. A troca de e-mail exige a senha atual. A correção também vale para as cópias nas demandas do titular.
 
 #### Minimização e prazo de guarda
 
-- **RS20** — Definir por quanto tempo guardar cada dado. Proposta: anonimizar os dados de contato da demanda 12 meses após o status final (resolvida ou cancelada). Usar uma tarefa agendada com `node-cron`, que o backend já usa (`backend/src/config/cron.ts`).
-- A remoção de EXIF (RS15) também reduz dados coletados sem necessidade.
+- **RS20** — Definir por quanto tempo guardar cada dado.
+  Atendido — uma tarefa diária (`backend/src/services/retentionService.ts`) anonimiza o contato das demandas resolvidas ou canceladas há mais de 12 meses e apaga registros de auditoria do mesmo período. O prazo e o horário são configuráveis (`RETENTION_MONTHS`, `RETENTION_CRON`). **Limite:** fotos enviadas e não vinculadas a uma demanda não são apagadas.
+- A remoção de EXIF (RS15, ainda pendente) também reduz dados coletados sem necessidade.
 
 #### Compartilhamento com terceiros
 
-- O backend pode enviar fotos para a API do Google Vision (`GOOGLE_VISION_CREDENTIALS`, `env.ts:40`). A foto pode mostrar pessoas, placas de carro e fachadas. Isso é compartilhamento de dados pessoais com um operador externo. **Ação:** informar esse envio no termo de consentimento do formulário de nova demanda. Confirmar que o contrato do Google Cloud inclui um acordo de tratamento de dados (DPA) compatível com a LGPD. Mais detalhes na Entrega 6.
+- O backend pode enviar fotos para a API do Google Vision (`GOOGLE_VISION_CREDENTIALS`, `env.ts:40`). A foto pode mostrar pessoas, placas de carro e fachadas. Isso é compartilhamento de dados pessoais com um operador externo. O texto de consentimento informa esse envio, e a foto só pode ser anexada depois do aceite. O aceite é exigido pelo app, não pela API. **Pendente:** confirmar que o contrato do Google Cloud inclui um acordo de tratamento de dados (DPA) compatível com a LGPD. Mais detalhes na Entrega 6.
 
 #### Segurança técnica (art. 46)
 
-Os requisitos RS01 a RS16 das Entregas 1 e 2 fazem parte do dever de segurança da LGPD.
+Os requisitos RS01 a RS16 das Entregas 1 e 2 fazem parte do dever de segurança da LGPD. RS15 (EXIF) e RS16 (Redis) continuam pendentes.
 
 #### Resposta a incidentes (art. 48)
 
 1. Toda suspeita de vazamento (ex.: fotos expostas em `/uploads`, `JWT_SECRET` descoberto) vira uma issue com a label de segurança e recebe prioridade máxima.
 2. Para conter um token falso, trocar o `JWT_SECRET`. Isso encerra todas as sessões ativas.
-3. Registrar a data, os dados que podem ter sido afetados e a ação tomada. Esse registro serve para comunicar a ANPD e os titulares, quando a LGPD exigir.
-4. **RS21** — Criar log de auditoria para login, cadastro, troca de papel e exclusão de conta (R9). Sem esse log, não é possível saber o que aconteceu em um incidente.
+3. Registrar a data, os dados que podem ter sido afetados e a ação tomada. Se o incidente puder causar risco ou dano relevante, comunicar a ANPD e os titulares em até 3 dias úteis (Resolução CD/ANPD nº 15/2024). **Pendente:** definir quem da equipe é responsável pela comunicação.
+4. **RS21** — Criar log de auditoria para login, cadastro, troca de papel e exclusão de conta (R9).
+   Atendido — tabela `AuditLog` (`backend/src/services/auditService.ts`). Registra cadastro, sucesso e falha de login, promoção e descredenciamento de gestor, correção, exportação e exclusão de conta, sem nome, e-mail, senha ou token. **Limite:** tentativas bloqueadas pelo limite de taxa não são registradas.
 
 ## Unidade 2
 
@@ -296,8 +306,8 @@ Todos os dados do sistema ficam em dois lugares: o arquivo `dev.db` e a pasta `b
 | Média | Limitar tentativas em `/api/auth/*` e requisições em toda a API | RS03, RS22 | R6, R12 | 1, 4 |
 | Média | Exigir senha com no mínimo 8 caracteres | RS02 | R7 | 1 |
 | Média | Limitar o gestor ao seu `organId` | RS06 | R8 | 1 |
-| Média | Anonimizar demandas ao excluir conta | RS13, RS17 | — | 2, 3 |
-| Média | Criar log de auditoria de login, cadastro e troca de papel | RS21 | R9 | 3 |
+| Média | Anonimizar demandas ao excluir conta — **feito** | RS13, RS17 | — | 2, 3 |
+| Média | Criar log de auditoria de login, cadastro e troca de papel — **feito** | RS21 | R9 | 3 |
 | Média | Ativar Dependabot e `npm audit` | RS35 | R13 | 6 |
 | Baixa | Formalizar base legal e DPA para envio de fotos ao Google Vision | RS33 | R10 | 3, 6 |
 | Baixa | Adicionar `helmet` e monitoramento externo de disponibilidade | RS23, RS25 | R12 | 4 |
