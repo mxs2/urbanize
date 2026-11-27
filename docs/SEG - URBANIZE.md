@@ -131,7 +131,7 @@ Os riscos estão agrupados pela parte do código onde ficam. Os links apontam pa
 **Permissões**
 
 - **RS05** — Somente o servidor pode definir o papel (`role`) do usuário. O cadastro público não pode aceitar esse campo.
-  Atendido ([#49](https://github.com/mxs2/urbanize/issues/49)). O cadastro público recusa `role` diferente de `cidadao` com 422, e o repositório sempre grava `cidadao`. O app não mostra mais a opção "Gestor público". O primeiro gestor é criado pelo seed (`backend/prisma/seed.ts`). Os demais se cadastram como cidadãos e são promovidos por um gestor (`POST /api/auth/gestores`).
+  Atendido ([#49](https://github.com/mxs2/urbanize/issues/49)). O cadastro público recusa `role` diferente de `cidadao` com 422, e o repositório sempre grava `cidadao`. O app não mostra mais a opção "Gestor público". O primeiro gestor é criado pelo seed (`backend/prisma/seed.ts`); em produção, a partir de `SEED_GESTOR_EMAIL` e `SEED_GESTOR_SENHA`, sem contas de demonstração. Os demais se cadastram como cidadãos e são promovidos por um gestor (`POST /api/auth/gestores`).
 - **RS06** — Toda rota que altera dados de outro usuário deve verificar se quem pede é o dono do dado ou tem o papel certo.
   Atendido para demandas (`demandService.ts:27-36`, `130-131`). Porém, o gestor não fica limitado ao seu `organId` (R8).
 - **RS07** — A verificação de papel deve ficar em um único middleware, e não espalhada pelo código.

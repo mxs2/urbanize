@@ -2,6 +2,7 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { newPasswordSchema } from "../src/utils/passwordPolicy";
 
 const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" });
 const prisma = new PrismaClient({ adapter });
@@ -116,9 +117,27 @@ const demandsData = [
   },
 ];
 
-async function main() {
-  const senhaHash = await bcrypt.hash("demo", 10);
+/**
+ * Em produção não há contas de demonstração: a senha delas é pública. O primeiro gestor
+ * vem de SEED_GESTOR_EMAIL e SEED_GESTOR_SENHA, e uma conta existente não é alterada.
+ */
+async function createFirstGestor() {
+  const email = process.env.SEED_GESTOR_EMAIL?.trim().toLowerCase();
+  const senha = process.env.SEED_GESTOR_SENHA;
+  if (!email || !senha) {
+    console.warn("SEED_GESTOR_EMAIL/SEED_GESTOR_SENHA não definidos: nenhum gestor criado.");
+    return;
+  }
 
+  const senhaHash = await bcrypt.hash(newPasswordSchema.parse(senha), 10);
+  await prisma.user.upsert({
+    where: { email },
+    update: {},
+    create: { nome: "Gestor geral", email, senhaHash, role: "gestor", acessoGeral: true },
+  });
+}
+
+async function main() {
   const organMap: Record<string, string> = {};
   for (const organ of organs) {
     const created = await prisma.organ.upsert({
@@ -129,6 +148,12 @@ async function main() {
     organMap[organ.sigla] = created.id;
   }
 
+  if (process.env.NODE_ENV === "production") {
+    await createFirstGestor();
+    return;
+  }
+
+  const senhaHash = await bcrypt.hash("demo", 10);
   const userMap: Record<string, string> = {};
   for (const u of usersData) {
     const organConnect = u.organSigla ? { organ: { connect: { id: organMap[u.organSigla] } } } : {};
@@ -181,7 +206,7 @@ async function main() {
 main()
   .then(async () => {
     await prisma.$disconnect();
-    console.log("Base de demonstração populada.");
+    console.log("Seed concluído.");
   })
   .catch(async (error) => {
     console.error(error);
