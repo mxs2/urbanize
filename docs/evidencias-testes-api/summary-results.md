@@ -2,7 +2,7 @@
 
 - **Data da Execução:** 09/09/2026
 - **Ambiente:** Node.js v24.13.0, Express 5.2.1, Jest 30.4.2, Supertest 7.2.2, Prisma 7.8.0, SQLite (in-memory / file db)
-- **Status Geral:** 🟢 **100% APROVADO (41/41 testes)**
+- Resultado: 41 de 41 testes passaram.
 - **Tempo Total:** ~4.06 segundos
 
 ## Métricas por Arquivo de Teste
@@ -13,7 +13,7 @@
 | `tests/02_demands.test.ts` | 21 | 21 | 0 | ~780 ms |
 | `tests/03_metrics_and_organs.test.ts` | 5 | 5 | 0 | ~60 ms |
 | `tests/04_general.test.ts` | 4 | 4 | 0 | ~40 ms |
-| **TOTAL** | **41** | **41** | **0** | **4.06 s** |
+| Total | 41 | 41 | 0 | 4,06 s |
 
 ## Distribuição dos Cenários por Código de Status HTTP Validado
 

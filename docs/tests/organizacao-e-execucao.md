@@ -109,15 +109,15 @@ Cenários automatizados (detalhes em [`e2e/README.md`](../../e2e/README.md)):
 ## Pipeline no GitHub Actions — como acionar
 
 O workflow [`.github/workflows/regressao.yml`](../../.github/workflows/regressao.yml) tem um job
-por nível — **Unitários**, **API** (Jest + BDD) e **E2E** — que rodam em paralelo. O que roda
+por nível (Unitários, API com Jest e BDD, e E2E), que rodam em paralelo. O que roda
 depende do evento:
 
 | Evento | Unitários | API | E2E |
 |---|---|---|---|
-| Push em qualquer branch | ✅ | ✅ | — |
-| Pull request para `main` (antes do merge) | ✅ | ✅ | só `@smoke` |
-| Diário, 23h de Brasília (`0 2 * * *` UTC) | ✅ | ✅ | completo |
-| Manual (**Run workflow**) | ✅ | ✅ | completo |
+| Push em qualquer branch | Sim | Sim | Não |
+| Pull request para `main` (antes do merge) | Sim | Sim | só `@smoke` |
+| Diário, 23h de Brasília (`0 2 * * *` UTC) | Sim | Sim | completo |
+| Manual (*Run workflow*) | Sim | Sim | completo |
 
 Os testes smoke são os marcados com `{ tag: "@smoke" }` no Playwright:
 `registrar-demanda.spec.ts` (cidadão) e `gestor-gerencia-demanda.spec.ts` (gestor). Para rodar
@@ -126,7 +126,7 @@ só eles localmente: `npm test -- --grep @smoke`.
 O agendamento do GitHub Actions é *best-effort*: as execuções diárias começam com algumas horas de
 atraso (observado entre 06h20 e 07h10 UTC) e podem ser puladas em períodos de alta demanda.
 
-Para rodar manualmente: aba **Actions** → **Regressão** → **Run workflow** → escolher a branch.
+Para rodar manualmente: aba Actions, workflow Regressão, botão *Run workflow* e a branch desejada.
 
 No CI o app web não roda com `expo start --web`: é gerado com `npx expo export -p web` e servido
 estático em `:8081` (`npx serve dist -s`), o que é mais rápido e estável. O relatório do
