@@ -4,6 +4,7 @@ import { demandRoutes } from "./demandRoutes";
 import { metricsRoutes } from "./metricsRoutes";
 import { uploadRoutes } from "./uploadRoutes";
 import { organRoutes } from "./organRoutes";
+import { notificationRoutes } from "./notificationRoutes";
 
 export const routes = Router();
 
@@ -21,6 +22,7 @@ routes.get("/", (_req, res) =>
         metrics: "/api/metrics",
         organs: "/api/organs",
         upload: "/api/upload",
+        notifications: "/api/notifications",
       },
     },
   })
@@ -32,3 +34,4 @@ routes.use("/demands", demandRoutes);
 routes.use("/metrics", metricsRoutes);
 routes.use("/upload", uploadRoutes);
 routes.use("/organs", organRoutes);
+routes.use("/notifications", notificationRoutes);

@@ -90,6 +90,8 @@ export const env = {
   backupOffsiteDir: process.env.BACKUP_OFFSITE_DIR ? path.resolve(process.env.BACKUP_OFFSITE_DIR) : null,
   backupCron: process.env.BACKUP_CRON ?? "0 2 * * *",
   googleCredentials: process.env.GOOGLE_VISION_CREDENTIALS ?? null,
+  /** Envia push (Expo) ao cidadão quando o status da demanda muda. PUSH_NOTIFICATIONS=false desliga. */
+  pushNotificationsEnabled: process.env.PUSH_NOTIFICATIONS !== "false",
 };
 
 export const isProduction = isProductionEnv;

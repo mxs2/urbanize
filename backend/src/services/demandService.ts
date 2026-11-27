@@ -7,6 +7,7 @@ import {
 import { demandRepository, DemandFilters } from "../repositories/demandRepository";
 import { AppError } from "../utils/appError";
 import { toDemandResponse } from "../utils/demandMapper";
+import { notificationService } from "./notificationService";
 import { organService } from "./organService";
 import { Actor, canAccessDemand, demandScope } from "../utils/demandScope";
 import { invalidateMetrics } from "./metricsService";
@@ -129,6 +130,8 @@ export const demandService = {
     });
 
     await invalidateMetrics(current.organId);
+    // Sem await: o gestor não espera o Expo responder para ver a demanda atualizada.
+    void notificationService.notifyStatusChange(updated);
     return toDemandResponse(updated);
   },
 };

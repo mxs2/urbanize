@@ -83,6 +83,7 @@ model User {
 
   demands       Demand[]
   refreshTokens RefreshToken[]
+  pushTokens    PushToken[]
 }
 
 /// Sessão renovável (RS04). Guarda só o hash do token; a família identifica um login.
@@ -98,6 +99,20 @@ model RefreshToken {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([familyId])
+  @@index([userId])
+}
+
+/// Token Expo Push de um aparelho. Um usuário pode ter vários (celular, tablet...).
+model PushToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  platform  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 
