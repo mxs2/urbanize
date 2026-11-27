@@ -48,7 +48,7 @@ export default function DemandasList() {
             actionLabel={isCidadao ? "Criar demanda" : undefined}
             onAction={isCidadao ? () => router.push("/demandas/nova") : undefined}
           />
-        ) : null
+        ) : undefined
       }
     />
   );

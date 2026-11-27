@@ -273,7 +273,7 @@ Checklist completo de conformidade com todos os requisitos implementados (docume
 ## Recursos técnicos
 
 **Mobile:**
-- Expo SDK 57 (React Native 0.86, React 19)
+- Expo SDK 58 (React Native 0.88, React 19)
 - expo-router (navegação baseada em arquivos)
 - TypeScript (strict mode)
 - expo-image-picker (câmera/galeria)
