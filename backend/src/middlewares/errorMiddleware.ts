@@ -28,7 +28,18 @@ export const errorMiddleware = (error: unknown, _req: Request, res: Response, _n
     });
   }
 
-  console.error(error);
+  // Erros do parser do corpo (JSON malformado, tamanho excedido) trazem o corpo recebido,
+  // que pode ter senha. São erro do cliente: respondem 4xx e não vão para o log.
+  const { type, status } = (error ?? {}) as { type?: unknown; status?: unknown };
+  if (typeof type === "string" && typeof status === "number" && status >= 400 && status < 500) {
+    return res.status(status).json({
+      success: false,
+      error: { code: "INVALID_BODY", message: "Corpo da requisição inválido." },
+    });
+  }
+
+  // Só a pilha: o objeto inteiro pode carregar dados da requisição.
+  console.error(error instanceof Error ? error.stack : "Erro não identificado.");
   return res.status(500).json({
     success: false,
     error: {
