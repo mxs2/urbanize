@@ -48,3 +48,6 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# fotos enviadas pelos usuários (dados pessoais)
+/uploads/
