@@ -38,7 +38,13 @@
           "cameraPermission": "O Urbanize usa a câmera para fotografar problemas urbanos."
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-notifications",
+        {
+          "color": "#2b82d4"
+        }
+      ]
     ]
   }
 }

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { authService } from "@/services/authService";
 import { demandCache } from "@/services/demandCache";
+import { notifications } from "@/services/notifications";
 import { secureStorage } from "@/services/secureStorage";
 import { AUTH_STORAGE_KEY, clearAuthToken, onSessionChange, setSession } from "@/services/session";
 import { ProfileChanges, User } from "@/types/user";
@@ -62,6 +63,8 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: async () => {
         const userId = get().user?.id;
+        // Antes do logout na API: remover o token de push exige a sessão ainda válida.
+        await notifications.unregister();
         await authService.logout().catch(() => undefined);
         // O cache tem dados pessoais das demandas: não fica no aparelho depois do logout.
         if (userId) await demandCache.clear(userId);

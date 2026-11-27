@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { isOfflineError } from "@/services/api";
 import { demandCache } from "@/services/demandCache";
 import { demandService } from "@/services/demandService";
+import { notifications } from "@/services/notifications";
 import { useAuthStore } from "@/store/authStore";
 import { Demand, FilterState, NewDemandInput } from "@/types/demand";
 import { errorMessage } from "@/utils/errorMessage";
@@ -25,6 +26,8 @@ interface DemandState {
   filters: FilterState;
   fetchDemands: (filters?: FilterState) => Promise<void>;
   fetchDemandById: (id: string) => Promise<void>;
+  /** Atualiza em segundo plano, sem indicador de carregamento; usado para detectar mudanças de status. */
+  syncInBackground: () => Promise<void>;
   createDemand: (payload: NewDemandInput) => Promise<Demand>;
   updateDemandStatus: (id: string, status: Demand["status"], observacaoGestor?: string) => Promise<void>;
   setFilters: (filters: FilterState) => void;
@@ -33,6 +36,14 @@ interface DemandState {
 }
 
 const currentUserId = () => useAuthStore.getState().user?.id;
+
+/** Salva no cache e avisa o cidadão das demandas que mudaram de status desde a última vez. */
+const persist = async (demands: Demand[]) => {
+  const user = useAuthStore.getState().user;
+  if (!user) return;
+  const changed = await demandCache.save(user.id, demands);
+  if (user.role === "cidadao") await notifications.notifyStatusChanges(changed);
+};
 
 const initialState = {
   demands: [],
@@ -52,8 +63,7 @@ export const useDemandStore = create<DemandState>((set, get) => ({
     try {
       const data = await demandService.getAll(filters);
       set({ demands: data, bairros: mergeBairros(get().bairros, data), loading: false, offlineSince: undefined });
-      const userId = currentUserId();
-      if (userId) await demandCache.save(userId, data);
+      await persist(data);
     } catch (error) {
       const userId = currentUserId();
       const cached = isOfflineError(error) && userId ? await demandCache.list(userId, filters) : null;
@@ -76,8 +86,7 @@ export const useDemandStore = create<DemandState>((set, get) => ({
     try {
       const demand = await demandService.getById(id);
       set({ selected: demand, loading: false, offlineSince: undefined });
-      const userId = currentUserId();
-      if (userId) await demandCache.save(userId, [demand]);
+      await persist([demand]);
     } catch (error) {
       const userId = currentUserId();
       const cached = isOfflineError(error) && userId ? await demandCache.get(userId, id) : null;
@@ -86,6 +95,22 @@ export const useDemandStore = create<DemandState>((set, get) => ({
         return;
       }
       set({ error: errorMessage(error, "Erro ao carregar demanda"), loading: false });
+    }
+  },
+  async syncInBackground() {
+    if (get().loading || !currentUserId()) return;
+    try {
+      const latest = await demandService.getAll({});
+      const byId = new Map(latest.map((d) => [d.id, d]));
+      const { demands, selected } = get();
+      set({
+        demands: demands.map((d) => byId.get(d.id) ?? d),
+        selected: selected ? (byId.get(selected.id) ?? selected) : selected,
+        offlineSince: undefined,
+      });
+      await persist(latest);
+    } catch {
+      // Sincronização silenciosa: sem rede, tenta de novo no próximo ciclo.
     }
   },
   async createDemand(payload) {

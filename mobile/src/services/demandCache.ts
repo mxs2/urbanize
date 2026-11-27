@@ -48,9 +48,13 @@ export const applyFilters = (demands: Demand[], filters: FilterState) => {
 };
 
 export const demandCache = {
-  /** Junta as demandas recebidas às que já estavam salvas (a lista pode vir filtrada). */
-  async save(userId: string, demands: Demand[]) {
+  /**
+   * Junta as demandas recebidas às que já estavam salvas (a lista pode vir filtrada).
+   * Devolve as que já estavam no cache com outro status, para o app avisar o cidadão.
+   */
+  async save(userId: string, demands: Demand[]): Promise<Demand[]> {
     const current = (await read(userId))?.byId ?? {};
+    const changed = demands.filter((d) => current[d.id] && current[d.id].status !== d.status);
     for (const demand of demands) current[demand.id] = demand;
     const kept = Object.values(current).sort(byNewest).slice(0, MAX_ENTRIES);
     const next: StoredCache = {
@@ -58,6 +62,7 @@ export const demandCache = {
       byId: Object.fromEntries(kept.map((d) => [d.id, d])),
     };
     await AsyncStorage.setItem(keyFor(userId), JSON.stringify(next)).catch(() => undefined);
+    return changed;
   },
 
   async list(userId: string, filters: FilterState = {}): Promise<CachedDemands | null> {

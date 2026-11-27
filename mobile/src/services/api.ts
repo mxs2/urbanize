@@ -159,6 +159,13 @@ export const api = {
 
   getOrgans: () => call(() => http.get<ApiResponse<Organ[]>>("/organs")),
 
+  registerPushToken: (token: string, platform: string) =>
+    call(() => http.post<ApiResponse<{ token: string }>>("/notifications/token", { token, platform })),
+
+  unregisterPushToken: async (token: string): Promise<void> => {
+    await call(() => http.delete<ApiResponse<null>>("/notifications/token", { data: { token } }));
+  },
+
   uploadImage: (photo: { uri: string; name: string; type: string }, categoria?: DemandCategory) => {
     const formData = new FormData();
     // O FormData do React Native aceita { uri, name, type } como arquivo.

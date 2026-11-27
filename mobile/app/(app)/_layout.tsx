@@ -5,6 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/authStore";
 import { colors, spacing } from "@/theme";
 import { LoadingState } from "@/components/LoadingState";
+import { NoticeToast } from "@/components/NoticeToast";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const CIDADAO_LINKS = [
   { href: "/dashboard", label: "Início" },
@@ -22,6 +24,7 @@ const GESTOR_LINKS = [
 export default function AppLayout() {
   const { user, hydrated, logout } = useAuthStore();
   const pathname = usePathname();
+  useNotifications(hydrated ? user : null);
 
   // Navegar durante o render quebra o roteador; o redirect fica no efeito.
   useEffect(() => {
@@ -36,6 +39,7 @@ export default function AppLayout() {
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <View style={styles.content}>
         <Slot />
+        <NoticeToast />
       </View>
       <View style={styles.tabBar}>
         {links.map((link) => {

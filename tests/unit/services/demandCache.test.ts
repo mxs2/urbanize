@@ -43,6 +43,14 @@ describe("Cache local de demandas", () => {
     expect((await demandCache.list("u1", { busca: "urb-2" }))?.demands.map((d) => d.id)).toEqual(["2"]);
   });
 
+  it("devolve as demandas que mudaram de status desde a última consulta", async () => {
+    expect(await demandCache.save("u1", [demand("1"), demand("2")])).toEqual([]);
+
+    const changed = await demandCache.save("u1", [demand("1", { status: "em_atendimento" }), demand("2")]);
+
+    expect(changed.map((d) => [d.id, d.status])).toEqual([["1", "em_atendimento"]]);
+  });
+
   it("separa o cache por usuário e apaga no logout", async () => {
     await demandCache.save("u1", [demand("1")]);
 
