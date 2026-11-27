@@ -1,4 +1,4 @@
-# Histórias de Usuário — Urbanize
+# Histórias de usuário
 
 Complementa o [plano de testes](plano-de-testes.md). Os casos que verificam cada história estão em
 [casos-de-teste.md](casos-de-teste.md).

@@ -1,8 +1,8 @@
-# Alocação da Equipe por Área — 5º Semestre
+# Alocação da equipe por área (5º semestre)
 
 Divisão de demandas do PI baseada na enquete de interesse/veto realizada em 2026-08-24.
 
-Cada pessoa tem uma área **primária** (responsável pela entrega) e uma **secundária**
+Cada pessoa tem uma área primária (responsável pela entrega) e uma secundária
 (apoio, revisão, cobertura em caso de ausência). Ninguém foi alocado em área que vetou.
 
 ## Alocação
@@ -29,7 +29,6 @@ Cada pessoa tem uma área **primária** (responsável pela entrega) e uma **secu
 | Documentação | Hyngrid | Enzo, Janderson |
 | Negócios | Janderson | Hyngrid |
 | Branding/Design | Pamela | — |
-
 
 ## Base da enquete
 

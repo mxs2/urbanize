@@ -1,4 +1,4 @@
-# Plano de Testes — Urbanize
+# Plano de testes
 
 **Escopo:** `backend/` (Express + Prisma) e `mobile/` (Expo/React Native)
 **Planilha de origem:** [Google Sheets](https://docs.google.com/spreadsheets/d/1JBFtfe4tXyT1ysQPIRPgsehFX_fubWEBVphiHgesVKE/edit?gid=1407582128#gid=1407582128) · exports em [`docs/sheets/plano-de-testes/`](../sheets/plano-de-testes/)

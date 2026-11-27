@@ -1,4 +1,4 @@
-# Métricas de Qualidade — Urbanize
+# Métricas de qualidade
 
 Complementa o [plano de testes](plano-de-testes.md). Define o que a pipeline
 [`regressao.yml`](../../.github/workflows/regressao.yml) mede, por que mede e o que ficou de fora.
