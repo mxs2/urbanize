@@ -1,116 +1,101 @@
-# Urbanize — Suíte de Testes E2E
+# Testes E2E
 
-Testes end-to-end automatizados com [Playwright](https://playwright.dev/), executados contra a
-versão web do app mobile (Expo Router + `react-native-web`), exercitando o sistema pela interface
-como um usuário real.
+Testes de ponta a ponta com [Playwright](https://playwright.dev/), rodando contra a versão web do
+app (Expo Router com `react-native-web`). Eles usam o sistema pela interface, como um usuário.
 
-## Cenário automatizado
+## Cenários
 
-**`tests/registrar-demanda.spec.ts`** — Cidadão registra uma nova demanda urbana:
+`tests/fluxo-completo.spec.ts` (smoke) percorre o fluxo inteiro da entrega final:
 
-1. Login com credenciais de cidadão demo.
-2. Navegação até "Nova demanda" pela tab bar do app.
-3. Preenchimento do formulário (título, descrição, endereço) e aceite dos termos.
-4. Submissão e verificação do protocolo (`URB-XXXXX`) gerado na tela de detalhe.
-5. Confirmação de que a nova demanda aparece na listagem "Minhas demandas".
+1. Um cidadão novo cria a conta pela tela de cadastro.
+2. Registra uma demanda com foto (escolhida na galeria) e coordenadas do GPS do navegador,
+   escolhendo categoria e prioridade.
+3. Na listagem, abre o painel de filtros e filtra por categoria e status.
+4. O gestor entra, busca a demanda pelo protocolo e muda o status para "Em atendimento" com uma
+   observação.
+5. O cidadão volta ao app, recebe o aviso da mudança de status e, tocando nele, vê a demanda
+   atualizada com a observação no histórico.
 
-**`tests/gestor-gerencia-demanda.spec.ts`** — Gestor faz a triagem de uma demanda e conduz seu
-atendimento até "Resolvida":
+Cada etapa roda num contexto de navegador separado. O cidadão leva a sessão e o cache local de uma
+etapa para a outra (`storageState`), como o mesmo celular reaberto; é a comparação com esse cache
+que gera o aviso.
 
-1. Pré-condição: um cidadão registra uma demanda pela API (`POST /api/demands`), já que o
-   registro pela interface é coberto pelo cenário acima.
-2. Login com credenciais de gestor demo e redirecionamento ao "Painel do gestor".
-3. Verificação de que a nova demanda aparece na seção "Triagem Inteligente".
-4. Navegação até "Demandas", busca pelo protocolo e abertura do detalhe da demanda.
-5. Avanço do status Em análise → Encaminhada → Em atendimento → Resolvida, com uma observação em
-   cada etapa, conferindo o status atual e o registro da observação no histórico.
-6. Confirmação de que a listagem do gestor mostra a demanda como "Resolvida".
-7. Logout, login como o cidadão que registrou a demanda e confirmação de que ele também vê o
-   status "Resolvida" em "Minhas demandas".
+`tests/registrar-demanda.spec.ts` (smoke): o cidadão entra, abre "Nova demanda" pela barra de abas,
+preenche título, descrição e endereço, aceita os termos, confere o protocolo `URB-XXXXX` no detalhe
+e encontra a demanda em "Minhas demandas".
 
-**`tests/gestor-aceita-triagem.spec.ts`** — Gestor aceita a sugestão de encaminhamento da
-Triagem Inteligente:
+`tests/gestor-gerencia-demanda.spec.ts` (smoke): uma demanda criada pela API aparece na Triagem
+Inteligente do gestor, que a leva de "Em análise" até "Resolvida", uma observação por etapa. No
+fim, o cidadão autor vê o status "Resolvida".
 
-1. Pré-condição: um cidadão registra uma demanda pela API; o backend faz a triagem automática
-   e sugere o órgão responsável com um grau de confiança.
-2. Login com credenciais de gestor demo e leitura das métricas "Em análise" e "Encaminhadas".
-3. Verificação de que a demanda aparece na "Triagem Inteligente" com o órgão sugerido e a
-   confiança calculada pelo backend.
-4. Clique em "Aceitar": a demanda sai da fila de triagem, "Encaminhadas" aumenta em 1 e
-   "Em análise" diminui em 1.
-5. Na "Fila recente", a demanda aparece como "Encaminhada"; no detalhe, o histórico mostra a
-   triagem automática e o encaminhamento para o órgão sugerido.
+`tests/gestor-aceita-triagem.spec.ts`: o gestor aceita a sugestão da triagem; a demanda sai da
+fila, "Encaminhadas" sobe 1, "Em análise" desce 1 e o histórico mostra o encaminhamento.
 
-**`tests/buscar-demandas.spec.ts`** — Cidadão pesquisa demandas na listagem:
+`tests/triagem-gestor.spec.ts`: o cidadão registra pela interface e o gestor, em outra sessão,
+aceita a triagem; depois de recarregar, a demanda continua fora da fila.
 
-1. Login com credenciais de cidadão demo.
-2. Navegação até "Demandas" pela tab bar.
-3. Preenchimento do campo de busca com um termo ("Buraco").
-4. Confirmação de que o resultado correspondente aparece na listagem.
-
-**`tests/triagem-gestor.spec.ts`** — Cidadão registra pela interface e o gestor aceita a triagem
-em outra sessão:
-
-1. Cidadão faz login, registra uma demanda pela UI e guarda o protocolo (`URB-XXXXX`).
-2. Em um contexto separado, o gestor faz login e a demanda aparece na "Triagem Inteligente" com
-   a porcentagem de confiança.
-3. Clique em "Aceitar": a demanda sai da fila.
-4. Após recarregar a página, a demanda continua fora da fila (status persistido no backend).
+`tests/buscar-demandas.spec.ts`, `tests/filtrar-status.spec.ts`, `tests/cadastro-cidadao.spec.ts`
+e `tests/registrar-demanda-responsivo.spec.ts` cobrem busca, filtro de status, cadastro e o
+formulário em viewports de celular, tablet e desktop.
 
 ## Pré-requisitos
 
-- Node.js 24+ (mesma versão usada em `backend/` e `mobile/`).
-- Backend rodando com banco de dados seedado (usuários demo `cidadao@urbanize.com` e
-  `gestor@urbanize.com`, ambos com senha `demo`).
-- `backend/` com `npm install` já feito (o teste usa o Prisma Client de lá pra limpar dados antigos, ver abaixo).
-
-Antes de cada execução, a suíte remove automaticamente as demandas criadas por rodadas
-anteriores dos testes (`backend/scripts/e2eCleanup.ts`, disparado via `globalSetup` do
-Playwright), então a listagem não fica acumulando repetições.
+- Node.js 22 ou superior.
+- Backend rodando com o banco populado pelo seed (`cidadao@urbanize.com` e `gestor@urbanize.com`,
+  senha `demo`).
+- `npm install` feito em `backend/`: antes de cada rodada, o `globalSetup` roda
+  `backend/scripts/e2eCleanup.ts`, que apaga as demandas e os usuários criados por execuções
+  anteriores.
 
 ## Instalação
 
 ```bash
 cd e2e
 npm install
-npm run install-browsers   # baixa o Chromium usado pelos testes
+npm run install-browsers   # baixa o Chromium usado nos testes
 ```
 
-## Subindo o SUT
+## Subindo o sistema
 
-Em dois terminais separados, a partir da raiz do repositório:
+Em dois terminais, a partir da raiz do repositório:
 
 ```bash
-# Terminal 1 — API
+# Terminal 1: API
 cd backend
 npm install
 npm run db:migrate
 npm run db:seed
 npm run dev                 # http://localhost:4000/api
 
-# Terminal 2 — App web
+# Terminal 2: app web
 cd mobile
 npm install
-npm run web                  # http://localhost:8081
+npm run web                 # http://localhost:8081
 ```
 
-## Executando os testes
+## Executando
 
 ```bash
 cd e2e
-npm test                     # headless
-npm run test:headed          # com navegador visível
-npx playwright test tests/gestor-gerencia-demanda.spec.ts   # só um cenário
+npm test                                        # todos, sem janela
+npm run test:headed                             # com o navegador visível
+npx playwright test tests/fluxo-completo.spec.ts   # um cenário
+npm test -- --grep @smoke                       # só os smoke, como no pull request
 ```
 
-> Na primeira vez que o app web é aberto, o Metro ainda está compilando o bundle (~40s) e o
-> primeiro teste pode estourar o timeout. Abra `http://localhost:8081` no navegador uma vez antes
-> de rodar a suíte.
+Na primeira vez que o app web abre, o Metro ainda compila o bundle (cerca de 40 s) e o primeiro
+teste pode estourar o tempo. Abra http://localhost:8081 no navegador uma vez antes de rodar.
 
-Se o app web ou a API estiverem em outra porta/host, sobrescreva com:
+Se o app ou a API estiverem em outro endereço:
 
 ```bash
 WEB_URL=http://localhost:8081 API_URL=http://127.0.0.1:4000/api npm test
 ```
 
-O relatório HTML fica em `e2e/playwright-report/` (abrir com `npx playwright show-report`).
+O relatório HTML fica em `e2e/playwright-report/` (`npx playwright show-report`).
+
+## GIFs e vídeo do README
+
+`npm run demo:gifs` roda o `fluxo-completo.spec.ts` gravando cada etapa em vídeo e converte as
+gravações em `docs/media/1-cadastro.gif` a `5-notificacao.gif`. Precisa do sistema rodando, como
+acima, e do `ffmpeg` no PATH. Rode de novo sempre que a interface mudar.
