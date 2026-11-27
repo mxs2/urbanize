@@ -39,7 +39,7 @@ Fizemos esta análise a partir do código-fonte atual. Cada requisito informa o 
 | R8 | Gestor acessa demandas de outro órgão | O acesso do gestor não é limitado ao seu `organId` | Baixa-Média | Médio | **Médio** | `backend/src/services/demandService.ts:39-49` | 1 |
 | R9 | Incidentes sem registro | Não há log de login, cadastro ou troca de papel | Média | Médio | **Médio** — corrigido | `backend/src/services/auditService.ts` | 3, 4 |
 | R10 | Envio de dados pessoais a terceiro sem base legal clara | Fotos podem ir para o Google Vision para triagem | Baixa | Médio | **Baixo-Médio** | `backend/src/config/env.ts:40` (`GOOGLE_VISION_CREDENTIALS`) | 3, 6 |
-| R11 | Perda total dos dados | Banco (`dev.db`) e fotos (`uploads/`) ficam em um único disco, sem cópia de segurança | Média | Alto | **Alto** | `backend/.env.example` (`DATABASE_URL="file:./dev.db"`), `backend/src/middlewares/uploadMiddleware.ts:12` | 5 |
+| R11 | Perda total dos dados | Banco (`dev.db`) e fotos (`uploads/`) ficam em um único disco, sem cópia de segurança | Média | Alto | **Alto** — corrigido no código; falta ativar em produção | `backend/.env.example` (`DATABASE_URL="file:./dev.db"`), `backend/src/middlewares/uploadMiddleware.ts:12` | 5 |
 | R12 | API fora do ar por excesso de requisições | Sem limite de requisições e sem cabeçalhos de segurança HTTP | Média | Médio | **Médio** | `backend/src/app.ts` não usa `helmet` nem limite de taxa | 4 |
 | R13 | Falha ou ataque em pacote de terceiros | Imagens Docker e pacotes npm sem verificação automática de vulnerabilidades | Média | Médio | **Médio** | `docker/docker-compose.yml` (`redis:7-alpine`), `backend/package.json` | 6 |
 
@@ -184,9 +184,21 @@ Os riscos estão agrupados pela parte do código onde ficam. Os links apontam pa
 | Ponto de referência, latitude e longitude | `Demand` | Localizar o problema no mapa | Consentimento no formulário de nova demanda | Até a exclusão da conta |
 | Foto da demanda | `backend/uploads/` | Mostrar o problema e fazer a triagem automática | Consentimento antes do envio da foto | Até a exclusão da conta |
 | Evento, identificador do usuário, IP e data | `AuditLog` | Segurança e resposta a incidentes | Legítimo interesse (art. 7º, IX) | 12 meses |
+| Cópia de todos os dados acima | Backups cifrados | Recuperação de desastre | A mesma do dado original (art. 46) | Até 28 dias |
+| Identificador das contas excluídas | `contas-excluidas.log` | Não trazer contas de volta em uma restauração | Cumprimento de obrigação legal (art. 7º, II) | Sem prazo |
 | Hash e validade do token de renovação | `RefreshToken` | Manter e revogar sessões | Execução de contrato | Até a exclusão da conta |
 
 A tela de cadastro mostra um aviso de privacidade com a finalidade dos dados e os direitos do titular.
+
+#### Contas excluídas e backups
+
+**A exclusão de uma conta não apaga na hora os dados que estão em backups já feitos.** O sistema não edita backups cifrados: os dados da conta excluída, incluindo as fotos, continuam neles até o arquivo expirar, em **no máximo 28 dias** (RS29). Nesse período:
+
+- os backups só são usados para recuperação de desastre, e ficam cifrados;
+- toda restauração exclui novamente as contas apagadas, a partir de `contas-excluidas.log`, que guarda apenas o identificador interno de cada uma;
+- a tela Perfil informa esse prazo antes da exclusão.
+
+O mesmo vale para contatos anonimizados pelo prazo de guarda (RS20) e para correções (RS19): a versão anterior permanece nos backups até eles expirarem. O prazo depende de o backup rodar todo dia, porque os arquivos antigos são removidos quando um novo é criado.
 
 #### Direitos dos titulares (art. 18)
 
@@ -254,7 +266,7 @@ Os requisitos RS01 a RS16 das Entregas 1 e 2 fazem parte do dever de segurança 
 
 #### Situação atual
 
-Todos os dados do sistema ficam em dois lugares: o arquivo `dev.db` e a pasta `backend/uploads/`. Os dois estão no mesmo disco e não têm cópia de segurança. O `.gitignore` exclui os arquivos `*.db`, então o repositório também não guarda uma cópia (e não deve guardar, porque contém dados pessoais). Se o disco falhar, perdemos todas as demandas e fotos (R11).
+Os dados ficam no arquivo `dev.db` e na pasta `backend/uploads/`. O backup cifrado dos dois está implementado (`backend/src/services/backupService.ts`), mas **só passa a valer depois de configurado**: sem `BACKUP_ENCRYPTION_KEY` ele não roda, e sem `BACKUP_OFFSITE_DIR` a cópia fica no mesmo disco (R11).
 
 #### Metas
 
@@ -265,12 +277,18 @@ Todos os dados do sistema ficam em dois lugares: o arquivo `dev.db` e a pasta `b
 
 #### Requisitos
 
-- **RS26** — Fazer backup diário do banco com o comando `sqlite3 dev.db ".backup ..."`. Esse comando copia o banco com segurança mesmo com a API ligada.
+- **RS26** — Fazer backup diário do banco com cópia segura mesmo com a API ligada.
+  Atendido — tarefa diária (`BACKUP_CRON`, padrão 2h) usando a API de backup do SQLite, a mesma do comando `.backup`.
 - **RS27** — Fazer backup diário da pasta `uploads/`.
-- **RS28** — Guardar os backups fora do servidor principal (ex.: armazenamento em nuvem em outra região), com criptografia.
+  Atendido — as fotos vão no mesmo arquivo do banco.
+- **RS28** — Guardar os backups fora do servidor principal, com criptografia.
+  Parcial — o arquivo é cifrado com AES-256-GCM e copiado para `BACKUP_OFFSITE_DIR`. **Pendente:** escolher e montar o armazenamento externo, e guardar a chave fora do servidor.
 - **RS29** — Manter os backups diários por 7 dias e os semanais por 4 semanas. Backups também contêm dados pessoais e seguem as regras da Entrega 3.
-- **RS30** — Testar a restauração de um backup uma vez por mês e registrar o resultado. Backup que nunca foi testado não garante nada.
-- **RS31** — Escrever um roteiro de recuperação: quem age, em que ordem, e quais comandos usar para subir o sistema a partir do backup. O `docker-compose.yml` já permite recriar a API e o Redis. O Redis guarda apenas cache e não precisa de backup.
+  Atendido — a limpeza roda nas duas cópias a cada backup. Nenhum arquivo passa de 28 dias enquanto o backup rodar. Sobre contas excluídas, ver "Contas excluídas e backups", na Entrega 3.
+- **RS30** — Testar a restauração uma vez por mês e registrar o resultado.
+  Parcial — `npm run backup:verify` faz o teste e há um primeiro registro em ambiente de desenvolvimento. **Pendente:** definir o responsável e repetir todo mês em produção.
+- **RS31** — Escrever um roteiro de recuperação.
+  Atendido — [`docs/backup-e-restauracao.md`](backup-e-restauracao.md). **Pendente:** preencher os responsáveis. O Redis guarda apenas cache e não precisa de backup.
 
 ### Entrega 6 — Gestão de fornecedores (11/12)
 
@@ -302,7 +320,7 @@ Todos os dados do sistema ficam em dois lugares: o arquivo `dev.db` e a pasta `b
 | Alta | Proteger `/uploads` com login ou links assinados — **feito** | RS10 | R4 | 2 |
 | Alta | Guardar o token do app em `expo-secure-store` — **feito** | RS12 | R2 | 1 |
 | Alta | Usar TLS em todo ambiente fora do `localhost` — **código pronto; ativar em produção** | RS08 | R5 | 4 |
-| Alta | Criar backup diário do banco e das fotos, com teste de restauração | RS26–RS30 | R11 | 5 |
+| Alta | Criar backup diário do banco e das fotos, com teste de restauração — **código pronto; configurar em produção** | RS26–RS30 | R11 | 5 |
 | Média | Limitar tentativas em `/api/auth/*` e requisições em toda a API | RS03, RS22 | R6, R12 | 1, 4 |
 | Média | Exigir senha com no mínimo 8 caracteres | RS02 | R7 | 1 |
 | Média | Limitar o gestor ao seu `organId` | RS06 | R8 | 1 |
