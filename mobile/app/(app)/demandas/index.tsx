@@ -1,8 +1,8 @@
-import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
+import { FlatList, RefreshControl, View } from "react-native";
 import { router } from "expo-router";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { useDemands } from "@/hooks/useDemands";
-import { colors, spacing } from "@/theme";
+import { colors } from "@/theme";
 import { Button } from "@/components/Button";
 import { DemandCard } from "@/components/DemandCard";
 import { DemandFilters } from "@/components/DemandFilters";
@@ -23,7 +23,7 @@ export default function DemandasList() {
 
   return (
     <FlatList
-      contentContainerStyle={styles.container}
+      contentContainerClassName="p-6 pb-10"
       data={loading || error ? [] : demands}
       keyExtractor={(item) => item.id}
       refreshControl={
@@ -31,16 +31,16 @@ export default function DemandasList() {
       }
       renderItem={({ item }) => <DemandCard demand={item} />}
       ListHeaderComponent={
-        <View style={styles.header}>
+        <View className="mb-2">
           <SectionTitle
             title={isCidadao ? "Minhas Demandas" : "Todas as Demandas"}
-            subtitle={
-              isCidadao
-                ? "Acompanhe o status das demandas que você registrou"
-                : "Fila geral de demandas urbanas"
+            subtitle={isCidadao ? "Acompanhe o status das demandas que você registrou" : "Fila geral de demandas urbanas"}
+            action={
+              isCidadao ? (
+                <Button label="Nova" icon="add" size="sm" onPress={() => router.push("/demandas/nova")} />
+              ) : null
             }
           />
-          {isCidadao ? <Button label="Nova demanda" onPress={() => router.push("/demandas/nova")} /> : null}
           <OfflineBanner since={offlineSince} />
           <DemandFilters />
           {loading ? <LoadingState /> : null}
@@ -59,8 +59,3 @@ export default function DemandasList() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: spacing.lg, gap: spacing.sm },
-  header: { gap: spacing.sm, marginBottom: spacing.sm },
-});

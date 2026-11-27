@@ -1,14 +1,11 @@
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { colors, spacing } from "@/theme";
+import { ActivityIndicator, Text, View } from "react-native";
+import { colors } from "@/theme";
 
-export function LoadingState() {
+export function LoadingState({ label }: { label?: string }) {
   return (
-    <View style={styles.container}>
+    <View className="items-center justify-center gap-3 p-8" role="progressbar" aria-busy>
       <ActivityIndicator size="large" color={colors.brand[500]} />
+      {label ? <Text className="text-sm text-ink-muted">{label}</Text> : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: spacing.xl, alignItems: "center", justifyContent: "center" },
-});

@@ -1,43 +1,43 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ComponentProps } from "react";
+import { ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { colors } from "@/theme";
+import { AuthHeader } from "@/components/AuthHeader";
 import { Screen } from "@/components/Screen";
-import { colors, fontSizes, spacing } from "@/theme";
 import { Button } from "@/components/Button";
-import { categoryLabel } from "@/utils/categoryLabel";
 
-const STEPS = [
-  "Registre uma demanda urbana com foto e localização",
-  "Nossa triagem automática sugere o órgão responsável",
-  "Acompanhe o status em tempo real",
-  "Receba a resolução e histórico completo",
+const STEPS: { icon: ComponentProps<typeof Ionicons>["name"]; title: string; text: string }[] = [
+  { icon: "camera-outline", title: "Registre", text: "Foto e localização do problema, direto do celular." },
+  { icon: "git-branch-outline", title: "Triagem", text: "A categoria e o órgão responsável são sugeridos na hora." },
+  { icon: "eye-outline", title: "Acompanhe", text: "Cada mudança de status fica no histórico da demanda." },
+  { icon: "notifications-outline", title: "Seja avisado", text: "Você recebe uma notificação quando o status muda." },
 ];
 
 export default function Home() {
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.hero}>Urbanize</Text>
-        <Text style={styles.subtitle}>
-          Plataforma de gestão de demandas urbanas com backend real e diferenciação de perfis (Cidadão e Gestor)
-        </Text>
+      <ScrollView className="bg-canvas" contentContainerClassName="flex-grow justify-center p-6">
+        <AuthHeader
+          title="Problemas da cidade, resolvidos com transparência"
+          subtitle="Cidadãos registram demandas urbanas; a prefeitura organiza, encaminha e responde."
+        />
 
-        <View style={styles.ctaRow}>
+        <View className="mb-8 gap-2">
           <Button label="Entrar" onPress={() => router.push("/login")} />
           <Button label="Criar conta" variant="outline" onPress={() => router.push("/cadastro")} />
         </View>
 
-        <Text style={styles.sectionTitle}>Como funciona</Text>
-        {STEPS.map((step, index) => (
-          <Text key={step} style={styles.step}>
-            {index + 1}. {step}
-          </Text>
-        ))}
-
-        <Text style={styles.sectionTitle}>Categorias</Text>
-        <View style={styles.tagRow}>
-          {Object.values(categoryLabel).map((label) => (
-            <View key={label} style={styles.tag}>
-              <Text style={styles.tagLabel}>{label}</Text>
+        <View className="gap-4">
+          {STEPS.map((step) => (
+            <View key={step.title} className="flex-row items-start gap-3">
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-brand-50">
+                <Ionicons name={step.icon} size={20} color={colors.brand[600]} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-[15px] font-bold text-ink">{step.title}</Text>
+                <Text className="text-[13px] text-ink-muted">{step.text}</Text>
+              </View>
             </View>
           ))}
         </View>
@@ -45,20 +45,3 @@ export default function Home() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: spacing.lg, gap: spacing.sm, flexGrow: 1 },
-  hero: { fontSize: fontSizes.xl, fontWeight: "800", color: colors.brand[700] },
-  subtitle: { fontSize: fontSizes.sm, color: colors.textMuted, marginBottom: spacing.md },
-  ctaRow: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.lg },
-  sectionTitle: { fontSize: fontSizes.md, fontWeight: "700", color: colors.text, marginTop: spacing.md },
-  step: { fontSize: fontSizes.sm, color: colors.text, marginTop: spacing.xs },
-  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.xs },
-  tag: {
-    backgroundColor: colors.brand[50],
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: 999,
-  },
-  tagLabel: { color: colors.brand[700], fontSize: 12, fontWeight: "600" },
-});

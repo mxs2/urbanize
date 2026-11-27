@@ -1,27 +1,18 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { formatDate } from "@/utils/formatDate";
-import { colors, radii, spacing } from "@/theme";
+import { colors } from "@/theme";
 
 /** Aviso de que a tela mostra o cache local porque a API não respondeu. */
 export function OfflineBanner({ since }: { since?: string }) {
   if (!since) return null;
   return (
-    <View testID="banner-offline" style={styles.container} role="status">
-      <Text style={styles.title}>Sem conexão</Text>
-      <Text style={styles.text}>Mostrando dados salvos no aparelho em {formatDate(since)}.</Text>
+    <View testID="banner-offline" role="status" className="mb-3 flex-row items-start gap-2 rounded-md bg-warning/15 p-3">
+      <Ionicons name="cloud-offline-outline" size={18} color={colors.warning} />
+      <View className="flex-1">
+        <Text className="text-[13px] font-bold text-ink">Sem conexão</Text>
+        <Text className="text-xs text-ink">Mostrando dados salvos no aparelho em {formatDate(since)}.</Text>
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: `${colors.warning}22`,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.warning,
-    borderRadius: radii.sm,
-    padding: spacing.sm,
-    gap: 2,
-  },
-  title: { fontWeight: "700", color: colors.text, fontSize: 13 },
-  text: { color: colors.text, fontSize: 12 },
-});

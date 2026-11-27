@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
-import { colors, radii, spacing } from "@/theme";
+import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { colors } from "@/theme";
 import { Button } from "./Button";
 
 interface ErrorStateProps {
@@ -10,21 +11,12 @@ interface ErrorStateProps {
 
 export function ErrorState({ message, onRetry, testID }: ErrorStateProps) {
   return (
-    <View testID={testID} style={styles.container} role="alert">
-      <Text style={styles.text}>{message}</Text>
-      {onRetry ? <Button label="Tentar novamente" variant="outline" onPress={onRetry} /> : null}
+    <View testID={testID} role="alert" className="gap-3 rounded-md border border-danger/30 bg-danger/10 p-3">
+      <View className="flex-row items-start gap-2">
+        <Ionicons name="alert-circle" size={18} color={colors.danger} />
+        <Text className="flex-1 text-sm font-medium text-danger">{message}</Text>
+      </View>
+      {onRetry ? <Button label="Tentar novamente" variant="outline" size="sm" icon="refresh" onPress={onRetry} /> : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: `${colors.danger}15`,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.danger,
-    padding: spacing.md,
-    borderRadius: radii.sm,
-    gap: spacing.sm,
-  },
-  text: { color: colors.danger, fontWeight: "500" },
-});

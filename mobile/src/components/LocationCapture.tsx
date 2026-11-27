@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import * as Location from "expo-location";
-import { colors, radii, spacing } from "@/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { colors } from "@/theme";
 import { Button } from "./Button";
 
 export interface Coordinates {
@@ -23,21 +24,18 @@ interface LocationCaptureProps {
 
 export function LocationCapture({ value, onChange, onAddressResolved }: LocationCaptureProps) {
   const [locating, setLocating] = useState(false);
+  const [error, setError] = useState<string>();
 
   const capture = async () => {
     setLocating(true);
+    setError(undefined);
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert(
-          "Permissão necessária",
-          "Autorize o acesso à localização para registrar as coordenadas da demanda."
-        );
+        setError("Autorize o acesso à localização para registrar as coordenadas da demanda.");
         return;
       }
-      const position = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       const coordinates = { latitude: position.coords.latitude, longitude: position.coords.longitude };
       onChange(coordinates);
 
@@ -53,49 +51,43 @@ export function LocationCapture({ value, onChange, onAddressResolved }: Location
             });
           }
         } catch {
-          // reverse geocoding é best-effort: coordenadas já foram salvas acima
+          // Endereço é best-effort: as coordenadas já foram salvas acima.
         }
       }
     } catch {
-      Alert.alert("Erro ao localizar", "Não foi possível obter a localização do dispositivo.");
+      setError("Não foi possível obter a localização do dispositivo.");
     } finally {
       setLocating(false);
     }
   };
 
   return (
-    <View style={styles.container}>
+    <View className="mb-4 gap-3">
       {value ? (
-        <View style={styles.coordsBox}>
-          <Text style={styles.coordsText}>
-            Coordenadas: {value.latitude.toFixed(6)}, {value.longitude.toFixed(6)}
+        <View className="flex-row items-center gap-2 rounded-md bg-brand-50 p-3">
+          <Ionicons name="navigate" size={16} color={colors.brand[600]} />
+          <Text className="flex-1 text-[13px] text-brand-800">
+            GPS: {value.latitude.toFixed(6)}, {value.longitude.toFixed(6)}
           </Text>
         </View>
       ) : null}
       {locating ? (
-        <View style={styles.locatingRow}>
+        <View className="flex-row items-center gap-2">
           <ActivityIndicator color={colors.brand[500]} />
-          <Text style={styles.locatingText}>Obtendo localização…</Text>
+          <Text className="text-[13px] text-ink-muted">Obtendo localização…</Text>
         </View>
       ) : (
-        <View style={styles.actions}>
+        <View className="flex-row flex-wrap gap-2">
           <Button
             label={value ? "Atualizar localização" : "Usar minha localização"}
+            icon="locate-outline"
             variant="outline"
             onPress={capture}
           />
           {value ? <Button label="Remover" variant="ghost" onPress={() => onChange(undefined)} /> : null}
         </View>
       )}
+      {error ? <Text className="text-xs text-danger">{error}</Text> : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { gap: spacing.sm, marginTop: spacing.xs },
-  coordsBox: { backgroundColor: colors.brand[50], borderRadius: radii.md, padding: spacing.sm },
-  coordsText: { color: colors.brand[800], fontSize: 13 },
-  actions: { flexDirection: "row", gap: spacing.sm, flexWrap: "wrap" },
-  locatingRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  locatingText: { color: colors.textMuted, fontSize: 13 },
-});

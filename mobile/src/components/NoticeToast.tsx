@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useNoticeStore } from "@/store/noticeStore";
-import { colors, radii, spacing } from "@/theme";
 
 const AUTO_DISMISS_MS = 8000;
 
@@ -22,35 +22,18 @@ export function NoticeToast() {
     <Pressable
       testID="aviso-notificacao"
       role="alert"
-      style={styles.container}
       onPress={() => {
         dismiss();
         if (notice.demandId) router.push(`/demandas/${notice.demandId}`);
       }}
+      className="absolute left-4 right-4 top-4 z-10 flex-row items-start gap-3 rounded-lg bg-brand-800 p-4 shadow-lg"
+      style={{ elevation: 6 }}
     >
-      <Text style={styles.title}>{notice.title}</Text>
-      <Text style={styles.body}>{notice.body}</Text>
+      <Ionicons name="notifications" size={20} color="#fff" />
+      <View className="flex-1 gap-0.5">
+        <Text className="text-sm font-bold text-white">{notice.title}</Text>
+        <Text className="text-[13px] text-brand-100">{notice.body}</Text>
+      </View>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    top: spacing.md,
-    left: spacing.md,
-    right: spacing.md,
-    zIndex: 10,
-    backgroundColor: colors.brand[800],
-    borderRadius: radii.md,
-    padding: spacing.md,
-    gap: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
-  title: { color: "#fff", fontWeight: "700", fontSize: 14 },
-  body: { color: colors.brand[100], fontSize: 13 },
-});

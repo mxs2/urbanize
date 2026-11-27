@@ -1,17 +1,23 @@
-import { StyleSheet, Text, View } from "react-native";
-import { colors, fontSizes, spacing } from "@/theme";
+import { ReactNode } from "react";
+import { Text, View } from "react-native";
 
-export function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+interface SectionTitleProps {
+  title: string;
+  subtitle?: string;
+  /** Ação à direita do título (ex.: "Ver todas"). */
+  action?: ReactNode;
+}
+
+export function SectionTitle({ title, subtitle, action }: SectionTitleProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    <View className="mb-3 mt-2 flex-row items-end justify-between gap-3">
+      <View className="flex-1">
+        <Text role="heading" className="text-lg font-bold text-ink">
+          {title}
+        </Text>
+        {subtitle ? <Text className="mt-0.5 text-sm text-ink-muted">{subtitle}</Text> : null}
+      </View>
+      {action}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { marginBottom: spacing.md },
-  title: { fontSize: fontSizes.lg, fontWeight: "700", color: colors.text },
-  subtitle: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },
-});

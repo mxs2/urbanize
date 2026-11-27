@@ -1,23 +1,23 @@
 import { useEffect } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { useDemandStore } from "@/store/demandStore";
 import { useMetrics } from "@/hooks/useMetrics";
-import { colors, spacing } from "@/theme";
-import { Button } from "@/components/Button";
-import { MetricsCard } from "@/components/MetricsCard";
+import { colors } from "@/theme";
 import { DemandCard } from "@/components/DemandCard";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingState } from "@/components/LoadingState";
+import { MetricsCard } from "@/components/MetricsCard";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { SectionTitle } from "@/components/SectionTitle";
 
 export default function Dashboard() {
   const { ready, user } = useRoleGuard(["cidadao"]);
-  const { demands, error, offlineSince, fetchDemands } = useDemandStore();
-  const { metrics, loading: metricsLoading } = useMetrics();
+  const { demands, loading, error, offlineSince, fetchDemands } = useDemandStore();
+  const { metrics } = useMetrics(ready);
 
   useEffect(() => {
     if (ready) fetchDemands();
@@ -29,50 +29,73 @@ export default function Dashboard() {
   // A API já devolve só as demandas da conta; o contato pode ter sido anonimizado (RS20).
   const myDemands = demands;
   const resolvidas = myDemands.filter((d) => d.status === "resolvida").length;
-  const emAtendimento = myDemands.filter((d) => d.status === "em_atendimento").length;
+  const emAndamento = myDemands.filter((d) => !["resolvida", "cancelada"].includes(d.status)).length;
+  const primeiroNome = user.nome.split(" ")[0];
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <SectionTitle title={`Olá, ${user.nome}`} subtitle="Acompanhe suas demandas urbanas" />
+    <ScrollView contentContainerClassName="gap-4 p-6 pb-10">
+      <View>
+        <Text className="text-sm text-ink-muted">Olá,</Text>
+        <Text role="heading" className="text-2xl font-bold text-ink">
+          {primeiroNome}
+        </Text>
+      </View>
+
       <OfflineBanner since={offlineSince} />
 
-      {metricsLoading ? (
-        <LoadingState />
-      ) : (
-        <View style={styles.metricsRow}>
-          <MetricsCard label="Total" value={myDemands.length} />
-          <MetricsCard label="Em atendimento" value={emAtendimento} accentColor={colors.brand[500]} />
-          <MetricsCard label="Resolvidas" value={resolvidas} accentColor={colors.success} />
-          <MetricsCard
-            label="Tempo médio"
-            value={`${metrics?.tempoMedioAtendimentoDias ?? 0}d`}
-            accentColor={colors.warning}
-          />
+      <Pressable
+        testID="cta-nova-demanda"
+        role="button"
+        onPress={() => router.push("/demandas/nova")}
+        className="flex-row items-center gap-4 rounded-lg bg-brand-500 p-5 active:bg-brand-600"
+      >
+        <View className="h-12 w-12 items-center justify-center rounded-full bg-white/20">
+          <Ionicons name="camera" size={24} color="#fff" />
         </View>
-      )}
+        <View className="flex-1">
+          <Text className="text-base font-bold text-white">Registrar um problema</Text>
+          <Text className="text-[13px] text-brand-100">Foto, localização e pronto: a prefeitura recebe.</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#fff" />
+      </Pressable>
 
-      <SectionTitle title="Últimas demandas" />
+      <View className="flex-row flex-wrap gap-3">
+        <MetricsCard label="Registradas" value={myDemands.length} icon="documents-outline" />
+        <MetricsCard label="Em andamento" value={emAndamento} icon="time-outline" accentColor={colors.warning} />
+        <MetricsCard label="Resolvidas" value={resolvidas} icon="checkmark-done-outline" accentColor={colors.success} />
+        <MetricsCard
+          label="Tempo médio"
+          value={`${metrics?.tempoMedioAtendimentoDias ?? 0}d`}
+          icon="hourglass-outline"
+          accentColor={colors.brand[700]}
+        />
+      </View>
+
+      <SectionTitle
+        title="Últimas demandas"
+        action={
+          myDemands.length > 0 ? (
+            <Pressable onPress={() => router.push("/demandas")} hitSlop={8}>
+              <Text className="text-sm font-semibold text-brand-600">Ver todas</Text>
+            </Pressable>
+          ) : null
+        }
+      />
       {error ? <ErrorState message={error} onRetry={() => fetchDemands()} /> : null}
-      {myDemands.length === 0 && !error ? (
+      {loading && myDemands.length === 0 ? <LoadingState /> : null}
+      {!loading && myDemands.length === 0 && !error ? (
         <EmptyState
           message="Você ainda não registrou nenhuma demanda."
           actionLabel="Nova demanda"
           onAction={() => router.push("/demandas/nova")}
         />
       ) : (
-        myDemands.slice(0, 4).map((demand) => <DemandCard key={demand.id} demand={demand} />)
+        <View>
+          {myDemands.slice(0, 4).map((demand) => (
+            <DemandCard key={demand.id} demand={demand} />
+          ))}
+        </View>
       )}
-
-      <View style={styles.actions}>
-        <Button label="Nova demanda" onPress={() => router.push("/demandas/nova")} />
-        <Button label="Ver todas" variant="outline" onPress={() => router.push("/demandas")} />
-      </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: spacing.lg, gap: spacing.sm },
-  metricsRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.lg },
-  actions: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
-});

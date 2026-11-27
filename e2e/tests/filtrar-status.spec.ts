@@ -59,6 +59,7 @@ test("TC62: cidadão filtra a listagem por status Em análise", async ({ page, r
   const cards = page.locator('[data-testid^="card-demanda-"]');
   await expect(cards).toHaveCount(2);
 
+  await page.getByTestId("btn-filtros").click();
   await page.getByTestId("filtro-status-em_analise").click();
   await page.getByTestId("btn-aplicar-filtros").click();
 

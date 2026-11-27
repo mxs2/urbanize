@@ -1,5 +1,5 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { colors, spacing } from "@/theme";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { cx } from "@/utils/cx";
 
 interface Option {
   label: string;
@@ -14,21 +14,27 @@ interface SelectProps {
   onChange: (value: string) => void;
 }
 
+/** Escolha única em chips roláveis; funciona igual em toque, mouse e leitor de tela. */
 export function Select({ label, value, options, onChange, testID }: SelectProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+    <View className="mb-4">
+      <Text className="mb-1.5 text-[13px] font-semibold text-ink">{label}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2" role="radiogroup">
         {options.map((option) => {
           const active = option.value === value;
           return (
             <Pressable
               key={option.value}
               testID={testID ? `${testID}-${option.value || "todos"}` : undefined}
+              role="radio"
+              aria-checked={active}
               onPress={() => onChange(option.value)}
-              style={[styles.chip, active && styles.chipActive]}
+              className={cx(
+                "rounded-full border px-3.5 py-2",
+                active ? "border-brand-500 bg-brand-500" : "border-line bg-surface active:bg-brand-50"
+              )}
             >
-              <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{option.label}</Text>
+              <Text className={cx("text-[13px]", active ? "font-semibold text-white" : "text-ink")}>{option.label}</Text>
             </Pressable>
           );
         })}
@@ -36,20 +42,3 @@ export function Select({ label, value, options, onChange, testID }: SelectProps)
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { marginBottom: spacing.md },
-  label: { fontSize: 13, fontWeight: "600", color: colors.text, marginBottom: spacing.xs },
-  row: { gap: spacing.xs },
-  chip: {
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  chipActive: { backgroundColor: colors.brand[500], borderColor: colors.brand[500] },
-  chipLabel: { fontSize: 13, color: colors.text },
-  chipLabelActive: { color: "#fff", fontWeight: "600" },
-});

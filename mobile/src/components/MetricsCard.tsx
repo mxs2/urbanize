@@ -1,11 +1,14 @@
-import { StyleSheet, Text, View } from "react-native";
-import { colors, radii, spacing } from "@/theme";
+import { ComponentProps } from "react";
+import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { colors } from "@/theme";
 
 interface MetricsCardProps {
   label: string;
   value: string | number;
   helpText?: string;
   accentColor?: string;
+  icon?: ComponentProps<typeof Ionicons>["name"];
   testID?: string;
 }
 
@@ -14,31 +17,21 @@ export function MetricsCard({
   value,
   helpText,
   accentColor = colors.brand[500],
+  icon = "stats-chart-outline",
   testID,
 }: MetricsCardProps) {
   return (
-    <View style={[styles.card, { borderTopColor: accentColor }]}>
-      <Text style={styles.label}>{label}</Text>
-      <Text testID={testID} style={styles.value}>
+    <View className="min-w-[140px] flex-1 rounded-lg border border-line bg-surface p-4">
+      <View className="flex-row items-center justify-between">
+        <Text className="text-[13px] text-ink-muted">{label}</Text>
+        <View className="h-7 w-7 items-center justify-center rounded-full" style={{ backgroundColor: `${accentColor}1f` }}>
+          <Ionicons name={icon} size={15} color={accentColor} />
+        </View>
+      </View>
+      <Text testID={testID} className="mt-2 text-[26px] font-bold text-ink">
         {value}
       </Text>
-      {helpText ? <Text style={styles.helpText}>{helpText}</Text> : null}
+      {helpText ? <Text className="mt-1 text-xs text-ink-muted">{helpText}</Text> : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    minWidth: 140,
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    borderTopWidth: 3,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  label: { fontSize: 13, color: colors.textMuted },
-  value: { fontSize: 24, fontWeight: "700", color: colors.text, marginTop: spacing.xs },
-  helpText: { fontSize: 12, color: colors.textMuted, marginTop: spacing.xs },
-});

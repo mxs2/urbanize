@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { uploadService } from "@/services/uploadService";
 import { ImageTriage } from "@/types/demand";
-import { colors, radii, spacing } from "@/theme";
+import { errorMessage } from "@/utils/errorMessage";
+import { colors } from "@/theme";
 import { Button } from "./Button";
 
 interface ImageUploadProps {
@@ -14,17 +15,18 @@ interface ImageUploadProps {
 export function ImageUpload({ onResult, disabled }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string>();
 
   const processAsset = async (asset: ImagePicker.ImagePickerAsset) => {
     setPreview(asset.uri);
     setProcessing(true);
+    setError(undefined);
     try {
       const fileName = asset.fileName ?? asset.uri.split("/").pop() ?? "foto.jpg";
       const mimeType = asset.mimeType ?? "image/jpeg";
-      const result = await uploadService.image({ uri: asset.uri, name: fileName, type: mimeType });
-      onResult(result);
-    } catch {
-      Alert.alert("Erro ao processar imagem", "Não foi possível enviar ou classificar a foto.");
+      onResult(await uploadService.image({ uri: asset.uri, name: fileName, type: mimeType }));
+    } catch (err) {
+      setError(errorMessage(err, "Não foi possível enviar ou classificar a foto."));
     } finally {
       setProcessing(false);
     }
@@ -51,27 +53,24 @@ export function ImageUpload({ onResult, disabled }: ImageUploadProps) {
   };
 
   return (
-    <View style={styles.container}>
-      {preview ? <Image source={{ uri: preview }} style={styles.preview} /> : null}
+    <View className="mb-4 gap-3 rounded-lg border border-line bg-surface p-4">
+      <View>
+        <Text className="text-[15px] font-bold text-ink">Foto do problema</Text>
+        <Text className="text-xs text-ink-muted">A triagem automática sugere a categoria a partir da imagem.</Text>
+      </View>
+      {preview ? <Image source={{ uri: preview }} className="h-48 w-full rounded-md bg-line" /> : null}
       {processing ? (
-        <View style={styles.processingRow}>
+        <View className="flex-row items-center gap-2">
           <ActivityIndicator color={colors.brand[500]} />
-          <Text style={styles.processingText}>Enviando e classificando imagem…</Text>
+          <Text className="text-[13px] text-ink-muted">Enviando e classificando imagem…</Text>
         </View>
       ) : (
-        <View style={styles.actions}>
-          <Button label="Tirar foto" variant="outline" onPress={pickFromCamera} disabled={disabled} />
-          <Button label="Escolher da galeria" variant="outline" onPress={pickFromLibrary} disabled={disabled} />
+        <View className="flex-row gap-2">
+          <Button className="flex-1" label="Câmera" icon="camera-outline" variant="outline" onPress={pickFromCamera} disabled={disabled} />
+          <Button className="flex-1" label="Galeria" icon="images-outline" variant="outline" onPress={pickFromLibrary} disabled={disabled} />
         </View>
       )}
+      {error ? <Text className="text-xs text-danger">{error}</Text> : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { gap: spacing.sm, marginBottom: spacing.md },
-  preview: { width: "100%", height: 180, borderRadius: radii.md, backgroundColor: colors.border },
-  actions: { flexDirection: "row", gap: spacing.sm },
-  processingRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  processingText: { color: colors.textMuted, fontSize: 13 },
-});

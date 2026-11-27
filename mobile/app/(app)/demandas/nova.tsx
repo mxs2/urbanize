@@ -1,21 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { useDemandStore } from "@/store/demandStore";
 import { organService } from "@/services/organService";
 import { DemandCategory, DemandPriority, ImageTriage, NewDemandInput } from "@/types/demand";
 import { Organ, buildEmailLink, buildWhatsappLink } from "@/types/organ";
 import { categoryLabel } from "@/utils/categoryLabel";
+import { cx } from "@/utils/cx";
 import { errorMessage } from "@/utils/errorMessage";
+import { priorityLabel } from "@/utils/priorityLabel";
 import { FieldErrors, hasErrors, validateDemand } from "@/utils/validation";
-import { colors, fontSizes, radii, spacing } from "@/theme";
+import { colors } from "@/theme";
 import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
 import { ErrorState } from "@/components/ErrorState";
 import { ImageUpload } from "@/components/ImageUpload";
 import { CapturedAddress, Coordinates, LocationCapture } from "@/components/LocationCapture";
+import { SectionTitle } from "@/components/SectionTitle";
 import { Select } from "@/components/Select";
 import { TextField } from "@/components/TextField";
+
+const toOptions = (labels: Record<string, string>) =>
+  Object.entries(labels).map(([value, label]) => ({ value, label }));
 
 export default function NovaDemanda() {
   const { ready, user } = useRoleGuard(["cidadao"]);
@@ -44,10 +52,7 @@ export default function NovaDemanda() {
         .catch(() => undefined);
   }, [ready]);
 
-  const matchedOrgan = useMemo(
-    () => organService.findByCategory(organs, categoria),
-    [organs, categoria]
-  );
+  const matchedOrgan = useMemo(() => organService.findByCategory(organs, categoria), [organs, categoria]);
 
   /* eslint-disable react-hooks/exhaustive-deps, react-hooks/set-state-in-effect -- one-shot suggestion sync when the matched organ or category changes, not a render-derived value */
   useEffect(() => {
@@ -100,7 +105,6 @@ export default function NovaDemanda() {
         historico: [],
       };
       const created = await createDemand(payload);
-      Alert.alert("Demanda registrada", `Protocolo ${created.protocolo}`);
       router.replace(`/demandas/${created.id}`);
     } catch (error) {
       setApiError(errorMessage(error, "Não foi possível registrar a demanda."));
@@ -109,21 +113,37 @@ export default function NovaDemanda() {
 
   if (!ready) return null;
 
+  const whatsapp = matchedOrgan ? buildWhatsappLink(matchedOrgan, "-", titulo) : null;
+  const email = matchedOrgan ? buildEmailLink(matchedOrgan, "-", titulo) : null;
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Nova demanda</Text>
+    <ScrollView contentContainerClassName="p-6 pb-10" keyboardShouldPersistTaps="handled">
+      <SectionTitle title="Nova demanda" subtitle="Conte o que aconteceu e onde. A prefeitura recebe na hora." />
 
       {/* O aceite vem antes da foto: o envio e a triagem acontecem assim que ela é escolhida. */}
-      <Pressable testID="checkbox-aceite" style={styles.consentRow} onPress={() => setAceite(!aceite)}>
-        <View style={[styles.checkbox, aceite && styles.checkboxChecked]} />
-        <Text style={styles.consentText}>
+      <Pressable
+        testID="checkbox-aceite"
+        role="checkbox"
+        aria-checked={aceite}
+        onPress={() => setAceite(!aceite)}
+        className="mb-3 flex-row items-start gap-3"
+      >
+        <View
+          className={cx(
+            "mt-0.5 h-5 w-5 items-center justify-center rounded border",
+            aceite ? "border-brand-500 bg-brand-500" : errors.aceite ? "border-danger" : "border-line bg-surface"
+          )}
+        >
+          {aceite ? <Ionicons name="checkmark" size={14} color="#fff" /> : null}
+        </View>
+        <Text className="flex-1 text-xs text-ink-muted">
           Concordo em compartilhar estes dados com o órgão responsável pela demanda. A foto pode ser enviada ao Google
           (Cloud Vision) para classificação automática. Evite fotografar pessoas e placas de veículos. Marque para
           anexar uma foto ou registrar.
         </Text>
       </Pressable>
       {errors.aceite ? (
-        <Text testID="checkbox-aceite-erro" style={styles.fieldError}>
+        <Text testID="checkbox-aceite-erro" className="mb-2 text-xs text-danger">
           {errors.aceite}
         </Text>
       ) : null}
@@ -131,27 +151,24 @@ export default function NovaDemanda() {
       <ImageUpload onResult={handleImageResult} disabled={!aceite} />
 
       {matchedOrgan ? (
-        <View style={styles.organAlert}>
-          <Text style={styles.organText}>
-            Identificamos que esta demanda pode ser de responsabilidade de {matchedOrgan.nome}.
-          </Text>
-          <View style={styles.organActions}>
-            {buildWhatsappLink(matchedOrgan, "-", titulo) ? (
-              <Button
-                label="WhatsApp"
-                variant="outline"
-                onPress={() => Linking.openURL(buildWhatsappLink(matchedOrgan, "-", titulo)!)}
-              />
+        <View className="mb-4 gap-3 rounded-lg bg-brand-50 p-4">
+          <View className="flex-row items-start gap-2">
+            <Ionicons name="business-outline" size={18} color={colors.brand[700]} />
+            <Text className="flex-1 text-[13px] text-brand-800">
+              Esta demanda deve ser de responsabilidade de <Text className="font-bold">{matchedOrgan.nome}</Text>.
+            </Text>
+          </View>
+          <View className="flex-row flex-wrap gap-2">
+            {whatsapp ? (
+              <Button size="sm" icon="logo-whatsapp" label="WhatsApp" variant="outline" onPress={() => Linking.openURL(whatsapp)} />
             ) : null}
-            {buildEmailLink(matchedOrgan, "-", titulo) ? (
-              <Button
-                label="Email"
-                variant="outline"
-                onPress={() => Linking.openURL(buildEmailLink(matchedOrgan, "-", titulo)!)}
-              />
+            {email ? (
+              <Button size="sm" icon="mail-outline" label="Email" variant="outline" onPress={() => Linking.openURL(email)} />
             ) : null}
             {matchedOrgan.site ? (
               <Button
+                size="sm"
+                icon="globe-outline"
                 label="Site oficial"
                 variant="outline"
                 onPress={() => Linking.openURL(matchedOrgan.site!)}
@@ -161,83 +178,67 @@ export default function NovaDemanda() {
         </View>
       ) : null}
 
-      <TextField
-        testID="input-titulo"
-        label="Título"
-        required
-        value={titulo}
-        onChangeText={setTitulo}
-        error={errors.titulo}
-      />
-      <TextField
-        testID="input-descricao"
-        label="Descrição"
-        required
-        multiline
-        numberOfLines={4}
-        value={descricao}
-        onChangeText={setDescricao}
-        error={errors.descricao}
-      />
-      <Select
-        label="Prioridade"
-        value={prioridade}
-        options={[
-          { label: "Baixa", value: "baixa" },
-          { label: "Média", value: "media" },
-          { label: "Alta", value: "alta" },
-        ]}
-        onChange={(value) => setPrioridade(value as DemandPriority)}
-      />
+      <Card className="mb-4 pb-0">
+        <Text className="mb-3 text-[15px] font-bold text-ink">O que aconteceu</Text>
+        <TextField testID="input-titulo" label="Título" required value={titulo} onChangeText={setTitulo} error={errors.titulo} />
+        <TextField
+          testID="input-descricao"
+          label="Descrição"
+          required
+          multiline
+          numberOfLines={4}
+          value={descricao}
+          onChangeText={setDescricao}
+          error={errors.descricao}
+        />
+        <Select
+          testID="select-categoria"
+          label="Categoria"
+          value={categoria}
+          options={toOptions(categoryLabel)}
+          onChange={(value) => setCategoria(value as DemandCategory)}
+        />
+        <Select
+          testID="select-prioridade"
+          label="Prioridade"
+          value={prioridade}
+          options={toOptions(priorityLabel)}
+          onChange={(value) => setPrioridade(value as DemandPriority)}
+        />
+      </Card>
 
-      <Text style={styles.sectionLabel}>Localização</Text>
-      <TextField
-        testID="input-endereco"
-        label="Endereço/Rua"
-        required
-        value={endereco}
-        onChangeText={setEndereco}
-        error={errors.endereco}
-      />
-      <TextField label="Bairro" value={bairro} onChangeText={setBairro} />
-      <TextField label="Cidade" value={cidade} onChangeText={setCidade} />
-      <TextField label="Ponto de referência" value={referencia} onChangeText={setReferencia} />
-      <LocationCapture value={coordenadas} onChange={setCoordenadas} onAddressResolved={handleAddressResolved} />
+      <Card className="mb-4 pb-0">
+        <Text className="mb-3 text-[15px] font-bold text-ink">Onde</Text>
+        <LocationCapture value={coordenadas} onChange={setCoordenadas} onAddressResolved={handleAddressResolved} />
+        <TextField
+          testID="input-endereco"
+          label="Endereço/Rua"
+          required
+          value={endereco}
+          onChangeText={setEndereco}
+          error={errors.endereco}
+        />
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <TextField label="Bairro" value={bairro} onChangeText={setBairro} />
+          </View>
+          <View className="flex-1">
+            <TextField label="Cidade" value={cidade} onChangeText={setCidade} />
+          </View>
+        </View>
+        <TextField label="Ponto de referência" value={referencia} onChangeText={setReferencia} />
+      </Card>
 
-      {apiError ? <ErrorState testID="erro-registrar" message={apiError} /> : null}
+      {apiError ? (
+        <View className="my-2">
+          <ErrorState testID="erro-registrar" message={apiError} />
+        </View>
+      ) : null}
 
-      <View style={styles.footerActions}>
-        <Button testID="btn-registrar" label="Registrar demanda" onPress={handleSubmit} loading={saving} />
+      <View className="mt-4 gap-2">
+        <Button testID="btn-registrar" label="Registrar demanda" icon="send" onPress={handleSubmit} loading={saving} />
         <Button label="Cancelar" variant="ghost" onPress={() => router.push("/demandas")} />
       </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: spacing.lg, gap: spacing.sm, paddingBottom: spacing.xl },
-  title: { fontSize: fontSizes.xl, fontWeight: "700", color: colors.text, marginBottom: spacing.sm },
-  sectionLabel: { fontSize: fontSizes.md, fontWeight: "700", color: colors.text, marginTop: spacing.md },
-  organAlert: {
-    backgroundColor: colors.brand[50],
-    borderRadius: radii.md,
-    padding: spacing.sm,
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  organText: { color: colors.brand[800], fontSize: 13 },
-  organActions: { flexDirection: "row", gap: spacing.xs, flexWrap: "wrap" },
-  consentRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm, marginVertical: spacing.md },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginTop: 2,
-  },
-  checkboxChecked: { backgroundColor: colors.brand[500], borderColor: colors.brand[500] },
-  consentText: { flex: 1, fontSize: 12, color: colors.textMuted },
-  fieldError: { color: colors.danger, fontSize: 12, marginTop: -spacing.sm },
-  footerActions: { gap: spacing.sm },
-});
