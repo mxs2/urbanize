@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "path";
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value);
@@ -82,6 +83,12 @@ export const env = {
   retentionMonths: Math.max(1, toNumber(process.env.RETENTION_MONTHS, 12)),
   /** Validade dos links assinados de /uploads. */
   uploadUrlTtlSeconds: toNumber(process.env.UPLOAD_URL_TTL_SECONDS, 3600),
+  /** RS26–RS29. A chave não tem valor padrão (RS11): sem ela o backup diário não roda. */
+  backupKey: process.env.BACKUP_ENCRYPTION_KEY?.trim() || null,
+  backupDir: path.resolve(process.env.BACKUP_DIR || "backups"),
+  /** Cópia fora do servidor principal (disco remoto ou armazenamento em nuvem montado). */
+  backupOffsiteDir: process.env.BACKUP_OFFSITE_DIR ? path.resolve(process.env.BACKUP_OFFSITE_DIR) : null,
+  backupCron: process.env.BACKUP_CRON ?? "0 2 * * *",
   googleCredentials: process.env.GOOGLE_VISION_CREDENTIALS ?? null,
 };
 

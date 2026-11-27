@@ -10,3 +10,5 @@ docs
 tools
 backend/src/generated
 backend/dev.db
+backend/backups
+backend/uploads

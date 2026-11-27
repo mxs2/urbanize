@@ -51,3 +51,8 @@ next-env.d.ts
 
 # fotos enviadas pelos usuários (dados pessoais)
 /uploads/
+
+# backups: dados pessoais, mesmo cifrados
+/backups/
+*.tar.gz.enc
+*.antes-restauracao-*

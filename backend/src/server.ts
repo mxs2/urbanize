@@ -1,12 +1,13 @@
 import { app } from "./app";
 import { env } from "./config/env";
 import { connectRedis } from "./config/redis";
-import { startMetricsJob, startRetentionJob } from "./config/cron";
+import { startBackupJob, startMetricsJob, startRetentionJob } from "./config/cron";
 
 const start = async () => {
   await connectRedis();
   startMetricsJob();
   startRetentionJob();
+  startBackupJob();
 
   app.listen(env.port, env.host, () => {
     console.log(`Backend Urbanize escutando em http://${env.host}:${env.port}/api`);
