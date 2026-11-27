@@ -66,6 +66,8 @@ const usersData = [
     email: "gestor@urbanize.com",
     role: "gestor" as const,
     organSigla: "EMLURB" as string | null,
+    // Gestor de demonstração enxerga todos os órgãos; os criados pela API, só o próprio.
+    acessoGeral: true,
   },
 ];
 
@@ -132,8 +134,15 @@ async function main() {
     const organConnect = u.organSigla ? { organ: { connect: { id: organMap[u.organSigla] } } } : {};
     const created = await prisma.user.upsert({
       where: { email: u.email },
-      update: { nome: u.nome, role: u.role, senhaHash, ...organConnect },
-      create: { nome: u.nome, email: u.email, role: u.role, senhaHash, ...organConnect },
+      update: { nome: u.nome, role: u.role, senhaHash, acessoGeral: u.acessoGeral ?? false, ...organConnect },
+      create: {
+        nome: u.nome,
+        email: u.email,
+        role: u.role,
+        senhaHash,
+        acessoGeral: u.acessoGeral ?? false,
+        ...organConnect,
+      },
     });
     userMap[u.email] = created.id;
   }

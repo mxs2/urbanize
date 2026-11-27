@@ -1,7 +1,7 @@
-import { Prisma, UserRole } from "../generated/prisma/client";
 import { cache } from "../config/redis";
 import { prisma } from "../config/prisma";
 import { demandRepository } from "../repositories/demandRepository";
+import { Actor, demandScope } from "../utils/demandScope";
 
 const toRecord = <T extends string>(items: Array<Record<T, string> & { _count: { _all: number } }>, key: T) =>
   items.reduce<Record<string, number>>((acc, item) => {
@@ -16,13 +16,21 @@ export interface MetricsSummary {
   tempoMedioAtendimentoDias: number;
 }
 
-export const calculateMetricsSummary = async (user?: {
-  id: string;
-  role: UserRole;
-}): Promise<MetricsSummary> => {
-  const where: Prisma.DemandWhereInput | undefined =
-    user && user.role !== "gestor" ? { userId: user.id } : undefined;
-  const cacheKey = where ? `metrics:summary:user:${user?.id}` : "metrics:summary:all";
+const organCacheKey = (organId: string) => `metrics:summary:organ:${organId}`;
+
+export const invalidateMetrics = async (organId?: string | null) => {
+  await cache.del("metrics:summary:all");
+  if (organId) await cache.del(organCacheKey(organId));
+};
+
+export const calculateMetricsSummary = async (user?: Actor): Promise<MetricsSummary> => {
+  // Mesmo escopo da listagem, para os totais baterem com o que a pessoa vê (RS06).
+  const where = (user && demandScope(user)) || undefined;
+  const cacheKey = !where
+    ? "metrics:summary:all"
+    : where.organId
+      ? organCacheKey(where.organId)
+      : `metrics:summary:user:${where.userId}`;
 
   const cached = await cache.getJson<MetricsSummary>(cacheKey);
   if (cached) return cached;

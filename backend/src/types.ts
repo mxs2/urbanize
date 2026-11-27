@@ -6,6 +6,7 @@ export interface AuthUser {
   role: UserRole;
   nome: string;
   organId?: string | null;
+  acessoGeral: boolean;
 }
 
 declare global {

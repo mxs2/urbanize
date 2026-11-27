@@ -2,12 +2,13 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { authService } from "@/services/authService";
 import { secureStorage } from "@/services/secureStorage";
-import { AUTH_STORAGE_KEY, clearAuthToken, setAuthToken } from "@/services/session";
+import { AUTH_STORAGE_KEY, clearAuthToken, onSessionChange, setSession } from "@/services/session";
 import { User } from "@/types/user";
 
 interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   loading: boolean;
   hydrated: boolean;
   login: (email: string, senha: string) => Promise<void>;
@@ -25,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       token: null,
+      refreshToken: null,
       loading: false,
       hydrated: false,
       login: async (email: string, senha: string) => {
@@ -32,11 +34,11 @@ export const useAuthStore = create<AuthState>()(
 
         set({ loading: true });
         try {
-          const { user, token } = await authService.login({ email, senha });
+          const { user, token, refreshToken } = await authService.login({ email, senha });
           // Antes de liberar a UI: o token precisa estar disponível para o interceptor,
           // senão a primeira requisição da próxima tela sai sem Authorization.
-          setAuthToken(token);
-          set({ user, token, loading: false });
+          setSession(token, refreshToken);
+          set({ user, token, refreshToken, loading: false });
         } catch (error) {
           set({ loading: false });
           throw error;
@@ -47,9 +49,9 @@ export const useAuthStore = create<AuthState>()(
 
         set({ loading: true });
         try {
-          const { user, token } = await authService.register({ nome, email, telefone, senha });
-          setAuthToken(token);
-          set({ user, token, loading: false });
+          const { user, token, refreshToken } = await authService.register({ nome, email, telefone, senha });
+          setSession(token, refreshToken);
+          set({ user, token, refreshToken, loading: false });
         } catch (error) {
           set({ loading: false });
           throw error;
@@ -58,15 +60,15 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         await authService.logout().catch(() => undefined);
         clearAuthToken();
-        set({ user: null, token: null });
+        set({ user: null, token: null, refreshToken: null });
       },
     }),
     {
       name: AUTH_STORAGE_KEY,
       storage: createJSONStorage(() => secureStorage),
-      partialize: (state) => ({ user: state.user, token: state.token }),
+      partialize: (state) => ({ user: state.user, token: state.token, refreshToken: state.refreshToken }),
       onRehydrateStorage: () => (state) => {
-        setAuthToken(state?.token ?? null);
+        setSession(state?.token ?? null, state?.refreshToken ?? null);
         // Via setState (e não mutando `state`) para que os componentes já montados
         // re-renderizem; marcado mesmo em caso de falha, senão a UI fica presa no loading.
         useAuthStore.setState({ hydrated: true });
@@ -74,3 +76,8 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// Renovação vinda da API é persistida; sessão encerrada derruba o usuário (useRoleGuard redireciona).
+onSessionChange(({ token, refreshToken }) => {
+  useAuthStore.setState(token ? { token, refreshToken } : { user: null, token: null, refreshToken: null });
+});

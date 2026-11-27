@@ -7,6 +7,12 @@ export const userRepository = {
   findById(id: string) {
     return prisma.user.findUnique({ where: { id } });
   },
+  async organExists(id: string) {
+    return Boolean(await prisma.organ.findUnique({ where: { id }, select: { id: true } }));
+  },
+  promoteToGestor(id: string, organId: string) {
+    return prisma.user.update({ where: { id }, data: { role: "gestor", organId } });
+  },
   create(data: { nome: string; email: string; senhaHash: string; telefone?: string }) {
     return prisma.user.create({
       data: {
