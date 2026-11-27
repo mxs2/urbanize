@@ -25,6 +25,14 @@ export const resolveImageUrl = (imagemUrl?: string) => {
   return imagemUrl.startsWith("http") ? imagemUrl : `${SERVER_BASE_URL}${imagemUrl}`;
 };
 
+/** Foto a enviar: `uri` no app nativo, `file` (File do navegador) na web. */
+export interface PhotoUpload {
+  uri: string;
+  name: string;
+  type: string;
+  file?: Blob;
+}
+
 /** Erro de comunicação com a API, com o motivo separado para a UI decidir o que mostrar. */
 export class ApiError extends Error {
   constructor(
@@ -166,10 +174,15 @@ export const api = {
     await call(() => http.delete<ApiResponse<null>>("/notifications/token", { data: { token } }));
   },
 
-  uploadImage: (photo: { uri: string; name: string; type: string }, categoria?: DemandCategory) => {
+  uploadImage: (photo: PhotoUpload, categoria?: DemandCategory) => {
     const formData = new FormData();
-    // O FormData do React Native aceita { uri, name, type } como arquivo.
-    formData.append("imagem", photo as unknown as Blob);
+    if (photo.file) {
+      // Web: o FormData do navegador só envia Blob/File; um objeto vira o texto "[object Object]".
+      formData.append("imagem", photo.file, photo.name);
+    } else {
+      // iOS/Android: o FormData do React Native aceita { uri, name, type } como arquivo.
+      formData.append("imagem", { uri: photo.uri, name: photo.name, type: photo.type } as unknown as Blob);
+    }
     if (categoria) formData.append("categoria", categoria);
 
     return call(() =>

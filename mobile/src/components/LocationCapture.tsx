@@ -79,6 +79,7 @@ export function LocationCapture({ value, onChange, onAddressResolved }: Location
       ) : (
         <View className="flex-row flex-wrap gap-2">
           <Button
+            testID="btn-localizacao"
             label={value ? "Atualizar localização" : "Usar minha localização"}
             icon="locate-outline"
             variant="outline"

@@ -87,6 +87,7 @@ export default function DemandDetail() {
 
       {selected.imagemUrl ? (
         <Image
+          testID="foto-demanda"
           source={{ uri: resolveImageUrl(selected.imagemUrl) }}
           className="h-56 w-full rounded-lg bg-line"
           accessibilityLabel="Foto enviada pelo cidadão"
