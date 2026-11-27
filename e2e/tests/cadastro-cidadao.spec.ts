@@ -14,7 +14,6 @@ test("TC12: cidadão cria conta pela tela de cadastro", async ({ page, request }
   await page.getByTestId("input-nome").fill("Maria Silva");
   await page.getByTestId("input-email").fill(email);
   await page.getByTestId("input-senha").fill("senhaSegura123");
-  await page.getByText("Cidadão", { exact: true }).click();
   await page.getByTestId("btn-criar-conta").click();
 
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 10_000 });
