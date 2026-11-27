@@ -8,3 +8,10 @@ export interface User {
   role: DemandRole;
   senha?: string;
 }
+
+export interface ProfileChanges {
+  nome?: string;
+  email?: string;
+  telefone?: string | null;
+  senhaAtual?: string;
+}

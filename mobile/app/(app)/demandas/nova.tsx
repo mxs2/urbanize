@@ -117,7 +117,17 @@ export default function NovaDemanda() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Nova demanda</Text>
 
-      <ImageUpload onResult={handleImageResult} />
+      {/* O aceite vem antes da foto: o envio e a triagem acontecem assim que ela é escolhida. */}
+      <Pressable testID="checkbox-aceite" style={styles.consentRow} onPress={() => setAceite(!aceite)}>
+        <View style={[styles.checkbox, aceite && styles.checkboxChecked]} />
+        <Text style={styles.consentText}>
+          Concordo em compartilhar estes dados com o órgão responsável pela demanda. A foto pode ser enviada ao Google
+          (Cloud Vision) para classificação automática. Evite fotografar pessoas e placas de veículos. Marque para
+          anexar uma foto ou registrar.
+        </Text>
+      </Pressable>
+
+      <ImageUpload onResult={handleImageResult} disabled={!aceite} />
 
       {matchedOrgan ? (
         <View style={styles.organAlert}>
@@ -177,13 +187,6 @@ export default function NovaDemanda() {
       <TextField label="Cidade" value={cidade} onChangeText={setCidade} />
       <TextField label="Ponto de referência" value={referencia} onChangeText={setReferencia} />
       <LocationCapture value={coordenadas} onChange={setCoordenadas} onAddressResolved={handleAddressResolved} />
-
-      <Pressable testID="checkbox-aceite" style={styles.consentRow} onPress={() => setAceite(!aceite)}>
-        <View style={[styles.checkbox, aceite && styles.checkboxChecked]} />
-        <Text style={styles.consentText}>
-          Concordo em compartilhar estes dados com o órgão responsável pela demanda.
-        </Text>
-      </Pressable>
 
       <View style={styles.footerActions}>
         <Button testID="btn-registrar" label="Registrar demanda" onPress={handleSubmit} loading={submitting} />

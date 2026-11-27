@@ -24,7 +24,8 @@ export default function Dashboard() {
 
   if (!ready || !user) return <LoadingState />;
 
-  const myDemands = demands.filter((d) => d.emailSolicitante === user.email);
+  // A API já devolve só as demandas da conta; o contato pode ter sido anonimizado (RS20).
+  const myDemands = demands;
   const resolvidas = myDemands.filter((d) => d.status === "resolvida").length;
   const emAtendimento = myDemands.filter((d) => d.status === "em_atendimento").length;
 

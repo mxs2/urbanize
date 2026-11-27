@@ -51,6 +51,11 @@ export default function Cadastro() {
         <Text testID="regra-senha" style={erroSenha ? styles.erro : styles.dica}>
           {erroSenha || REGRA_SENHA}
         </Text>
+        <Text testID="aviso-privacidade" style={styles.dica}>
+          Usamos seu nome, e-mail e telefone para criar a conta e responder às suas demandas, que são vistas pelo órgão
+          responsável. Em Perfil você corrige, baixa ou exclui seus dados. O contato em demandas encerradas é
+          anonimizado após 12 meses.
+        </Text>
         <Button testID="btn-criar-conta" label="Criar conta" onPress={handleSubmit} loading={loading} />
         <Link href="/login" style={styles.link}>
           Já tem conta? Entrar
