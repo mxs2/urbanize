@@ -61,7 +61,7 @@ test("fluxo completo: cadastro → demanda com foto e GPS → filtros → gestor
   test.setTimeout(180_000);
   const sufixo = Date.now();
   const email = `fluxo-${sufixo}@urbanize.test`;
-  const titulo = `Lixo acumulado na calçada ${sufixo}`;
+  const titulo = "Lixo acumulado na calçada";
 
   // 1. Cadastro do cidadão
   const cadastro = await openStage(browser, "1-cadastro");

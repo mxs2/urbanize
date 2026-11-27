@@ -6,7 +6,8 @@
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
-    "install-browsers": "playwright install chromium"
+    "install-browsers": "playwright install chromium",
+    "demo:gifs": "node scripts/gerar-gifs.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0"
