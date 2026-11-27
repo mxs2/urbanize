@@ -1,340 +1,317 @@
 # Urbanize
 
-> Plataforma de gestão de demandas urbanas com backend real, banco persistente e diferenciação de perfis (Cidadão e Gestor)
+App para registrar e acompanhar problemas urbanos (buraco na rua, poste caído, lixo
+acumulado). O cidadão fotografa o problema e marca o local pelo GPS; a prefeitura recebe a
+demanda já classificada, encaminha ao órgão responsável e atualiza o status. A cada mudança
+de status, o cidadão recebe uma notificação.
 
-**Stack:** Expo (React Native) • TypeScript • expo-router • Zustand • Node.js • Express • Prisma ORM • JWT • Redis opcional • Cron Jobs
+O projeto tem duas partes:
 
-> Este projeto era originalmente uma aplicação web (Next.js). O frontend foi removido e substituído por um app mobile (Expo/React Native) — veja o histórico do Git para a versão web.
+- `mobile/`: app em Expo (React Native) com TypeScript, expo-router, Zustand e NativeWind.
+  Roda no Android, no iOS e no navegador.
+- `backend/`: API REST em Node.js com Express, Prisma (SQLite), JWT, Redis opcional e
+  envio de push pelo Expo.
 
-## Início rápido (Docker)
+## Demonstração
+
+| Cadastro | Registro com foto e GPS | Acompanhamento e filtros |
+| :---: | :---: | :---: |
+| ![Cadastro do cidadão](docs/media/1-cadastro.gif) | ![Registro de demanda com foto e GPS](docs/media/2-registro.gif) | ![Listagem com filtros](docs/media/3-filtros.gif) |
+
+| Gestor atualiza o status | Cidadão é notificado |
+| :---: | :---: |
+| ![Gestor muda o status da demanda](docs/media/4-gestor.gif) | ![Notificação de mudança de status](docs/media/5-notificacao.gif) |
+
+Vídeo do fluxo completo (31 s): [docs/media/demo-fluxo-completo.mp4](docs/media/demo-fluxo-completo.mp4).
+
+Os GIFs e o vídeo saem do teste E2E do fluxo completo, gravado na versão web. Para gerá-los de
+novo depois de mudar a interface, rode `npm run demo:gifs` em `e2e/` (detalhes em
+[e2e/README.md](e2e/README.md)).
+
+## Funcionalidades
+
+**Cidadão**
+
+- Cria a conta pelo app (o cadastro público só cria cidadãos).
+- Registra demandas com foto (câmera ou galeria), localização do GPS, categoria e prioridade.
+  A foto passa por uma triagem que sugere a categoria e o órgão responsável.
+- Acompanha as próprias demandas, com busca e filtros por status, categoria, bairro e
+  prioridade, e vê o histórico de cada uma.
+- Recebe notificação quando o gestor muda o status.
+- Consulta as demandas já abertas mesmo sem internet (cache local).
+
+**Gestor público**
+
+- Painel com total de demandas, contagem por status, distribuição por categoria e tempo
+  médio de atendimento.
+- Fila de triagem: aceita a sugestão automática ou abre a demanda para revisar.
+- Altera o status com uma observação, que entra no histórico e dispara a notificação.
+
+Contas de demonstração (criadas pelo seed):
+
+| Perfil | Email | Senha |
+| --- | --- | --- |
+| Cidadão | `cidadao@urbanize.com` | `demo` |
+| Gestor | `gestor@urbanize.com` | `demo` |
+
+## Como rodar
+
+Pré-requisitos: Node.js 22 ou superior e npm. Para o caminho com Docker, Docker Desktop (ou
+Docker Engine com Compose). Para testar no celular, o app Expo Go.
+
+### Com Docker
 
 ```bash
-./scripts/up.sh            # Windows: bash scripts/up.sh (Git Bash ou WSL2)
+./scripts/up.sh        # no Windows: bash scripts/up.sh (Git Bash ou WSL2)
 ```
 
-> Passo a passo detalhado para Linux, macOS e Windows — incluindo pré-requisitos e solução de problemas — em **[docs/guia-instalacao.md](docs/guia-instalacao.md)**.
+O script gera `backend/.env`, `mobile/.env` e `docker/.env` (com o IP da máquina na rede local
+e um `JWT_SECRET` aleatório), sobe os containers, aplica as migrations e popula o banco.
 
-O script gera `backend/.env`, `mobile/.env` e `docker/.env` (detectando o IP desta máquina na rede local e sorteando um `JWT_SECRET`), sobe os containers, aplica as migrations e popula o banco de demonstração.
-
-| Serviço | Endereço | O que é |
+| Serviço | Endereço | Conteúdo |
 | --- | --- | --- |
-| `mobile` | http://localhost:8081 | App Urbanize no navegador (Expo web / Metro) |
-| `backend` | http://localhost:4000/api | API REST (índice com os endpoints disponíveis) |
+| `mobile` | http://localhost:8081 | App no navegador e Metro para o Expo Go |
+| `backend` | http://localhost:4000/api | API REST; documentação em `/api/docs` |
 | `redis` | `localhost:6379` | Cache das métricas |
 
-O mesmo Metro atende o Expo Go. O QR code para escanear com o celular aparece no log do serviço:
+O QR code para abrir o app no Expo Go aparece em
+`docker compose -f docker/docker-compose.yml logs mobile`. O celular precisa estar na mesma
+rede Wi-Fi da máquina.
 
 ```bash
-docker compose -f docker/docker-compose.yml logs mobile     # mostra o QR code
-docker compose -f docker/docker-compose.yml attach mobile   # QR + menu interativo (r, a, w...)
+./scripts/down.sh      # para os containers
+./scripts/down.sh -v   # para e apaga os volumes (banco e dependências)
 ```
 
-Se preferir digitar, a URL é `exp://<IP-da-máquina>:8081` — o IP detectado fica em `docker/.env` como `HOST_LAN_IP`. O celular precisa estar na mesma rede Wi-Fi.
+O passo a passo para Linux, macOS e Windows, com solução de problemas, está em
+[docs/guia-instalacao.md](docs/guia-instalacao.md).
+
+### Sem Docker
+
+Backend, em um terminal:
 
 ```bash
-./scripts/down.sh          # para os containers
-./scripts/down.sh -v       # para e apaga os volumes (força reinstalar e repovoar)
-./scripts/setup-env.sh     # só regenera os .env (use --force ou --ip <endereço>)
-```
-
-## Início rápido (sem Docker)
-
-```bash
-# Backend
 cd backend
 npm install
-Copy-Item .env.example .env   # PowerShell (Linux/macOS: cp .env.example .env)
+cp .env.example .env           # PowerShell: Copy-Item .env.example .env
 npx prisma generate
-npm run db:migrate
-npm run db:seed
-npm run dev                    # API em http://localhost:4000/api
+npm run db:migrate             # cria backend/dev.db e aplica as migrations
+npm run db:seed                # usuários, órgãos e demandas de demonstração
+npm run dev                    # http://localhost:4000/api
+```
 
-# App mobile (em outro terminal)
+App, em outro terminal:
+
+```bash
 cd mobile
 npm install
-Copy-Item .env.example .env    # ajuste EXPO_PUBLIC_API_URL se necessário
-npm start                      # abre o Expo Dev Tools (emulador, dispositivo físico ou navegador)
+cp .env.example .env           # ajuste EXPO_PUBLIC_API_URL, ver abaixo
+npm start                      # w = navegador, a = emulador Android, QR = Expo Go
 ```
 
-**Credenciais de teste:**
-- Cidadão: `cidadao@urbanize.com` / `demo`
-- Gestor: `gestor@urbanize.com` / `demo`
+`EXPO_PUBLIC_API_URL` precisa ser um endereço que o aparelho alcance:
 
-**Backend:** `http://localhost:4000/api`
+| Onde o app roda | Valor |
+| --- | --- |
+| Navegador ou simulador iOS | `http://127.0.0.1:4000/api` |
+| Emulador Android | `http://10.0.2.2:4000/api` |
+| Celular na mesma rede | `http://<IP-da-máquina>:4000/api` |
 
-<details>
-<summary>Configurando EXPO_PUBLIC_API_URL</summary>
+O valor entra no bundle quando o Metro inicia. Depois de mudar, reinicie com
+`npx expo start --clear`.
 
-O app mobile precisa apontar para o endereço do backend acessível pelo dispositivo/emulador usado:
+## Variáveis de ambiente
 
-- **iOS Simulator / web:** `http://127.0.0.1:4000/api` (padrão)
-- **Android Emulator:** `http://10.0.2.2:4000/api`
-- **Dispositivo físico:** `http://<IP-da-máquina-na-rede-local>:4000/api`
+### Backend (`backend/.env`)
 
-Configure em `mobile/.env` (a partir de `mobile/.env.example`).
+| Variável | Obrigatória | Padrão | Para que serve |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | sim | `file:./dev.db` | Arquivo SQLite usado pelo Prisma |
+| `JWT_SECRET` | sim | (nenhum) | Assina os tokens de sessão e os links das fotos. Em produção, 32+ caracteres aleatórios (`openssl rand -hex 32`) |
+| `JWT_EXPIRES_IN` | não | `15m` | Validade do token de acesso; a sessão se renova pelo refresh token |
+| `REFRESH_TOKEN_TTL_DAYS` | não | `7` | Validade do refresh token |
+| `BACKEND_PORT` | não | `4000` | Porta HTTP (o Render usa `PORT`) |
+| `BACKEND_HOST` | não | `0.0.0.0` | Interface de rede; `0.0.0.0` aceita conexões do celular |
+| `FRONTEND_URL` | em produção | (vazio) | Origens liberadas no CORS, separadas por vírgula |
+| `AUTH_COOKIE_NAME` | não | `urbanize_session` | Cookie de sessão para clientes web |
+| `REDIS_URL` | não | (vazio) | Liga o cache das métricas (sem ela o cache é desligado) |
+| `METRICS_CRON` | não | `*/15 * * * *` | Frequência do snapshot de métricas |
+| `RETENTION_MONTHS` / `RETENTION_CRON` | não | `12` / `0 3 * * *` | LGPD: após quantos meses o contato de demandas encerradas é anonimizado, e quando a rotina roda |
+| `UPLOAD_URL_TTL_SECONDS` | não | `3600` | Validade dos links assinados das fotos |
+| `GOOGLE_VISION_CREDENTIALS` | não | (vazio) | JSON da conta de serviço do Google Vision. Sem ela, a triagem usa a categoria escolhida no app |
+| `BACKUP_ENCRYPTION_KEY` | não | (vazio) | Chave do backup diário cifrado (`openssl rand -hex 32`). Sem ela o backup não roda |
+| `BACKUP_DIR` / `BACKUP_OFFSITE_DIR` / `BACKUP_CRON` | não | `./backups` / (vazio) / `0 2 * * *` | Onde e quando o backup é gravado |
+| `SEED_GESTOR_EMAIL` / `SEED_GESTOR_SENHA` | em produção | (vazio) | Primeiro gestor criado pelo seed em produção, onde as contas de demonstração não existem |
+| `PUSH_NOTIFICATIONS` | não | `true` | `false` desliga o envio de push |
+| `TRUST_PROXY` / `REQUIRE_HTTPS` | não | `1` / `true` em produção | Comportamento atrás de proxy com TLS |
 
-</details>
+### App (`mobile/.env`)
 
-<details>
-<summary>Scripts disponíveis</summary>
+| Variável | Para que serve |
+| --- | --- |
+| `EXPO_PUBLIC_API_URL` | Endereço da API (ver tabela acima). Nos builds do EAS vem do `eas.json` |
 
-**Backend (`backend/`):**
-- `npm run dev` - API Express com Prisma, JWT, Redis opcional e cron
-- `npm run db:migrate` - Criar/aplicar migrações Prisma
-- `npm run db:seed` - Popular usuários e demandas de demonstração
-- `npm test` - Testes de aceitação (Jest + Supertest)
-- `npm run test:bdd` - Cenários BDD (Cucumber)
+### Docker (`docker/.env`)
 
-**Mobile (`mobile/`):**
-- `npm start` - Abre o Expo Dev Tools
-- `npm run android` / `npm run ios` / `npm run web` - Roda em uma plataforma específica
-- `npm run typecheck` - Verificação de tipos TypeScript
-- `npm run lint` - ESLint (eslint-config-expo)
-- `npm test` - Testes unitários (Jest)
+`HOST_LAN_IP` (IP usado pelo Expo Go), `BACKEND_PORT`, `METRO_PORT`, `REDIS_PORT` e, para
+publicar com HTTPS pelo Caddy, `API_DOMAIN` e `BACKEND_BIND=127.0.0.1`. O
+`scripts/setup-env.sh` preenche os valores locais.
 
-</details>
+## Banco de dados
 
-<details>
-<summary>Solução de problemas</summary>
+O backend usa SQLite pelo Prisma. O schema fica em `backend/prisma/schema.prisma` e as
+migrations em `backend/prisma/migrations/`.
 
-**Erro ao executar o seed:**
+| Comando (em `backend/`) | O que faz |
+| --- | --- |
+| `npm run db:migrate` | Aplica as migrations pendentes (e cria uma nova se o schema mudou) |
+| `npx prisma migrate deploy` | Aplica as migrations sem criar novas (CI e produção) |
+| `npm run db:seed` | Cria os usuários de demonstração, os órgãos e algumas demandas |
+| `npm run db:studio` | Abre o Prisma Studio para ver e editar os dados |
+| `npx prisma migrate reset` | Apaga o banco, reaplica as migrations e roda o seed |
+
+Tabelas principais: `User` (perfil `cidadao` ou `gestor`), `Demand` e `DemandHistory`
+(histórico de status), `Organ` (órgãos e categorias que atendem), `PushToken` (aparelhos
+para notificação) e `MetricsSnapshot` (consolidação periódica).
+
+## Documentação da API
+
+Com o backend rodando, a documentação interativa (Swagger UI) fica em
+**http://localhost:4000/api/docs**. Para chamar rotas autenticadas, faça login em
+`POST /auth/login`, copie o `token` e use o botão *Authorize*.
+
+A especificação OpenAPI está em [`backend/openapi.yaml`](backend/openapi.yaml) e também é
+servida em `/api/docs/openapi.json`. Para usar no Postman ou no Insomnia, importe esse
+arquivo ou a URL (*Import > File/URL*): as coleções são geradas a partir dele.
+
+Resumo das rotas:
+
+| Método e rota | Quem pode | Descrição |
+| --- | --- | --- |
+| `POST /auth/register` | público | Cadastro de cidadão |
+| `POST /auth/login` | público | Login; devolve o JWT |
+| `GET /auth/me` / `POST /auth/logout` | autenticado | Sessão atual / logout |
+| `GET /demands` | autenticado | Lista com filtros `status`, `categoria`, `prioridade`, `bairro`, `busca` |
+| `POST /demands` | autenticado | Registra uma demanda |
+| `GET /demands/:id` | dono ou gestor | Detalhe com histórico |
+| `PATCH /demands/:id/status` | gestor | Muda o status e notifica o cidadão |
+| `POST /upload/image` | autenticado | Envia a foto e devolve a triagem |
+| `GET /metrics/summary` | autenticado | Indicadores (do usuário ou gerais, para o gestor) |
+| `GET /organs` | autenticado | Órgãos e categorias atendidas |
+| `POST`/`DELETE /notifications/token` | autenticado | Registra ou remove o aparelho para push |
+
+## Notificações
+
+O fluxo segue registrar, acompanhar e notificar:
+
+1. Depois do login, o app pede permissão de notificação e registra o token Expo Push do
+   aparelho em `POST /notifications/token`.
+2. Quando o gestor muda o status, o backend envia o push para os aparelhos do autor da
+   demanda. Tocar na notificação abre a demanda.
+3. O Expo Go e os emuladores não recebem push remoto. Nesses casos o app sincroniza a cada
+   30 segundos e ao voltar para o primeiro plano, compara os status com o cache local e
+   dispara uma notificação local. Na web, o aviso aparece dentro do app.
+
+O push remoto exige um build com `projectId` do EAS (ver abaixo) rodando em aparelho físico.
+
+## Modo offline
+
+Cada lista e cada detalhe consultados ficam salvos no AsyncStorage, separados por usuário.
+Sem conexão, o app mostra esses dados com o aviso "Sem conexão" e aplica os mesmos filtros
+da API. O token de sessão fica no SecureStore (Keychain ou Keystore) e a sessão sobrevive
+ao fechamento do app. O logout apaga o cache.
+
+## Build e atualizações (EAS)
+
+A configuração está em [`mobile/eas.json`](mobile/eas.json). Os perfis `preview` e
+`production` geram APK instalável e apontam para a API do Render.
 
 ```bash
-Cannot find module '../generated/prisma/client'
+cd mobile
+npx eas-cli login
+npx eas-cli init               # cria o projeto no EAS e grava o projectId no app.json
+npx eas-cli update:configure   # liga o expo-updates ao projeto
+npm run build:apk              # build Android (perfil preview), gera o link do APK
 ```
 
-Gere novamente o Prisma Client:
+O APK pode ser instalado no celular pelo link ou QR code que o EAS mostra ao final, ou no
+emulador arrastando o arquivo para a janela. Para iOS, `npx eas-cli build -p ios --profile preview`
+gera um build para o simulador.
 
-```bash
-npx prisma generate
-npm run db:seed
-```
+Atualizações OTA: mudanças só de JavaScript chegam aos builds já instalados com
+`npm run update:preview` (ou `update:production`). O app baixa a atualização ao abrir e
+mostra uma faixa "Reiniciar". A política de `runtimeVersion` é `appVersion`, então uma
+mudança nativa (plugin, permissão, SDK) exige novo build e novo `version` no `app.json`.
 
-**App mobile não consegue falar com o backend:**
+## Testes
 
-Confira `EXPO_PUBLIC_API_URL` em `mobile/.env` — veja a seção acima sobre emulador Android vs. dispositivo físico vs. simulador iOS.
+| Nível | Onde | Comando |
+| --- | --- | --- |
+| Unitários do app | `tests/unit/` | `npm test` em `mobile/` |
+| API (Jest + Supertest) | `tests/acceptance/` | `npm test` em `backend/` |
+| BDD (Cucumber) | `tests/bdd/` | `npm run test:bdd` em `backend/` |
+| E2E na versão web (Playwright) | `e2e/tests/` | `npm test` em `e2e/` (backend e app rodando) |
 
-</details>
+O E2E `fluxo-completo.spec.ts` percorre o caminho inteiro: cadastro, demanda com foto e GPS,
+filtros, mudança de status pelo gestor e notificação ao cidadão. A pipeline do GitHub
+Actions (`.github/workflows/regressao.yml`) roda unitários e API a cada push e os E2E
+marcados com `@smoke` nos pull requests. Mais detalhes em
+[docs/tests/organizacao-e-execucao.md](docs/tests/organizacao-e-execucao.md).
 
-## Funcionalidades principais
-
-### Autenticação e perfis
-
-O perfil do usuário é definido no cadastro e validado no backend:
-
-- **Cidadão** → cria e acompanha suas próprias demandas
-- **Gestor público** → visualiza a fila geral, revisa triagens e altera status
-
-A autenticação usa senha com hash, JWT e proteção por perfil. O app mobile mantém a sessão via token Bearer (persistido com AsyncStorage), sem depender de cookies.
-
-### Perfil Cidadão
-
-**Permissões:**
-- ✅ Criar novas demandas
-- ✅ Visualizar suas próprias demandas
-- ✅ Acompanhar status e timeline
-- ✅ Consultar métricas pessoais
-- ❌ Alterar status de demandas
-- ❌ Acessar painel do gestor
-
-**Telas:**
-- Início — visão geral pessoal e métricas
-- Minhas demandas — listagem com filtros
-- Nova demanda — criação com foto, localização e triagem automática
-- Detalhes da demanda — status e histórico
-
-<details>
-<summary>Ver jornada completa do cidadão</summary>
-
-Consulte a [documentação de jornadas](docs/jornada-usuario.md) para fluxos detalhados, permissões e cenários de teste (referência histórica da versão web — a lógica de permissões é a mesma no app mobile).
-
-</details>
-
-### Perfil Gestor
-
-**Permissões:**
-- ✅ Visualizar a fila geral de demandas
-- ✅ Alterar status de demandas
-- ✅ Adicionar observações
-- ✅ Revisar triagem automática
-- ✅ Visualizar métricas gerais
-- ❌ Criar novas demandas
-
-**Telas:**
-- Painel — métricas, fila de triagem inteligente e fila recente
-- Demandas — todas as demandas visíveis ao gestor
-- Detalhes da demanda — ações de triagem (mudança de status, observações)
-
-<details>
-<summary>Ver jornada completa do gestor</summary>
-
-Consulte a [documentação de jornadas](docs/jornada-usuario.md) para fluxos detalhados, permissões e cenários de teste (referência histórica da versão web — a lógica de permissões é a mesma no app mobile).
-
-</details>
-
-### Proteção de rotas
-
-O app implementa controle de acesso automático (`mobile/src/hooks/useRoleGuard.ts`):
-
-- Usuário não autenticado → redirecionado para a tela de login
-- Cidadão tentando acessar o painel do gestor → redirecionado para o início
-- Gestor tentando acessar telas exclusivas do cidadão (ex.: nova demanda) → redirecionado para o painel
-
-### Triagem inteligente
-
-Fluxo de triagem no app mobile:
-- Foto anexada via câmera ou galeria (`expo-image-picker`) na criação da demanda
-- Upload para o backend, que classifica a imagem com Google Vision (`GOOGLE_APPLICATION_CREDENTIALS_JSON`) quando configurado
-- Sugestão de órgão responsável conforme categoria detectada e cadastro de órgãos
-- Título e descrição preenchidos automaticamente após a análise
-- Histórico da demanda gravado no banco
-
-> A versão web anterior também classificava a imagem localmente no navegador com TensorFlow.js/MobileNet como um pré-preenchimento client-side. Esse passo não foi portado para o mobile: a classificação do backend via Google Vision já cobre o mesmo papel (com fallback para a categoria escolhida manualmente quando o Vision não está configurado), e evita embutir um modelo de ML pesado no app.
-
-## Estrutura do projeto
+## Estrutura
 
 ```
 mobile/
-├── app/                      # Rotas (expo-router, file-based)
-│   ├── index.tsx            # Home pública
-│   ├── login.tsx
-│   ├── cadastro.tsx
-│   └── (app)/                # Grupo autenticado (guarda de rota + navegação)
-│       ├── dashboard.tsx     # Início do cidadão
-│       ├── gestor.tsx        # Painel do gestor
-│       └── demandas/         # Listagem, detalhe e criação
-├── src/
-│   ├── components/           # UI kit (Button, TextField, Badge, DemandCard, ImageUpload…)
-│   ├── hooks/                # useAuth, useDemands, useFilters, useMetrics, useRoleGuard
-│   ├── services/             # Cliente HTTP (axios) e services por domínio
-│   ├── store/                # Zustand stores (auth com persist via AsyncStorage)
-│   ├── theme/                # Tokens de cor/espaçamento
-│   ├── types/                # TypeScript types compartilhados
-│   └── utils/                # Labels, formatação, detecção de perfil
+  app/                  rotas (expo-router): telas públicas e o grupo (app) autenticado
+  src/components/       componentes de interface (NativeWind)
+  src/hooks/            useAuth, useDemands, useMetrics, useNotifications, useOtaUpdate, useRoleGuard
+  src/services/         cliente HTTP, serviços por domínio, cache offline, notificações, sessão
+  src/store/            stores Zustand: auth, demand, metrics, notice
+  src/types/            tipos compartilhados
+  src/theme/            tokens de cor e espaçamento (lidos também pelo Tailwind)
+  eas.json              perfis de build
 
-backend/src/
-├── app.ts                    # Middlewares e rotas Express
-├── server.ts                 # Bootstrap do servidor
-├── config/                   # Variáveis, Prisma e Redis
-├── controllers/               # Entrada HTTP e validação
-├── services/                  # Regras de negócio e triagem
-├── repositories/              # Acesso ao banco
-├── routes/                    # Endpoints REST
-├── middlewares/                # Auth, upload e erros
-└── utils/                     # Mappers e erros
+backend/
+  openapi.yaml          especificação da API
+  prisma/               schema, migrations e seed
+  src/routes/           rotas Express
+  src/controllers/      validação de entrada (zod) e resposta HTTP
+  src/services/         regras de negócio, triagem, métricas, notificações
+  src/repositories/     acesso ao banco
+  src/middlewares/      autenticação, upload, HTTPS, rate limit, erros
+
+tests/                  unitários, API e BDD
+e2e/                    testes ponta a ponta e geração dos GIFs
+docker/                 Dockerfiles, compose e proxy Caddy
+docs/                   documentação do projeto
 ```
-
-<details>
-<summary>Ver estrutura detalhada do app mobile</summary>
-
-**Stores (Zustand):**
-- `authStore` - Autenticação e usuário (persistido via AsyncStorage)
-- `demandStore` - Demandas e filtros
-- `uiStore` - Estado da UI
-
-**Services:**
-- `api.ts` - Cliente HTTP Axios integrado ao backend Express
-- `authService.ts` - Login e registro
-- `demandService.ts` - CRUD de demandas
-- `metricsService.ts` - Métricas e estatísticas
-
-**Hooks:**
-- `useAuth` - Gerenciamento de autenticação
-- `useDemands` - Gerenciamento de demandas
-- `useFilters` - Filtros e busca
-- `useMetrics` - Métricas e estatísticas
-- `useRoleGuard` - Proteção de rotas por perfil
-
-</details>
-
-## Documentação
-
-🧪 **[Plano de Testes](docs/tests/plano-de-testes.md)** · **[Como rodar cada nível de teste](docs/tests/organizacao-e-execucao.md)**
-Estratégia de teste, seleção de casos de uso, backlog priorizado (AUT-01–AUT-16), matriz de riscos e decisão de ferramentas por camada
-
-🔒 **[Requisitos e Análise de Riscos de Segurança](docs/requisitos-seguranca.md)**
-Análise de riscos, requisitos de segurança, modelo de autenticação/autorização e plano de conformidade com a LGPD
-
-📌 **[Requisitos da disciplina — Fundamentos de Computação Concorrente, Paralela e Distribuída](docs/requisitos-disciplina-projetos.md)**
-Mapeamento dos requisitos avaliados: arquitetura distribuída, diagrama, concorrência/paralelismo e otimização
-
-📖 **[Documentação da API](docs/api.md)**
-Endpoints REST, autenticação, permissões, payloads, exemplos de resposta e variáveis de ambiente
-
-📖 **[Avaliação 2 — Backend real](docs/avaliacao-2-backend.md)**
-Arquitetura Express, Prisma, autenticação JWT, Redis opcional, cron jobs e endpoints
-
-📖 **[Jornadas e Perfis de Usuário](docs/jornada-usuario.md)**
-Fluxos detalhados, permissões, matriz de proteção de rotas e guia de testes (documentação histórica da versão web)
-
-📋 **[Requisitos da Avaliação 1](docs/requisitos-urbanize.md)**
-Checklist completo de conformidade com todos os requisitos implementados (documentação histórica da versão web)
-
-## Recursos técnicos
-
-**Mobile:**
-- Expo SDK 58 (React Native 0.88, React 19)
-- expo-router (navegação baseada em arquivos)
-- TypeScript (strict mode)
-- expo-image-picker (câmera/galeria)
-
-**Estado e dados:**
-- Zustand (gerenciamento de estado)
-- Axios (cliente HTTP)
-- AsyncStorage (persistência de sessão)
-- SQLite via Prisma no backend (persistência local)
-
-**Qualidade:**
-- ESLint (eslint-config-expo)
-- TypeScript strict mode
-- Componentes de feedback (loading/error/empty)
-- Validação de formulários
-
-## Notas de desenvolvimento
-
-**API real:**
-A aplicação usa backend Express em `backend/src`, persistência Prisma/SQLite e autenticação JWT. O Redis é opcional para cache de métricas e o cron consolida snapshots periódicos em `MetricsSnapshot`.
-
-**Perfis:**
-O perfil é definido no cadastro e armazenado no banco. O backend valida permissões por rota e impede alterações de status por cidadãos.
-
-**Proteção de rotas:**
-Hook `useRoleGuard` em `mobile/src/hooks/` verifica autenticação e permissões antes de renderizar telas protegidas.
-
-**Estados visuais:**
-Todos os componentes de lista implementam loading states, empty states e error states para melhor UX.
-
-## Status
-
-✅ **Backend funcional:** Express organizado em rotas, controllers, services e repositories
-✅ **Banco persistente:** Prisma ORM com SQLite e migrações
-✅ **Autenticação real:** Cadastro, login, JWT e logout
-✅ **Perfis:** Cidadão e gestor com permissões distintas
-✅ **CRUD principal:** Demandas com filtros, detalhe, criação e alteração de status
-✅ **Upload de imagem:** Anexo de foto via câmera/galeria, armazenamento local e triagem automática
-✅ **App mobile:** Expo/React Native consumindo a API real via Axios
-✅ **Redis opcional:** Cache de métricas quando `REDIS_URL` está configurado
-✅ **Cron opcional:** Snapshot periódico de métricas
-
-Consulte [docs/requisitos-urbanize.md](docs/requisitos-urbanize.md) para o checklist original da avaliação (versão web).
 
 ## Deploy
 
-**Backend (Render):** https://urbanize-backend.onrender.com/api/health
+O backend está no Render: https://urbanize-backend.onrender.com/api/health. No plano
+gratuito o serviço dorme sem uso; abra o link e espere cerca de um minuto antes de testar.
 
-> O backend está hospedado no plano gratuito do Render e pode ficar inativo após alguns minutos sem uso — acesse o link acima antes de testar o app para "acordar" o serviço.
-
-**HTTPS (produção):** com `NODE_ENV=production` a API recusa requisições que não chegaram por HTTPS (426) e confia no cabeçalho `X-Forwarded-Proto` do proxy (`TRUST_PROXY=1`). No Render o TLS já é do próprio serviço. Em um servidor próprio, suba o proxy Caddy:
+Em produção (`NODE_ENV=production`) a API recusa requisições sem HTTPS e exige um
+`JWT_SECRET` forte. Para hospedar em servidor próprio com TLS, o compose tem um perfil com
+o Caddy:
 
 ```bash
-# docker/.env: API_DOMAIN=api.seudominio.com  BACKEND_BIND=127.0.0.1  EXPO_PUBLIC_API_URL=https://api.seudominio.com/api
+# docker/.env: API_DOMAIN=api.seudominio.com  BACKEND_BIND=127.0.0.1
 docker compose -f docker/docker-compose.yml --profile tls up -d
 ```
 
-**Fotos:** `/uploads` só responde com o link assinado que a API devolve em `imagemUrl` (válido por `UPLOAD_URL_TTL_SECONDS`, 1 hora por padrão). Acesso direto a `/uploads/arquivo.jpg` retorna 403.
+As fotos em `/uploads` só abrem pelo link assinado que a API devolve em `imagemUrl`. O acesso
+direto ao arquivo retorna 403.
 
-O app mobile não possui deploy público; rode-o localmente com Expo (veja "Início rápido" acima) apontando `EXPO_PUBLIC_API_URL` para o backend acima ou para sua instância local.
+## Documentação do projeto
 
-**Credenciais de teste:**
-- Cidadão: `cidadao@urbanize.com` / `demo`
-- Gestor: `gestor@urbanize.com` / `demo`
+- [Guia de instalação](docs/guia-instalacao.md)
+- [Plano de testes](docs/tests/plano-de-testes.md) e [como rodar cada nível](docs/tests/organizacao-e-execucao.md)
+- [Requisitos de segurança e LGPD](docs/requisitos-seguranca.md) e [verificação no código](docs/SEG%20-%20URBANIZE.md)
+- [Backup e restauração](docs/backup-e-restauracao.md)
+- [Pipeline de regressão e Quality Gate](docs/entrega-pipeline-quality-gate.md)
+- [Relatório dos testes de API](docs/relatorio-testes-api.md)
+- [Personas](docs/personas.md), [jornada do usuário](docs/jornada-do-usuario.md),
+  [mapa de stakeholders](docs/mapa-de-stakeholders.md) e
+  [Business Model Canvas](docs/business-model-canvas.md)
+- [docs/old/](docs/old/): documentos da versão web anterior (Next.js), mantidos como histórico
