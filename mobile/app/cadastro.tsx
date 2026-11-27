@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text } from "react-native";
 import { Link, router } from "expo-router";
 import { useAuth } from "@/hooks/useAuth";
+import { Screen } from "@/components/Screen";
 import { colors, fontSizes, spacing } from "@/theme";
 import { Button } from "@/components/Button";
 import { TextField } from "@/components/TextField";
@@ -33,27 +34,29 @@ export default function Cadastro() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Criar conta</Text>
-      <TextField testID="input-nome" label="Nome" value={nome} onChangeText={setNome} />
-      <TextField
-        testID="input-email"
-        label="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextField label="Telefone" keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
-      <TextField testID="input-senha" label="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
-      <Text testID="regra-senha" style={erroSenha ? styles.erro : styles.dica}>
-        {erroSenha || REGRA_SENHA}
-      </Text>
-      <Button testID="btn-criar-conta" label="Criar conta" onPress={handleSubmit} loading={loading} />
-      <Link href="/login" style={styles.link}>
-        Já tem conta? Entrar
-      </Link>
-    </ScrollView>
+    <Screen>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Criar conta</Text>
+        <TextField testID="input-nome" label="Nome" value={nome} onChangeText={setNome} />
+        <TextField
+          testID="input-email"
+          label="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextField label="Telefone" keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
+        <TextField testID="input-senha" label="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
+        <Text testID="regra-senha" style={erroSenha ? styles.erro : styles.dica}>
+          {erroSenha || REGRA_SENHA}
+        </Text>
+        <Button testID="btn-criar-conta" label="Criar conta" onPress={handleSubmit} loading={loading} />
+        <Link href="/login" style={styles.link}>
+          Já tem conta? Entrar
+        </Link>
+      </ScrollView>
+    </Screen>
   );
 }
 
