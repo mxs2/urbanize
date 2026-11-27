@@ -11,11 +11,12 @@ import { DemandCard } from "@/components/DemandCard";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingState } from "@/components/LoadingState";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { SectionTitle } from "@/components/SectionTitle";
 
 export default function Dashboard() {
   const { ready, user } = useRoleGuard(["cidadao"]);
-  const { demands, error, fetchDemands } = useDemandStore();
+  const { demands, error, offlineSince, fetchDemands } = useDemandStore();
   const { metrics, loading: metricsLoading } = useMetrics();
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function Dashboard() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <SectionTitle title={`Olá, ${user.nome}`} subtitle="Acompanhe suas demandas urbanas" />
+      <OfflineBanner since={offlineSince} />
 
       {metricsLoading ? (
         <LoadingState />

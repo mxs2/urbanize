@@ -9,11 +9,12 @@ import { DemandFilters } from "@/components/DemandFilters";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { LoadingState } from "@/components/LoadingState";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { SectionTitle } from "@/components/SectionTitle";
 
 export default function DemandasList() {
   const { ready, user } = useRoleGuard(["cidadao", "gestor"]);
-  const { demands, loading, error, filters, fetchDemands } = useDemands(ready);
+  const { demands, loading, error, filters, fetchDemands, offlineSince } = useDemands(ready);
   const refresh = () => fetchDemands(filters);
 
   if (!ready || !user) return <LoadingState />;
@@ -40,6 +41,7 @@ export default function DemandasList() {
             }
           />
           {isCidadao ? <Button label="Nova demanda" onPress={() => router.push("/demandas/nova")} /> : null}
+          <OfflineBanner since={offlineSince} />
           <DemandFilters />
           {loading ? <LoadingState /> : null}
           {error ? <ErrorState testID="erro-listagem" message={error} onRetry={refresh} /> : null}

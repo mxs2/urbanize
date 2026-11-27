@@ -1,5 +1,8 @@
 import { create } from "zustand";
+import { isOfflineError } from "@/services/api";
+import { demandCache } from "@/services/demandCache";
 import { demandService } from "@/services/demandService";
+import { useAuthStore } from "@/store/authStore";
 import { Demand, FilterState, NewDemandInput } from "@/types/demand";
 import { errorMessage } from "@/utils/errorMessage";
 
@@ -17,6 +20,8 @@ interface DemandState {
   /** Enviando criação ou mudança de status; não esconde a tela atual. */
   saving: boolean;
   error?: string;
+  /** Preenchido quando a tela mostra dados do cache local por falta de conexão. */
+  offlineSince?: string;
   filters: FilterState;
   fetchDemands: (filters?: FilterState) => Promise<void>;
   fetchDemandById: (id: string) => Promise<void>;
@@ -24,20 +29,43 @@ interface DemandState {
   updateDemandStatus: (id: string, status: Demand["status"], observacaoGestor?: string) => Promise<void>;
   setFilters: (filters: FilterState) => void;
   clearFilters: () => void;
+  reset: () => void;
 }
 
-export const useDemandStore = create<DemandState>((set, get) => ({
+const currentUserId = () => useAuthStore.getState().user?.id;
+
+const initialState = {
   demands: [],
   bairros: [],
+  selected: undefined,
   loading: false,
   saving: false,
+  error: undefined,
+  offlineSince: undefined,
   filters: {},
+};
+
+export const useDemandStore = create<DemandState>((set, get) => ({
+  ...initialState,
   async fetchDemands(filters = {}) {
     set({ loading: true, error: undefined, filters });
     try {
       const data = await demandService.getAll(filters);
-      set({ demands: data, bairros: mergeBairros(get().bairros, data), loading: false });
+      set({ demands: data, bairros: mergeBairros(get().bairros, data), loading: false, offlineSince: undefined });
+      const userId = currentUserId();
+      if (userId) await demandCache.save(userId, data);
     } catch (error) {
+      const userId = currentUserId();
+      const cached = isOfflineError(error) && userId ? await demandCache.list(userId, filters) : null;
+      if (cached) {
+        set({
+          demands: cached.demands,
+          bairros: mergeBairros(get().bairros, cached.demands),
+          offlineSince: cached.savedAt,
+          loading: false,
+        });
+        return;
+      }
       set({ error: errorMessage(error, "Erro ao carregar demandas"), loading: false });
     }
   },
@@ -47,8 +75,16 @@ export const useDemandStore = create<DemandState>((set, get) => ({
     set({ loading: true, error: undefined });
     try {
       const demand = await demandService.getById(id);
-      set({ selected: demand, loading: false });
+      set({ selected: demand, loading: false, offlineSince: undefined });
+      const userId = currentUserId();
+      if (userId) await demandCache.save(userId, [demand]);
     } catch (error) {
+      const userId = currentUserId();
+      const cached = isOfflineError(error) && userId ? await demandCache.get(userId, id) : null;
+      if (cached) {
+        set({ selected: cached.demand, offlineSince: cached.savedAt, loading: false });
+        return;
+      }
       set({ error: errorMessage(error, "Erro ao carregar demanda"), loading: false });
     }
   },
@@ -80,4 +116,12 @@ export const useDemandStore = create<DemandState>((set, get) => ({
   clearFilters() {
     set({ filters: {} });
   },
+  reset() {
+    set(initialState);
+  },
 }));
+
+// Troca de usuário (logout, sessão expirada, outro login): nada da conta anterior fica na tela.
+useAuthStore.subscribe((state, previous) => {
+  if (state.user?.id !== previous.user?.id) useDemandStore.getState().reset();
+});

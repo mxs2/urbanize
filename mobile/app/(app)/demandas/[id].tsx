@@ -14,6 +14,7 @@ import { ErrorState } from "@/components/ErrorState";
 import { errorMessage } from "@/utils/errorMessage";
 import { DemandTimeline } from "@/components/DemandTimeline";
 import { LoadingState } from "@/components/LoadingState";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { PriorityBadge } from "@/components/PriorityBadge";
 import { SectionTitle } from "@/components/SectionTitle";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -30,7 +31,7 @@ const GESTOR_TRANSITIONS: DemandStatus[] = [
 export default function DemandDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { ready, user } = useRoleGuard(["cidadao", "gestor"]);
-  const { selected, loading, saving, error, fetchDemandById, updateDemandStatus } = useDemandStore();
+  const { selected, loading, saving, error, offlineSince, fetchDemandById, updateDemandStatus } = useDemandStore();
   const [observacao, setObservacao] = useState("");
   const [actionError, setActionError] = useState<string>();
 
@@ -68,6 +69,7 @@ export default function DemandDetail() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <OfflineBanner since={offlineSince} />
       <Text style={styles.protocolo}>{selected.protocolo}</Text>
       <Text style={styles.titulo}>{selected.titulo}</Text>
       <Text style={styles.data}>{formatDate(selected.criadaEm)}</Text>
@@ -85,7 +87,7 @@ export default function DemandDetail() {
       <SectionTitle title="Histórico" />
       <DemandTimeline historico={selected.historico} />
 
-      {isGestor ? (
+      {isGestor && !offlineSince ? (
         <View style={styles.gestorPanel}>
           <SectionTitle title="Ação do gestor" />
           <TextField
