@@ -13,9 +13,10 @@ export interface ImageUploadResult {
 
 interface ImageUploadProps {
   onResult: (result: ImageUploadResult) => void;
+  disabled?: boolean;
 }
 
-export function ImageUpload({ onResult }: ImageUploadProps) {
+export function ImageUpload({ onResult, disabled }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
 
@@ -64,8 +65,8 @@ export function ImageUpload({ onResult }: ImageUploadProps) {
         </View>
       ) : (
         <View style={styles.actions}>
-          <Button label="Tirar foto" variant="outline" onPress={pickFromCamera} />
-          <Button label="Escolher da galeria" variant="outline" onPress={pickFromLibrary} />
+          <Button label="Tirar foto" variant="outline" onPress={pickFromCamera} disabled={disabled} />
+          <Button label="Escolher da galeria" variant="outline" onPress={pickFromLibrary} disabled={disabled} />
         </View>
       )}
     </View>

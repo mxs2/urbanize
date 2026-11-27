@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { authService } from "@/services/authService";
 import { secureStorage } from "@/services/secureStorage";
 import { AUTH_STORAGE_KEY, clearAuthToken, onSessionChange, setSession } from "@/services/session";
-import { User } from "@/types/user";
+import { ProfileChanges, User } from "@/types/user";
 
 interface AuthState {
   user: User | null;
@@ -19,6 +19,8 @@ interface AuthState {
     telefone?: string
   ) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (changes: ProfileChanges) => Promise<void>;
+  deleteAccount: (senha: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -59,6 +61,14 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: async () => {
         await authService.logout().catch(() => undefined);
+        clearAuthToken();
+        set({ user: null, token: null, refreshToken: null });
+      },
+      updateProfile: async (changes) => {
+        set({ user: await authService.updateMe(changes) });
+      },
+      deleteAccount: async (senha) => {
+        await authService.deleteMe(senha);
         clearAuthToken();
         set({ user: null, token: null, refreshToken: null });
       },

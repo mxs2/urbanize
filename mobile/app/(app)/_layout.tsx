@@ -10,11 +10,13 @@ const CIDADAO_LINKS = [
   { href: "/dashboard", label: "Início" },
   { href: "/demandas", label: "Minhas demandas" },
   { href: "/demandas/nova", label: "Nova demanda" },
+  { href: "/perfil", label: "Perfil" },
 ];
 
 const GESTOR_LINKS = [
   { href: "/gestor", label: "Painel" },
   { href: "/demandas", label: "Demandas" },
+  { href: "/perfil", label: "Perfil" },
 ];
 
 export default function AppLayout() {

@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { getAuthToken, getRefreshToken, publishSession } from "./session";
 import { Demand, DemandCategory, FilterState } from "@/types/demand";
 import { MetricsSummary } from "@/types/metrics";
-import { User } from "@/types/user";
+import { ProfileChanges, User } from "@/types/user";
 import { Organ } from "@/types/organ";
 
 interface ApiResponse<T> {
@@ -167,6 +167,30 @@ export const api = {
     try {
       const data = unwrap(await http.get<ApiResponse<{ user: User }>>("/auth/me"));
       return data.user;
+    } catch (error) {
+      return normalizeError(error);
+    }
+  },
+
+  async updateMe(changes: ProfileChanges): Promise<User> {
+    try {
+      return unwrap(await http.patch<ApiResponse<{ user: User }>>("/auth/me", changes)).user;
+    } catch (error) {
+      return normalizeError(error);
+    }
+  },
+
+  async exportMyData(): Promise<unknown> {
+    try {
+      return unwrap(await http.get<ApiResponse<unknown>>("/auth/me/dados"));
+    } catch (error) {
+      return normalizeError(error);
+    }
+  },
+
+  async deleteMe(senha: string): Promise<void> {
+    try {
+      await http.delete<ApiResponse<null>>("/auth/me", { data: { senha } });
     } catch (error) {
       return normalizeError(error);
     }
